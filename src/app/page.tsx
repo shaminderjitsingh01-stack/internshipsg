@@ -227,6 +227,7 @@ const resources = [
 ];
 
 export default function Home() {
+  const { data: session, status } = useSession();
   const [appState, setAppState] = useState<AppState>("landing");
   const [formData, setFormData] = useState({
     name: "",
@@ -250,19 +251,33 @@ export default function Home() {
   const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  // Check if user is already registered
+  // Check if user signed in via OAuth
   useEffect(() => {
-    const savedUser = localStorage.getItem("internship_user");
-    if (savedUser) {
-      const user = JSON.parse(savedUser);
-      setFormData(prev => ({ ...prev, ...user }));
+    if (status === "authenticated" && session?.user) {
+      setFormData(prev => ({
+        ...prev,
+        name: session.user?.name || prev.name,
+        email: session.user?.email || prev.email,
+      }));
       setAppState("onboarding");
+    }
+  }, [session, status]);
+
+  // Check if user is already registered via localStorage
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      const savedUser = localStorage.getItem("internship_user");
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        setFormData(prev => ({ ...prev, ...user }));
+        setAppState("onboarding");
+      }
     }
     const savedProgress = localStorage.getItem("internship_progress");
     if (savedProgress) {
       setProgress(JSON.parse(savedProgress));
     }
-  }, []);
+  }, [status]);
 
   const updateProgress = (key: keyof Progress, value: number) => {
     const newProgress = { ...progress, [key]: value };
