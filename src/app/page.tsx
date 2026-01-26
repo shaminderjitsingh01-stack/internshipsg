@@ -251,17 +251,46 @@ export default function Home() {
   const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  // Check if user signed in via OAuth - auto-fill form and go to onboarding
+  // Check if user signed in via OAuth - auto-generate and go to dashboard
   useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      setFormData(prev => ({
-        ...prev,
-        name: session.user?.name || prev.name,
-        email: session.user?.email || prev.email,
-      }));
-      setAppState("onboarding");
+    if (status === "authenticated" && session?.user && appState !== "dashboard") {
+      const autoGenerate = async () => {
+        setLoading(true);
+        setError("");
+
+        const oauthFormData = {
+          name: session.user?.name || "Student",
+          email: session.user?.email || "",
+          course: "University Student",
+          skills: "Communication, Problem Solving, Teamwork",
+          interests: "Technology, Business, Finance",
+        };
+
+        try {
+          const res = await fetch("/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(oauthFormData),
+          });
+
+          if (!res.ok) throw new Error("Failed to generate guidance");
+
+          const data = await res.json();
+          setCareerData(data);
+          setFormData(oauthFormData);
+          setAppState("dashboard");
+          setActiveTab("careers");
+        } catch {
+          setError("Failed to generate. Please try again.");
+          setAppState("onboarding");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      autoGenerate();
     }
-  }, [session, status]);
+  }, [session, status, appState]);
 
   // Check if user is already registered via localStorage
   useEffect(() => {
@@ -333,6 +362,20 @@ export default function Home() {
     if (numScore >= 6) return "text-amber-600 bg-amber-50";
     return "text-rose-600 bg-rose-50";
   };
+
+  // ==================== LOADING SCREEN (for OAuth auto-generation) ====================
+  if (loading && status === "authenticated") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-white">
+        <div className="text-center">
+          <img src="/logo.png" alt="Internship.sg" className="h-20 w-auto mx-auto mb-6" />
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-red-200 border-t-red-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">Setting up your profile...</h2>
+          <p className="text-slate-600">Generating personalized interview prep content</p>
+        </div>
+      </div>
+    );
+  }
 
   // ==================== LANDING PAGE ====================
   if (appState === "landing") {
