@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `You are an expert career coach and internship recruiter for Singapore students. Generate personalized guidance for this student.
+    const prompt = `You are a top-tier AI internship coach for Singapore students. You provide personalized, actionable guidance that addresses common gaps in AI interview tools:
+- Generic questions & shallow feedback
+- Lack of internship-specific scenarios
+- No structured progress or roadmap
+- Minimal actionable suggestions
+- Limited soft skills coaching
 
 Student Profile:
 - Name: ${name}
@@ -28,40 +33,66 @@ Student Profile:
 
 Generate ALL outputs in valid JSON format with these exact keys:
 
-1. "career_suggestions": Array of 3-5 suitable internship roles. Each object should have:
+1. "career_suggestions": Array of 3-5 internship roles tailored to Singapore market. Each object:
    - "role": Role name
-   - "skills_needed": Array of key skills
-   - "internship_types": Array of suggested internship types in Singapore
-   - "resources": Array of resources/guides to get started
+   - "skills_needed": Array of 4-6 key skills
+   - "internship_types": Array of 2-3 specific company types/sectors in Singapore
+   - "resources": Array of 2-3 actionable resources (LinkedIn Learning, specific YouTube channels, Singapore career portals like MyCareersFuture, InternSG)
+   - "why_good_fit": Brief explanation why this role suits the student
 
-2. "mock_interview_questions": Array of 5-8 interview questions. Each object should have:
-   - "question": The interview question
+2. "mock_interview_questions": Array of 6-8 internship-specific questions. Each object:
+   - "question": The interview question (tailored to their role interest)
    - "type": "behavioral" | "situational" | "technical" | "knowledge"
-   - "tip": Quick tip for answering
+   - "tip": Quick answering tip
+   - "skill_tested": What skill this question evaluates
 
-3. "ai_feedback_examples": Array matching mock_interview_questions. Each object should have:
-   - "example_answer": A realistic student-level answer
-   - "feedback": Feedback on structure, clarity, confidence
-   - "improvements": Specific suggestions to improve
+3. "ai_feedback_examples": Array matching mock_interview_questions. Each object:
+   - "example_answer": A realistic student-level answer (150-200 words)
+   - "feedback": Object with:
+     - "structure_clarity": Feedback on answer structure (1-2 sentences)
+     - "confidence_tone": Feedback on confidence and tone (1-2 sentences)
+     - "role_relevance": How relevant to the internship role (1-2 sentences)
+     - "improvements": Array of 2-3 specific, actionable improvements with WHY they matter
+   - "score": Number 1-10 with brief justification
 
 4. "resume_suggestions": Object with:
-   - "bullet_points": Array of 3-5 ready-to-use resume bullet points based on their skills/projects
-   - "tips": Array of 3-4 formatting and phrasing tips
+   - "bullet_points": Array of 4-5 ready-to-use resume bullet points using their actual skills/projects. Use action verbs and quantify where possible.
+   - "formatting_tips": Array of 3 formatting best practices
+   - "common_mistakes": Array of 2-3 mistakes Singapore students often make
 
-5. "cover_letter": A tailored cover letter (200-250 words) as a single string. Professional but student-friendly.
+5. "cover_letter": A 200-250 word tailored cover letter with clear structure:
+   - Opening hook (not "I am writing to apply...")
+   - Why this role/company excites them
+   - 1-2 relevant experiences/skills
+   - Confident closing with call-to-action
+   Professional but student-friendly tone.
 
-6. "prep_tips": Array of 5 actionable tips for interview and application preparation.
+6. "prep_tips": Array of 5 actionable tips. Each object:
+   - "tip": The preparation tip
+   - "why_it_matters": Why this is important for Singapore internships
+   - "action_step": Specific next action to take
 
 7. "dashboard_recommendations": Object with:
-   - "mock_interviews_target": Recommended number of mock interviews to practice
-   - "applications_target": Recommended number of applications to submit
-   - "milestones": Array of 4-5 preparation milestones
+   - "mock_interviews_target": Number (recommended practice sessions)
+   - "applications_target": Number (recommended applications to send)
+   - "milestones": Array of 5 preparation milestones in order
+   - "weekly_goals": Array of 3 weekly goals to stay on track
+   - "next_actions": Array of 3 immediate next steps
 
-Return ONLY valid JSON, no markdown code blocks, no explanation text.`;
+8. "reflection_prompts": Array of 3 self-reflection prompts to help identify learning gaps. Each object:
+   - "prompt": The reflection question
+   - "purpose": Why this reflection helps
+
+9. "soft_skills_focus": Array of 3 soft skills to develop. Each object:
+   - "skill": Skill name
+   - "why_important": Why it matters for this role
+   - "how_to_develop": Practical way to develop it
+
+Return ONLY valid JSON, no markdown code blocks, no explanation text. Ensure all content is specific to Singapore context (local companies, job portals, cultural norms).`;
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
+      max_tokens: 6000,
       messages: [
         {
           role: "user",
