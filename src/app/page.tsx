@@ -349,6 +349,46 @@ export default function Home() {
     }
   };
 
+  // Simple email sign-up - auto-generates like OAuth
+  const handleEmailSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email) return;
+
+    setLoading(true);
+    setError("");
+
+    const emailFormData = {
+      name: formData.email.split("@")[0], // Use email prefix as name
+      email: formData.email,
+      course: "University Student",
+      skills: "Communication, Problem Solving, Teamwork",
+      interests: "Technology, Business, Finance",
+      experience: "Student with academic projects",
+      goal: "Land an internship in Singapore",
+    };
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailFormData),
+      });
+
+      if (!res.ok) throw new Error("Failed to generate guidance");
+
+      const data = await res.json();
+      setCareerData(data);
+      setFormData(emailFormData);
+      localStorage.setItem("internship_user", JSON.stringify({ name: emailFormData.name, email: emailFormData.email }));
+      setAppState("dashboard");
+      setActiveTab("careers");
+    } catch {
+      setError("Failed to set up. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const readinessScore = () => {
     if (!careerData) return 0;
     const targets = careerData.dashboard_recommendations;
@@ -709,20 +749,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Email Form */}
-            <form onSubmit={handleGenerateGuide} className="space-y-6">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Your Name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="input-premium w-full"
-                  placeholder="Sarah Tan"
-                />
-              </div>
+            {/* Simple Email Form */}
+            <form onSubmit={handleEmailSignUp} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
                 <input
@@ -731,102 +759,41 @@ export default function Home() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="input-premium w-full"
-                  placeholder="sarah@email.com"
+                  placeholder="your@email.com"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Course / Degree</label>
-              <input
-                type="text"
-                required
-                value={formData.course}
-                onChange={(e) => setFormData({ ...formData, course: e.target.value })}
-                className="input-premium w-full"
-                placeholder="Business Administration, NUS"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Skills & Projects</label>
-              <textarea
-                value={formData.skills}
-                onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                rows={3}
-                className="input-premium w-full resize-none"
-                placeholder="Python, Excel, built a stock portfolio tracker..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Preferred Roles</label>
-              <input
-                type="text"
-                required
-                value={formData.interests}
-                onChange={(e) => setFormData({ ...formData, interests: e.target.value })}
-                className="input-premium w-full"
-                placeholder="Marketing, Data Analytics, Finance"
-              />
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Experience</label>
-                <select
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                  className="input-premium w-full"
-                >
-                  <option value="none">No prior internships</option>
-                  <option value="some">1 internship</option>
-                  <option value="moderate">2+ internships</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Your Goal</label>
-                <input
-                  type="text"
-                  value={formData.goal}
-                  onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
-                  className="input-premium w-full"
-                  placeholder="Marketing Internship 2025"
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-rose-50 text-rose-600 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-premium w-full flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Generating Your Personalized Guide...
-                </>
-              ) : (
-                <>
+              {error && (
+                <div className="bg-rose-50 text-rose-600 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Generate My Career Guide
-                </>
+                  {error}
+                </div>
               )}
-            </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-premium w-full flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Setting up your profile...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Get Started
+                  </>
+                )}
+              </button>
             </form>
           </div>
 
