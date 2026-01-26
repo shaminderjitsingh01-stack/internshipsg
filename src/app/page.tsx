@@ -266,6 +266,8 @@ export default function Home() {
           course: "University Student",
           skills: "Communication, Problem Solving, Teamwork",
           interests: "Technology, Business, Finance",
+          experience: "Student with academic projects",
+          goal: "Land an internship in Singapore",
         };
 
         try {
