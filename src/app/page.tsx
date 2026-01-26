@@ -556,23 +556,28 @@ export default function Home() {
   // ==================== ONBOARDING PAGE ====================
   if (appState === "onboarding") {
     const handleGoogleSignIn = () => {
-      signIn("google");
+      console.log("Google sign-in clicked");
+      signIn("google", { callbackUrl: "/" });
     };
 
     const handleLinkedInSignIn = () => {
-      signIn("linkedin");
+      console.log("LinkedIn sign-in clicked");
+      signIn("linkedin", { callbackUrl: "/" });
     };
 
     const handleAppleSignIn = () => {
-      signIn("apple");
+      console.log("Apple sign-in clicked");
+      signIn("apple", { callbackUrl: "/" });
     };
 
     const handleFacebookSignIn = () => {
-      signIn("facebook");
+      console.log("Facebook sign-in clicked");
+      signIn("facebook", { callbackUrl: "/" });
     };
 
     const handleMicrosoftSignIn = () => {
-      signIn("azure-ad");
+      console.log("Microsoft sign-in clicked");
+      signIn("azure-ad", { callbackUrl: "/" });
     };
 
     return (
