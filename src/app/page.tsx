@@ -83,7 +83,31 @@ interface Progress {
   reflectionsCompleted: number;
 }
 
-type AppState = "landing" | "onboarding" | "dashboard" | "blog" | "resources";
+type AppState = "landing" | "onboarding" | "dashboard" | "blog" | "resources" | "glossary";
+
+// Glossary terms
+const glossaryTerms = [
+  { term: "STAR Method", definition: "A structured way to answer behavioral interview questions: Situation, Task, Action, Result. Helps you give clear, concise examples from your experience." },
+  { term: "ATS (Applicant Tracking System)", definition: "Software used by companies to scan and filter resumes before a human sees them. Your resume needs relevant keywords to pass ATS screening." },
+  { term: "Behavioral Interview", definition: "Interview questions that ask about past experiences (e.g., 'Tell me about a time when...'). They assess how you've handled real situations." },
+  { term: "Cover Letter", definition: "A one-page letter introducing yourself to employers, explaining why you're interested in the role and what you can contribute." },
+  { term: "Elevator Pitch", definition: "A 30-60 second summary of who you are, what you do, and what you're looking for. Useful for networking and interviews." },
+  { term: "Hard Skills", definition: "Technical, teachable abilities like coding, Excel, data analysis, or specific software proficiency that can be measured." },
+  { term: "Soft Skills", definition: "Interpersonal skills like communication, teamwork, adaptability, and problem-solving that affect how you work with others." },
+  { term: "Networking", definition: "Building professional relationships that can help with career advice, referrals, and job opportunities." },
+  { term: "Referral", definition: "When someone recommends you for a job at their company. Referrals often get priority consideration from recruiters." },
+  { term: "Portfolio", definition: "A collection of your work samples, projects, and achievements that demonstrate your skills to potential employers." },
+  { term: "LinkedIn", definition: "Professional social network where you can showcase your experience, connect with recruiters, and find job postings." },
+  { term: "Internship", definition: "A temporary work experience, usually for students, to gain practical skills and industry exposure. Can be paid or unpaid." },
+  { term: "CV (Curriculum Vitae)", definition: "A detailed document of your education, experience, and achievements. In Singapore, 'CV' and 'resume' are often used interchangeably." },
+  { term: "Job Description (JD)", definition: "A document outlining the responsibilities, requirements, and qualifications for a position. Study it carefully before applying." },
+  { term: "Cultural Fit", definition: "How well your values, work style, and personality align with a company's culture and team dynamics." },
+  { term: "Follow-up Email", definition: "A thank-you message sent within 24 hours after an interview, reiterating your interest and key qualifications." },
+  { term: "Informational Interview", definition: "A casual conversation with a professional to learn about their career path, company, or industry — not to ask for a job directly." },
+  { term: "Value Proposition", definition: "The unique combination of skills, experiences, and qualities you bring that make you valuable to employers." },
+  { term: "MyCareersFuture", definition: "Singapore government's official job portal with internship listings and career resources for citizens and PRs." },
+  { term: "SkillsFuture", definition: "Singapore government initiative providing credits and subsidies for courses to help citizens upskill throughout their careers." },
+];
 
 // Blog posts data
 const blogPosts = [
@@ -302,17 +326,14 @@ export default function Home() {
         <nav className="glass sticky top-0 z-50 border-b border-white/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <span className="text-xl font-bold text-gradient">Internship.sg</span>
+              <div className="flex items-center gap-2">
+                <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
               </div>
               <div className="hidden md:flex items-center gap-6">
-                <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-indigo-600 font-medium transition">Blog</button>
-                <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-indigo-600 font-medium transition">Resources</button>
+                <a href="#how-it-works" className="text-slate-600 hover:text-red-600 font-medium transition">How It Works</a>
+                <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 font-medium transition">Blog</button>
+                <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-red-600 font-medium transition">Resources</button>
+                <button onClick={() => setAppState("glossary")} className="text-slate-600 hover:text-red-600 font-medium transition">Glossary</button>
               </div>
               <button
                 onClick={() => setAppState("onboarding")}
@@ -327,22 +348,22 @@ export default function Home() {
         {/* Hero Section */}
         <section className="pt-20 pb-32 px-4">
           <div className="max-w-6xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-sm font-semibold mb-8">
+            <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-full text-sm font-semibold mb-8">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
-              AI-Powered Career Coaching
+              AI-Powered Interview Prep
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 mb-6 leading-tight">
-              Land Your Dream
-              <span className="text-gradient block">Internship in Singapore</span>
+              Prepare for Your
+              <span className="text-gradient block">Internship Interviews</span>
             </h1>
 
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Get personalized career guidance, AI mock interviews with real-time feedback,
-              resume optimization, and a structured roadmap — all tailored for Singapore students.
+              Practice with AI mock interviews, get personalized feedback on your answers,
+              and build confidence before your real interviews — designed for Singapore students.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -353,19 +374,19 @@ export default function Home() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Start Free — No Credit Card
+                Start Practicing Free
               </button>
-              <button className="px-10 py-4 rounded-2xl border-2 border-slate-200 text-slate-700 font-semibold hover:border-indigo-300 hover:bg-indigo-50/50 transition-all">
-                Watch Demo
-              </button>
+              <a href="#how-it-works" className="px-10 py-4 rounded-2xl border-2 border-slate-200 text-slate-700 font-semibold hover:border-red-300 hover:bg-red-50/50 transition-all">
+                See How It Works
+              </a>
             </div>
 
-            {/* Stats */}
+            {/* Value Props */}
             <div className="flex flex-wrap justify-center gap-8 sm:gap-16">
               {[
-                { value: "10K+", label: "Students Helped" },
-                { value: "500+", label: "Internships Landed" },
-                { value: "4.9/5", label: "User Rating" },
+                { value: "100%", label: "Free to Start" },
+                { value: "AI", label: "Powered Feedback" },
+                { value: "SG", label: "Focused Content" },
               ].map((stat, i) => (
                 <div key={i} className="text-center">
                   <p className="text-4xl font-bold text-gradient">{stat.value}</p>
@@ -381,10 +402,10 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                Everything You Need to <span className="text-gradient">Succeed</span>
+                Tools to Help You <span className="text-gradient">Prepare</span>
               </h2>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                Our AI-powered platform addresses every gap in traditional internship prep
+                Practice and improve your interview skills with AI-powered feedback
               </p>
             </div>
 
@@ -393,38 +414,38 @@ export default function Home() {
                 {
                   icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
                   title: "AI Mock Interviews",
-                  desc: "Practice with realistic questions and get instant feedback with scoring (1-10) on structure, confidence, and relevance.",
-                  color: "from-violet-500 to-purple-600",
+                  desc: "Practice with realistic interview questions and get feedback on your answers with scoring (1-10) on structure, confidence, and relevance.",
+                  color: "from-red-500 to-red-600",
                 },
                 {
                   icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-                  title: "Resume & Cover Letter",
-                  desc: "Get ready-to-use bullet points and tailored cover letters based on your actual skills and target roles.",
-                  color: "from-blue-500 to-indigo-600",
+                  title: "Resume Tips",
+                  desc: "Get suggestions for bullet points and formatting tips based on your skills and the roles you're targeting.",
+                  color: "from-red-600 to-red-700",
                 },
                 {
                   icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
                   title: "Progress Tracking",
-                  desc: "Visual dashboard to track mock interviews, applications sent, and your overall readiness score.",
-                  color: "from-emerald-500 to-teal-600",
+                  desc: "Keep track of your practice sessions, see your improvement over time, and stay motivated with milestones.",
+                  color: "from-red-500 to-rose-600",
                 },
                 {
                   icon: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
-                  title: "Career Path Matching",
-                  desc: "Get 3-5 role recommendations based on your skills, with specific companies and resources in Singapore.",
-                  color: "from-orange-500 to-amber-600",
+                  title: "Role Recommendations",
+                  desc: "Discover internship roles that match your skills and interests, with resources specific to Singapore.",
+                  color: "from-rose-500 to-red-600",
                 },
                 {
                   icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
-                  title: "Soft Skills Coaching",
-                  desc: "Develop communication, teamwork, and other skills that set you apart from other candidates.",
-                  color: "from-pink-500 to-rose-600",
+                  title: "Soft Skills Tips",
+                  desc: "Learn about communication, teamwork, and other interpersonal skills that interviewers look for.",
+                  color: "from-red-600 to-rose-600",
                 },
                 {
-                  icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-                  title: "Share & Win $100",
-                  desc: "Unlock more interview rounds by sharing. Top sharer each month wins $100 SGD prize!",
-                  color: "from-cyan-500 to-blue-600",
+                  icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
+                  title: "Cover Letter Help",
+                  desc: "Get a personalized cover letter template that you can customize for different applications.",
+                  color: "from-rose-600 to-red-700",
                 },
               ].map((feature, i) => (
                 <div key={i} className="card-premium p-8 group">
@@ -442,22 +463,23 @@ export default function Home() {
         </section>
 
         {/* How It Works */}
-        <section className="py-24">
+        <section id="how-it-works" className="py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                Get Started in <span className="text-gradient">3 Simple Steps</span>
+                How It <span className="text-gradient">Works</span>
               </h2>
+              <p className="text-lg text-slate-600">Start preparing for your interviews in 3 simple steps</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { step: "01", title: "Create Profile", desc: "Tell us about your course, skills, and career interests" },
-                { step: "02", title: "Get Your Guide", desc: "AI generates personalized career paths, interview prep, and resume tips" },
-                { step: "03", title: "Practice & Apply", desc: "Use mock interviews, track progress, and land your dream internship" },
+                { step: "01", title: "Create Profile", desc: "Tell us about your course, skills, and the types of roles you're interested in" },
+                { step: "02", title: "Get Practice Materials", desc: "AI generates interview questions, resume tips, and a cover letter template for you" },
+                { step: "03", title: "Practice & Improve", desc: "Use mock interviews to practice, review feedback, and build your confidence" },
               ].map((item, i) => (
                 <div key={i} className="text-center">
-                  <div className="w-20 h-20 gradient-primary rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl glow-indigo">
+                  <div className="w-20 h-20 gradient-primary rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl glow-primary">
                     <span className="text-2xl font-bold text-white">{item.step}</span>
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mb-2">{item.title}</h3>
@@ -475,16 +497,16 @@ export default function Home() {
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
               <div className="relative">
                 <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                  Ready to Land Your Dream Internship?
+                  Ready to Start Practicing?
                 </h2>
-                <p className="text-indigo-200 text-lg mb-8 max-w-xl mx-auto">
-                  Join thousands of Singapore students already using Internship.sg to accelerate their careers.
+                <p className="text-red-200 text-lg mb-8 max-w-xl mx-auto">
+                  Get personalized interview practice materials and start building your confidence today.
                 </p>
                 <button
                   onClick={() => setAppState("onboarding")}
-                  className="bg-white text-indigo-600 font-bold px-10 py-4 rounded-2xl hover:bg-indigo-50 transition-all shadow-xl text-lg"
+                  className="bg-white text-red-600 font-bold px-10 py-4 rounded-2xl hover:bg-red-50 transition-all shadow-xl text-lg"
                 >
-                  Get Started Free
+                  Start Free Practice
                 </button>
               </div>
             </div>
@@ -494,18 +516,20 @@ export default function Home() {
         {/* Footer */}
         <footer className="border-t border-slate-200 bg-white/50 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col items-center gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <span className="font-bold text-slate-900">Internship.sg</span>
+                <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
               </div>
-              <p className="text-slate-500 text-sm">
-                © 2024 Internship.sg. Made with ❤️ for Singapore students.
-              </p>
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 transition">Blog</button>
+                <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-red-600 transition">Resources</button>
+                <button onClick={() => setAppState("glossary")} className="text-slate-600 hover:text-red-600 transition">Glossary</button>
+              </div>
+              <div className="text-center text-slate-500 text-sm space-y-1">
+                <p>Made by <a href="https://shaminder.sg" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">shaminder.sg</a></p>
+                <p>Shaminder Technologies | UEN 53517136J</p>
+                <p className="text-slate-400">© {new Date().getFullYear()} Internship.sg. All rights reserved.</p>
+              </div>
             </div>
           </div>
         </footer>
@@ -529,13 +553,9 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-xl">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl glow-indigo">
-              <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
+            <img src="/logo.png" alt="Internship.sg" className="h-16 w-auto mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Create Your Profile</h1>
-            <p className="text-slate-600">Tell us about yourself so we can personalize your career guide</p>
+            <p className="text-slate-600">Tell us about yourself so we can personalize your interview practice</p>
           </div>
 
           <div className="card-premium p-8 space-y-6">
@@ -733,7 +753,7 @@ export default function Home() {
           </div>
 
           <p className="text-center text-sm text-slate-500 mt-6">
-            <button onClick={() => setAppState("landing")} className="text-indigo-600 hover:underline">
+            <button onClick={() => setAppState("landing")} className="text-red-600 hover:underline">
               ← Back to home
             </button>
           </p>
@@ -750,17 +770,13 @@ export default function Home() {
         <nav className="glass sticky top-0 z-50 border-b border-white/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <button onClick={() => setAppState("landing")} className="flex items-center gap-3">
-                <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <span className="text-xl font-bold text-gradient">Internship.sg</span>
+              <button onClick={() => setAppState("landing")} className="flex items-center gap-2">
+                <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
               </button>
               <div className="hidden md:flex items-center gap-6">
-                <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-indigo-600 font-medium transition">Home</button>
-                <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-indigo-600 font-medium transition">Resources</button>
+                <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 font-medium transition">Home</button>
+                <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-red-600 font-medium transition">Resources</button>
+                <button onClick={() => setAppState("glossary")} className="text-slate-600 hover:text-red-600 font-medium transition">Glossary</button>
               </div>
               <button onClick={() => setAppState("onboarding")} className="btn-premium text-sm px-6 py-2.5">
                 Get Started Free
@@ -776,7 +792,7 @@ export default function Home() {
               Career <span className="text-gradient">Blog</span>
             </h1>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Expert tips, guides, and insights to help you land your dream internship in Singapore
+              Tips, guides, and insights to help you prepare for your internship interviews
             </p>
           </div>
         </section>
@@ -785,7 +801,7 @@ export default function Home() {
         <section className="pb-8 px-4">
           <div className="max-w-6xl mx-auto flex flex-wrap justify-center gap-3">
             {["All", "Interview Tips", "Resume", "Career Growth", "Getting Started"].map((cat) => (
-              <button key={cat} className={`px-5 py-2 rounded-full text-sm font-semibold transition ${cat === "All" ? "bg-indigo-600 text-white" : "bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200"}`}>
+              <button key={cat} className={`px-5 py-2 rounded-full text-sm font-semibold transition ${cat === "All" ? "bg-red-600 text-white" : "bg-white text-slate-600 hover:bg-red-50 hover:text-red-600 border border-slate-200"}`}>
                 {cat}
               </button>
             ))}
@@ -806,14 +822,14 @@ export default function Home() {
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="badge-premium bg-indigo-50 text-indigo-700">{post.category}</span>
+                      <span className="badge-premium bg-red-50 text-red-700">{post.category}</span>
                       <span className="text-xs text-slate-500">{post.readTime}</span>
                     </div>
-                    <h2 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition">{post.title}</h2>
+                    <h2 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-red-600 transition">{post.title}</h2>
                     <p className="text-slate-600 text-sm mb-4 line-clamp-2">{post.excerpt}</p>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-400">{post.date}</span>
-                      <span className="text-indigo-600 font-semibold group-hover:underline">Read more →</span>
+                      <span className="text-red-600 font-semibold group-hover:underline">Read more →</span>
                     </div>
                   </div>
                 </article>
@@ -826,11 +842,11 @@ export default function Home() {
         <section className="pb-24 px-4">
           <div className="max-w-2xl mx-auto">
             <div className="gradient-premium rounded-3xl p-8 sm:p-12 text-center text-white">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3">Get Weekly Career Tips</h2>
-              <p className="text-indigo-200 mb-6">Join 5,000+ students receiving actionable internship advice every week.</p>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">Get Weekly Interview Tips</h2>
+              <p className="text-red-200 mb-6">Join students receiving actionable interview prep advice every week.</p>
               <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input type="email" placeholder="Enter your email" className="flex-1 px-5 py-3 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-white/50" />
-                <button className="px-6 py-3 bg-white text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition">Subscribe</button>
+                <button className="px-6 py-3 bg-white text-red-600 font-bold rounded-xl hover:bg-red-50 transition">Subscribe</button>
               </div>
             </div>
           </div>
@@ -838,9 +854,19 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="border-t border-slate-200 bg-white/50 py-12">
-          <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
-            <p className="font-semibold text-slate-700">Internship.sg</p>
-            <p>AI-Powered Career Coaching for Singapore Students</p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col items-center gap-6">
+              <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 transition">Home</button>
+                <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-red-600 transition">Resources</button>
+                <button onClick={() => setAppState("glossary")} className="text-slate-600 hover:text-red-600 transition">Glossary</button>
+              </div>
+              <div className="text-center text-slate-500 text-sm space-y-1">
+                <p>Made by <a href="https://shaminder.sg" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">shaminder.sg</a></p>
+                <p>Shaminder Technologies | UEN 53517136J</p>
+              </div>
+            </div>
           </div>
         </footer>
       </div>
@@ -855,17 +881,13 @@ export default function Home() {
         <nav className="glass sticky top-0 z-50 border-b border-white/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <button onClick={() => setAppState("landing")} className="flex items-center gap-3">
-                <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <span className="text-xl font-bold text-gradient">Internship.sg</span>
+              <button onClick={() => setAppState("landing")} className="flex items-center gap-2">
+                <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
               </button>
               <div className="hidden md:flex items-center gap-6">
-                <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-indigo-600 font-medium transition">Home</button>
-                <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-indigo-600 font-medium transition">Blog</button>
+                <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 font-medium transition">Home</button>
+                <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 font-medium transition">Blog</button>
+                <button onClick={() => setAppState("glossary")} className="text-slate-600 hover:text-red-600 font-medium transition">Glossary</button>
               </div>
               <button onClick={() => setAppState("onboarding")} className="btn-premium text-sm px-6 py-2.5">
                 Get Started Free
@@ -905,8 +927,8 @@ export default function Home() {
                       className="card-premium p-5 group"
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-bold text-slate-900 group-hover:text-indigo-600 transition">{item.name}</h3>
-                        <svg className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <h3 className="font-bold text-slate-900 group-hover:text-red-600 transition">{item.name}</h3>
+                        <svg className="w-4 h-4 text-slate-400 group-hover:text-red-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                       </div>
@@ -924,10 +946,10 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <div className="gradient-premium rounded-3xl p-12 text-center text-white relative overflow-hidden">
               <div className="relative">
-                <h2 className="text-3xl font-bold mb-4">Ready for Personalized Guidance?</h2>
-                <p className="text-indigo-200 text-lg mb-8">Get AI-powered career coaching tailored to your skills and goals.</p>
-                <button onClick={() => setAppState("onboarding")} className="bg-white text-indigo-600 font-bold px-10 py-4 rounded-2xl hover:bg-indigo-50 transition-all shadow-xl text-lg">
-                  Start Free — No Credit Card
+                <h2 className="text-3xl font-bold mb-4">Ready to Start Practicing?</h2>
+                <p className="text-red-200 text-lg mb-8">Get AI-powered interview practice tailored to your skills and goals.</p>
+                <button onClick={() => setAppState("onboarding")} className="bg-white text-red-600 font-bold px-10 py-4 rounded-2xl hover:bg-red-50 transition-all shadow-xl text-lg">
+                  Start Free Practice
                 </button>
               </div>
             </div>
@@ -936,9 +958,120 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="border-t border-slate-200 bg-white/50 py-12">
-          <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
-            <p className="font-semibold text-slate-700">Internship.sg</p>
-            <p>AI-Powered Career Coaching for Singapore Students</p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col items-center gap-6">
+              <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 transition">Home</button>
+                <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 transition">Blog</button>
+                <button onClick={() => setAppState("glossary")} className="text-slate-600 hover:text-red-600 transition">Glossary</button>
+              </div>
+              <div className="text-center text-slate-500 text-sm space-y-1">
+                <p>Made by <a href="https://shaminder.sg" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">shaminder.sg</a></p>
+                <p>Shaminder Technologies | UEN 53517136J</p>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // ==================== GLOSSARY PAGE ====================
+  if (appState === "glossary") {
+    return (
+      <div className="min-h-screen">
+        {/* Navigation */}
+        <nav className="glass sticky top-0 z-50 border-b border-white/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <button onClick={() => setAppState("landing")} className="flex items-center gap-2">
+                <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
+              </button>
+              <div className="hidden md:flex items-center gap-6">
+                <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 font-medium transition">Home</button>
+                <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 font-medium transition">Blog</button>
+                <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-red-600 font-medium transition">Resources</button>
+              </div>
+              <button onClick={() => setAppState("onboarding")} className="btn-premium text-sm px-6 py-2.5">
+                Get Started Free
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Glossary Header */}
+        <section className="pt-16 pb-12 px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+              Career <span className="text-gradient">Glossary</span>
+            </h1>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              Key terms and concepts you need to know for your internship search and interviews
+            </p>
+          </div>
+        </section>
+
+        {/* Search */}
+        <section className="pb-8 px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="relative">
+              <svg className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search terms..."
+                className="input-premium w-full pl-12"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Glossary Terms */}
+        <section className="pb-24 px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid gap-4">
+              {glossaryTerms.map((item, i) => (
+                <div key={i} className="card-premium p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">{item.term}</h3>
+                  <p className="text-slate-600">{item.definition}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="pb-24 px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="gradient-premium rounded-3xl p-12 text-center text-white relative overflow-hidden">
+              <div className="relative">
+                <h2 className="text-3xl font-bold mb-4">Ready to Put These Terms into Practice?</h2>
+                <p className="text-red-200 text-lg mb-8">Start practicing your interview skills with AI-powered feedback.</p>
+                <button onClick={() => setAppState("onboarding")} className="bg-white text-red-600 font-bold px-10 py-4 rounded-2xl hover:bg-red-50 transition-all shadow-xl text-lg">
+                  Start Free Practice
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="border-t border-slate-200 bg-white/50 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col items-center gap-6">
+              <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 transition">Home</button>
+                <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 transition">Blog</button>
+                <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-red-600 transition">Resources</button>
+              </div>
+              <div className="text-center text-slate-500 text-sm space-y-1">
+                <p>Made by <a href="https://shaminder.sg" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">shaminder.sg</a></p>
+                <p>Shaminder Technologies | UEN 53517136J</p>
+              </div>
+            </div>
           </div>
         </footer>
       </div>
@@ -952,13 +1085,8 @@ export default function Home() {
       <header className="glass sticky top-0 z-50 border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-gradient">Internship.sg</span>
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
             </div>
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-3 glass px-4 py-2 rounded-xl">
@@ -966,10 +1094,10 @@ export default function Home() {
                 <div className="w-20 h-2 bg-slate-200 rounded-full overflow-hidden">
                   <div className="h-full gradient-primary rounded-full transition-all" style={{ width: `${readinessScore()}%` }} />
                 </div>
-                <span className="font-bold text-indigo-600">{readinessScore()}%</span>
+                <span className="font-bold text-red-600">{readinessScore()}%</span>
               </div>
-              <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                <span className="text-indigo-600 font-bold">{formData.name?.[0]?.toUpperCase()}</span>
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <span className="text-red-600 font-bold">{formData.name?.[0]?.toUpperCase()}</span>
               </div>
             </div>
           </div>
