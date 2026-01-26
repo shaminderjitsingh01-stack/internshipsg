@@ -251,7 +251,7 @@ export default function Home() {
   const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  // Check if user signed in via OAuth - only auto-fill form, don't auto-redirect
+  // Check if user signed in via OAuth - auto-fill form and go to onboarding
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       setFormData(prev => ({
@@ -259,12 +259,7 @@ export default function Home() {
         name: session.user?.name || prev.name,
         email: session.user?.email || prev.email,
       }));
-      // Only go to onboarding if user clicked a sign-in button (not on page load)
-      const justSignedIn = sessionStorage.getItem("oauth_signin_clicked");
-      if (justSignedIn) {
-        setAppState("onboarding");
-        sessionStorage.removeItem("oauth_signin_clicked");
-      }
+      setAppState("onboarding");
     }
   }, [session, status]);
 
@@ -561,28 +556,23 @@ export default function Home() {
   // ==================== ONBOARDING PAGE ====================
   if (appState === "onboarding") {
     const handleGoogleSignIn = () => {
-      sessionStorage.setItem("oauth_signin_clicked", "true");
-      signIn("google", { callbackUrl: "/" });
+      signIn("google");
     };
 
     const handleLinkedInSignIn = () => {
-      sessionStorage.setItem("oauth_signin_clicked", "true");
-      signIn("linkedin", { callbackUrl: "/" });
+      signIn("linkedin");
     };
 
     const handleAppleSignIn = () => {
-      sessionStorage.setItem("oauth_signin_clicked", "true");
-      signIn("apple", { callbackUrl: "/" });
+      signIn("apple");
     };
 
     const handleFacebookSignIn = () => {
-      sessionStorage.setItem("oauth_signin_clicked", "true");
-      signIn("facebook", { callbackUrl: "/" });
+      signIn("facebook");
     };
 
     const handleMicrosoftSignIn = () => {
-      sessionStorage.setItem("oauth_signin_clicked", "true");
-      signIn("azure-ad", { callbackUrl: "/" });
+      signIn("azure-ad");
     };
 
     return (
