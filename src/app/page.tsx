@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { SharingProvider } from "@/lib/sharing-context";
 import ShareDashboard from "@/components/ShareDashboard";
 
@@ -540,13 +541,23 @@ export default function Home() {
   // ==================== ONBOARDING PAGE ====================
   if (appState === "onboarding") {
     const handleGoogleSignIn = () => {
-      // Simulate Google OAuth (in production, integrate with NextAuth or similar)
-      setFormData({ ...formData, name: "Google User", email: "user@gmail.com" });
+      signIn("google", { callbackUrl: "/" });
     };
 
     const handleLinkedInSignIn = () => {
-      // Simulate LinkedIn OAuth (in production, integrate with NextAuth or similar)
-      setFormData({ ...formData, name: "LinkedIn User", email: "user@linkedin.com" });
+      signIn("linkedin", { callbackUrl: "/" });
+    };
+
+    const handleAppleSignIn = () => {
+      signIn("apple", { callbackUrl: "/" });
+    };
+
+    const handleFacebookSignIn = () => {
+      signIn("facebook", { callbackUrl: "/" });
+    };
+
+    const handleMicrosoftSignIn = () => {
+      signIn("azure-ad", { callbackUrl: "/" });
     };
 
     return (
@@ -586,7 +597,7 @@ export default function Home() {
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, name: "Apple User", email: "user@icloud.com" })}
+                onClick={handleAppleSignIn}
                 className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-black text-white rounded-2xl font-semibold hover:bg-gray-800 transition-all"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -597,7 +608,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, name: "Facebook User", email: "user@facebook.com" })}
+                  onClick={handleFacebookSignIn}
                   className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] text-white rounded-2xl font-semibold hover:bg-[#166FE5] transition-all"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -607,7 +618,7 @@ export default function Home() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, name: "Microsoft User", email: "user@outlook.com" })}
+                  onClick={handleMicrosoftSignIn}
                   className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-slate-200 text-slate-700 rounded-2xl font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
