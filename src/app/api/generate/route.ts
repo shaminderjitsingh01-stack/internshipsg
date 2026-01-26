@@ -91,7 +91,7 @@ Generate ALL outputs in valid JSON format with these exact keys:
 Return ONLY valid JSON, no markdown code blocks, no explanation text. Ensure all content is specific to Singapore context (local companies, job portals, cultural norms).`;
 
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 6000,
       messages: [
         {
