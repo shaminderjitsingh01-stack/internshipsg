@@ -253,7 +253,9 @@ export default function Home() {
 
   // Check if user signed in via OAuth - auto-generate and go to dashboard
   useEffect(() => {
+    console.log("OAuth useEffect - status:", status, "session:", session?.user?.email, "appState:", appState);
     if (status === "authenticated" && session?.user && appState !== "dashboard") {
+      console.log("Starting auto-generate for OAuth user");
       const autoGenerate = async () => {
         setLoading(true);
         setError("");
