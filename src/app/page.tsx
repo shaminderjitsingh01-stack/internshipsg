@@ -251,7 +251,7 @@ export default function Home() {
   const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  // Check if user signed in via OAuth
+  // Check if user signed in via OAuth - only auto-fill form, don't auto-redirect
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       setFormData(prev => ({
@@ -259,7 +259,12 @@ export default function Home() {
         name: session.user?.name || prev.name,
         email: session.user?.email || prev.email,
       }));
-      setAppState("onboarding");
+      // Only go to onboarding if user clicked a sign-in button (not on page load)
+      const justSignedIn = sessionStorage.getItem("oauth_signin_clicked");
+      if (justSignedIn) {
+        setAppState("onboarding");
+        sessionStorage.removeItem("oauth_signin_clicked");
+      }
     }
   }, [session, status]);
 
@@ -556,22 +561,27 @@ export default function Home() {
   // ==================== ONBOARDING PAGE ====================
   if (appState === "onboarding") {
     const handleGoogleSignIn = () => {
+      sessionStorage.setItem("oauth_signin_clicked", "true");
       signIn("google", { callbackUrl: "/" });
     };
 
     const handleLinkedInSignIn = () => {
+      sessionStorage.setItem("oauth_signin_clicked", "true");
       signIn("linkedin", { callbackUrl: "/" });
     };
 
     const handleAppleSignIn = () => {
+      sessionStorage.setItem("oauth_signin_clicked", "true");
       signIn("apple", { callbackUrl: "/" });
     };
 
     const handleFacebookSignIn = () => {
+      sessionStorage.setItem("oauth_signin_clicked", "true");
       signIn("facebook", { callbackUrl: "/" });
     };
 
     const handleMicrosoftSignIn = () => {
+      sessionStorage.setItem("oauth_signin_clicked", "true");
       signIn("azure-ad", { callbackUrl: "/" });
     };
 
