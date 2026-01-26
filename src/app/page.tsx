@@ -357,12 +357,12 @@ export default function Home() {
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 mb-6 leading-tight">
-              Prepare for Your
-              <span className="text-gradient block">Internship Interviews</span>
+              Prepare for Internship
+              <span className="text-gradient block">Interviews with AI</span>
             </h1>
 
             <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Practice with AI mock interviews, get personalized feedback on your answers,
+              Practice with AI-powered mock interviews, get personalized feedback on your answers,
               and build confidence before your real interviews — designed for Singapore students.
             </p>
 
