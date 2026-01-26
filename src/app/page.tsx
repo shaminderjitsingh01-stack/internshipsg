@@ -327,7 +327,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
+                <img src="/logo.png" alt="Internship.sg" className="h-14 w-auto" />
               </div>
               <div className="hidden md:flex items-center gap-6">
                 <a href="#how-it-works" className="text-slate-600 hover:text-red-600 font-medium transition">How It Works</a>
@@ -518,7 +518,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center gap-6">
               <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
+                <img src="/logo.png" alt="Internship.sg" className="h-12 w-auto" />
               </div>
               <div className="flex flex-wrap justify-center gap-6 text-sm">
                 <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 transition">Blog</button>
@@ -553,7 +553,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-xl">
           <div className="text-center mb-8">
-            <img src="/logo.png" alt="Internship.sg" className="h-16 w-auto mx-auto mb-4" />
+            <img src="/logo.png" alt="Internship.sg" className="h-20 w-auto mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Create Your Profile</h1>
             <p className="text-slate-600">Tell us about yourself so we can personalize your interview practice</p>
           </div>
@@ -771,7 +771,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <button onClick={() => setAppState("landing")} className="flex items-center gap-2">
-                <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
+                <img src="/logo.png" alt="Internship.sg" className="h-14 w-auto" />
               </button>
               <div className="hidden md:flex items-center gap-6">
                 <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 font-medium transition">Home</button>
@@ -856,7 +856,7 @@ export default function Home() {
         <footer className="border-t border-slate-200 bg-white/50 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center gap-6">
-              <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
+              <img src="/logo.png" alt="Internship.sg" className="h-12 w-auto" />
               <div className="flex flex-wrap justify-center gap-6 text-sm">
                 <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 transition">Home</button>
                 <button onClick={() => setAppState("resources")} className="text-slate-600 hover:text-red-600 transition">Resources</button>
@@ -882,7 +882,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <button onClick={() => setAppState("landing")} className="flex items-center gap-2">
-                <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
+                <img src="/logo.png" alt="Internship.sg" className="h-14 w-auto" />
               </button>
               <div className="hidden md:flex items-center gap-6">
                 <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 font-medium transition">Home</button>
@@ -960,7 +960,7 @@ export default function Home() {
         <footer className="border-t border-slate-200 bg-white/50 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center gap-6">
-              <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
+              <img src="/logo.png" alt="Internship.sg" className="h-12 w-auto" />
               <div className="flex flex-wrap justify-center gap-6 text-sm">
                 <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 transition">Home</button>
                 <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 transition">Blog</button>
@@ -986,7 +986,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <button onClick={() => setAppState("landing")} className="flex items-center gap-2">
-                <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
+                <img src="/logo.png" alt="Internship.sg" className="h-14 w-auto" />
               </button>
               <div className="hidden md:flex items-center gap-6">
                 <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 font-medium transition">Home</button>
@@ -1061,7 +1061,7 @@ export default function Home() {
         <footer className="border-t border-slate-200 bg-white/50 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center gap-6">
-              <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
+              <img src="/logo.png" alt="Internship.sg" className="h-12 w-auto" />
               <div className="flex flex-wrap justify-center gap-6 text-sm">
                 <button onClick={() => setAppState("landing")} className="text-slate-600 hover:text-red-600 transition">Home</button>
                 <button onClick={() => setAppState("blog")} className="text-slate-600 hover:text-red-600 transition">Blog</button>
@@ -1086,7 +1086,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
+              <img src="/logo.png" alt="Internship.sg" className="h-14 w-auto" />
             </div>
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-3 glass px-4 py-2 rounded-xl">
