@@ -402,7 +402,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
             placeholder="Paste the job description here..."
-            className="w-full h-28 sm:h-32 px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm sm:text-base"
+            className="w-full min-h-[120px] sm:min-h-[150px] px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-y text-sm sm:text-base"
           />
         </div>
 
@@ -446,7 +446,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               placeholder="Paste your resume text here for a more personalized cover letter..."
-              className="w-full h-28 sm:h-32 px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm sm:text-base"
+              className="w-full min-h-[150px] sm:min-h-[200px] px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-y text-sm sm:text-base"
             />
           </div>
         )}
@@ -477,7 +477,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
               value={coverLetterText}
               onChange={(e) => setCoverLetterText(e.target.value)}
               placeholder="Paste your cover letter here to get feedback..."
-              className="w-full h-40 sm:h-48 px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm sm:text-base"
+              className="w-full min-h-[180px] sm:min-h-[250px] px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-y text-sm sm:text-base"
             />
           </div>
         )}
