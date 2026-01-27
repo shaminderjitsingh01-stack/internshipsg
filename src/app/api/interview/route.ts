@@ -22,9 +22,8 @@ export async function POST(request: NextRequest) {
 
 Candidate Profile:
 - Name: ${userProfile?.name || "Candidate"}
-- Course: ${userProfile?.course || "University Student"}
-- Skills: ${userProfile?.skills || "General skills"}
-- Interests: ${userProfile?.interests || "Various roles"}
+- Target Role: ${userProfile?.targetRole || "Internship"}
+- Experience: ${userProfile?.experience || "Student"}
 
 IMPORTANT RULES:
 1. Ask ONE question at a time
@@ -60,9 +59,8 @@ Start by greeting the candidate briefly and asking your first interview question
 
 Candidate Profile:
 - Name: ${userProfile?.name || "Candidate"}
-- Course: ${userProfile?.course || "University Student"}
-- Skills: ${userProfile?.skills || "General skills"}
-- Interests: ${userProfile?.interests || "Various roles"}
+- Target Role: ${userProfile?.targetRole || "Internship"}
+- Experience: ${userProfile?.experience || "Student"}
 
 This is question ${questionCount + 1} of 5.
 
