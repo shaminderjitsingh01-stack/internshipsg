@@ -810,14 +810,30 @@ export default function Home() {
     const currentElapsed = interviewStartTime > 0 ? Math.floor((Date.now() - interviewStartTime) / 1000) : 0;
     const totalSeconds = interviewDuration * 60;
     const remainingSeconds = Math.max(0, totalSeconds - currentElapsed);
-    const isTimeUp = remainingSeconds <= 30; // Less than 30 seconds left = wrap up
 
-    // If time is completely up, end immediately
-    if (remainingSeconds <= 0) {
+    // If less than 40 seconds left, wrap up the interview instead of asking another question
+    if (remainingSeconds <= 40) {
+      // Stop all timers
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (elapsedTimerRef.current) {
+        clearInterval(elapsedTimerRef.current);
+        elapsedTimerRef.current = null;
+      }
+      stopListening();
+
+      // Give closing remarks
+      setInterviewPhase("processing");
+      await speakText("We're almost out of time, so let me wrap up. Thank you so much for practicing with me today. You did a great job, and I can see your potential. Remember, every interview is a chance to learn and grow. Keep practicing, and you'll ace your real interviews. Good luck!");
+
       setInterviewPhase("complete");
       setInterviewComplete(true);
       return;
     }
+
+    const isTimeUp = remainingSeconds <= 60; // Less than 1 minute = last question
 
     setInterviewPhase("question");
     setInterviewLoading(true);
