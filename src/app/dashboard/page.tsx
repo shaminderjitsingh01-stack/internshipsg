@@ -8,6 +8,16 @@ import StreakWidget from "@/components/StreakWidget";
 import StreakCard from "@/components/StreakCard";
 import ResumeAnalyzer from "@/components/ResumeAnalyzer";
 import CoverLetterAssistant from "@/components/CoverLetterAssistant";
+import QuestionOfTheDay from "@/components/QuestionOfTheDay";
+import ConfidenceMeter from "@/components/ConfidenceMeter";
+import PrepChecklist from "@/components/PrepChecklist";
+import WeeklyChallenges from "@/components/WeeklyChallenges";
+import ProgressTimeline from "@/components/ProgressTimeline";
+import AIStrengthsInsights from "@/components/AIStrengthsInsights";
+import CareerPathQuiz from "@/components/CareerPathQuiz";
+import InterviewMistakes from "@/components/InterviewMistakes";
+import AICareerCoach from "@/components/AICareerCoach";
+import PerformanceBenchmark from "@/components/PerformanceBenchmark";
 
 interface Interview {
   id: string;
@@ -26,6 +36,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "interviews" | "resume" | "cover-letter" | "billing">("overview");
   const [showShareCard, setShowShareCard] = useState(false);
   const [streakForShare, setStreakForShare] = useState(0);
+  const [streakData, setStreakData] = useState({ currentStreak: 0, longestStreak: 0, badges: [] as { badge_id: string; unlocked_at: string }[] });
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -56,6 +67,31 @@ export default function DashboardPage() {
 
     if (status === "authenticated") {
       fetchInterviews();
+    }
+  }, [session, status]);
+
+  // Fetch streak data
+  useEffect(() => {
+    const fetchStreakData = async () => {
+      if (session?.user?.email) {
+        try {
+          const res = await fetch(`/api/streak?email=${encodeURIComponent(session.user.email)}`);
+          if (res.ok) {
+            const data = await res.json();
+            setStreakData({
+              currentStreak: data.currentStreak || 0,
+              longestStreak: data.longestStreak || 0,
+              badges: data.badges || [],
+            });
+          }
+        } catch (err) {
+          console.error("Failed to fetch streak data:", err);
+        }
+      }
+    };
+
+    if (status === "authenticated") {
+      fetchStreakData();
     }
   }, [session, status]);
 
@@ -221,74 +257,132 @@ export default function DashboardPage() {
               />
             )}
 
+            {/* Question of the Day - Full Width */}
+            {session?.user?.email && (
+              <QuestionOfTheDay userEmail={session.user.email} />
+            )}
+
             <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
-            {/* Profile Card */}
-            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Profile</h2>
-              <div className="flex items-center gap-4 mb-6">
-                {session.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt={session.user.name || "User"}
-                    className="w-16 h-16 rounded-full border-2 border-slate-200"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-                    <span className="text-red-600 font-bold text-xl">
-                      {session.user?.name?.charAt(0) || "U"}
-                    </span>
+              {/* Profile Card */}
+              <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Profile</h2>
+                <div className="flex items-center gap-4 mb-6">
+                  {session.user?.image ? (
+                    <img
+                      src={session.user.image}
+                      alt={session.user.name || "User"}
+                      className="w-16 h-16 rounded-full border-2 border-slate-200"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                      <span className="text-red-600 font-bold text-xl">
+                        {session.user?.name?.charAt(0) || "U"}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-slate-900">{session.user?.name}</p>
+                    <p className="text-sm text-slate-500">{session.user?.email}</p>
                   </div>
-                )}
-                <div>
-                  <p className="font-semibold text-slate-900">{session.user?.name}</p>
-                  <p className="text-sm text-slate-500">{session.user?.email}</p>
+                </div>
+                <div className="pt-4 border-t border-slate-100">
+                  <p className="text-sm text-slate-500">Member since</p>
+                  <p className="font-medium text-slate-900">January 2026</p>
                 </div>
               </div>
-              <div className="pt-4 border-t border-slate-100">
-                <p className="text-sm text-slate-500">Member since</p>
-                <p className="font-medium text-slate-900">January 2026</p>
+
+              {/* Confidence Meter */}
+              {session?.user?.email && (
+                <ConfidenceMeter
+                  userEmail={session.user.email}
+                  totalInterviews={interviews.length}
+                  averageScore={interviews.length > 0 ? interviews.reduce((acc, i) => acc + (i.score || 0), 0) / interviews.length : 0}
+                  currentStreak={streakData.currentStreak}
+                  totalActivities={interviews.length + streakData.currentStreak}
+                />
+              )}
+
+              {/* Quick Actions */}
+              <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl p-4 sm:p-6 text-white">
+                <h2 className="text-lg font-semibold mb-4">Ready to Practice?</h2>
+                <p className="text-white/80 mb-6">
+                  Start a new mock interview session and improve your skills.
+                </p>
+                <Link
+                  href="/?start=interview"
+                  className="block w-full py-3 bg-white text-red-600 rounded-xl font-semibold text-center hover:bg-red-50 transition-colors"
+                >
+                  Start New Interview
+                </Link>
               </div>
             </div>
 
-            {/* Stats Card */}
-            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Stats</h2>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Total Interviews</span>
-                  <span className="text-2xl font-bold text-slate-900">{interviews.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Average Score</span>
-                  <span className="text-2xl font-bold text-red-600">
-                    {interviews.length > 0
-                      ? (interviews.reduce((acc, i) => acc + (i.score || 0), 0) / interviews.length).toFixed(1)
-                      : "-"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Practice Time</span>
-                  <span className="text-2xl font-bold text-slate-900">
-                    {interviews.reduce((acc, i) => acc + (i.duration || 0), 0)} min
-                  </span>
-                </div>
-              </div>
+            {/* Weekly Challenges - Full Width */}
+            {session?.user?.email && (
+              <WeeklyChallenges
+                userEmail={session.user.email}
+                totalInterviews={interviews.length}
+                currentStreak={streakData.currentStreak}
+              />
+            )}
+
+            {/* Two Column Layout for Career & Learning */}
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Career Path Quiz */}
+              {session?.user?.email && (
+                <CareerPathQuiz userEmail={session.user.email} />
+              )}
+
+              {/* AI Career Coach */}
+              {session?.user?.email && (
+                <AICareerCoach userEmail={session.user.email} />
+              )}
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl p-4 sm:p-6 text-white">
-              <h2 className="text-lg font-semibold mb-4">Ready to Practice?</h2>
-              <p className="text-white/80 mb-6">
-                Start a new mock interview session and improve your skills.
-              </p>
-              <Link
-                href="/?start=interview"
-                className="block w-full py-3 bg-white text-red-600 rounded-xl font-semibold text-center hover:bg-red-50 transition-colors"
-              >
-                Start New Interview
-              </Link>
+            {/* Progress & Insights Row */}
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Progress Timeline */}
+              {session?.user?.email && (
+                <ProgressTimeline
+                  userEmail={session.user.email}
+                  totalInterviews={interviews.length}
+                  currentStreak={streakData.currentStreak}
+                  longestStreak={streakData.longestStreak}
+                  badges={streakData.badges}
+                  averageScore={interviews.length > 0 ? interviews.reduce((acc, i) => acc + (i.score || 0), 0) / interviews.length : 0}
+                />
+              )}
+
+              {/* AI Strengths Insights */}
+              {session?.user?.email && (
+                <AIStrengthsInsights
+                  userEmail={session.user.email}
+                  interviews={interviews.map(i => ({ score: i.score, feedback: i.feedback, created_at: i.created_at }))}
+                />
+              )}
             </div>
-          </div>
+
+            {/* Learning & Benchmark Row */}
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Interview Mistakes Learning */}
+              <InterviewMistakes />
+
+              {/* Performance Benchmark */}
+              {session?.user?.email && (
+                <PerformanceBenchmark
+                  userEmail={session.user.email}
+                  totalInterviews={interviews.length}
+                  averageScore={interviews.length > 0 ? interviews.reduce((acc, i) => acc + (i.score || 0), 0) / interviews.length : 0}
+                  currentStreak={streakData.currentStreak}
+                  totalActivities={interviews.length + streakData.currentStreak}
+                />
+              )}
+            </div>
+
+            {/* Prep Checklist - Full Width */}
+            {session?.user?.email && (
+              <PrepChecklist userEmail={session.user.email} />
+            )}
           </div>
         )}
 
