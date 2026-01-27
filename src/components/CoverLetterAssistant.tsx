@@ -179,21 +179,21 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
   if (result) {
     if (result.mode === "generate") {
       return (
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 border border-slate-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-slate-900">Generated Cover Letter</h2>
-              <span className="text-sm text-slate-500">{result.wordCount} words</span>
+        <div className="space-y-4 sm:space-y-6">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Generated Cover Letter</h2>
+              <span className="text-xs sm:text-sm text-slate-500">{result.wordCount} words</span>
             </div>
 
-            <div className="bg-slate-50 rounded-xl p-6 mb-6 whitespace-pre-wrap font-serif text-slate-800 leading-relaxed">
+            <div className="bg-slate-50 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 whitespace-pre-wrap font-serif text-slate-800 leading-relaxed text-sm sm:text-base">
               {result.coverLetter}
             </div>
 
-            <div className="flex gap-3 mb-6">
+            <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6">
               <button
                 onClick={() => copyToClipboard(result.coverLetter)}
-                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 sm:py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
               >
                 {copied ? (
                   <>
@@ -213,21 +213,21 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
               </button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-blue-50 rounded-xl p-4">
-                <h3 className="font-semibold text-blue-900 mb-2">Key Points Addressed</h3>
-                <ul className="space-y-2">
+            <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                <h3 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">Key Points Addressed</h3>
+                <ul className="space-y-1.5 sm:space-y-2">
                   {result.keyPoints.map((point, i) => (
-                    <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
+                    <li key={i} className="text-xs sm:text-sm text-blue-700 flex items-start gap-2">
                       <span>✓</span>
                       {point}
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="bg-green-50 rounded-xl p-4">
-                <h3 className="font-semibold text-green-900 mb-2">Customization</h3>
-                <p className="text-sm text-green-700">{result.customizationNotes}</p>
+              <div className="bg-green-50 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                <h3 className="font-semibold text-green-900 mb-2 text-sm sm:text-base">Customization</h3>
+                <p className="text-xs sm:text-sm text-green-700">{result.customizationNotes}</p>
                 <p className="text-xs text-green-600 mt-2">Tone: {result.tone}</p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
 
           <button
             onClick={resetForm}
-            className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+            className="w-full py-2.5 sm:py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors text-sm sm:text-base"
           >
             Generate Another Cover Letter
           </button>
@@ -244,57 +244,57 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
     } else {
       // Analyze result
       return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Score Overview */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className={`${getScoreBg(result.overallScore)} rounded-2xl p-4 text-center`}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+            <div className={`${getScoreBg(result.overallScore)} rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center`}>
               <p className="text-xs font-medium text-slate-600 mb-1">Overall</p>
-              <p className={`text-3xl font-bold ${getScoreColor(result.overallScore)}`}>
+              <p className={`text-2xl sm:text-3xl font-bold ${getScoreColor(result.overallScore)}`}>
                 {result.overallScore}
               </p>
             </div>
-            <div className={`${getScoreBg(result.toneAnalysis.score)} rounded-2xl p-4 text-center`}>
+            <div className={`${getScoreBg(result.toneAnalysis.score)} rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center`}>
               <p className="text-xs font-medium text-slate-600 mb-1">Tone</p>
-              <p className={`text-3xl font-bold ${getScoreColor(result.toneAnalysis.score)}`}>
+              <p className={`text-2xl sm:text-3xl font-bold ${getScoreColor(result.toneAnalysis.score)}`}>
                 {result.toneAnalysis.score}
               </p>
             </div>
-            <div className={`${getScoreBg(result.customizationScore.score)} rounded-2xl p-4 text-center`}>
-              <p className="text-xs font-medium text-slate-600 mb-1">Customization</p>
-              <p className={`text-3xl font-bold ${getScoreColor(result.customizationScore.score)}`}>
+            <div className={`${getScoreBg(result.customizationScore.score)} rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center`}>
+              <p className="text-xs font-medium text-slate-600 mb-1">Custom</p>
+              <p className={`text-2xl sm:text-3xl font-bold ${getScoreColor(result.customizationScore.score)}`}>
                 {result.customizationScore.score}
               </p>
             </div>
-            <div className={`${getScoreBg(result.structureAnalysis.score)} rounded-2xl p-4 text-center`}>
+            <div className={`${getScoreBg(result.structureAnalysis.score)} rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center`}>
               <p className="text-xs font-medium text-slate-600 mb-1">Structure</p>
-              <p className={`text-3xl font-bold ${getScoreColor(result.structureAnalysis.score)}`}>
+              <p className={`text-2xl sm:text-3xl font-bold ${getScoreColor(result.structureAnalysis.score)}`}>
                 {result.structureAnalysis.score}
               </p>
             </div>
           </div>
 
           {/* Detailed Feedback */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-green-700 mb-4 flex items-center gap-2">
-                <span className="text-xl">✓</span> Strengths
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+              <h3 className="font-semibold text-green-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <span className="text-lg sm:text-xl">✓</span> Strengths
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {result.strengths.map((strength, i) => (
-                  <li key={i} className="flex items-start gap-3 text-slate-700">
+                  <li key={i} className="flex items-start gap-2 sm:gap-3 text-slate-700 text-sm sm:text-base">
                     <span className="text-green-500 mt-1">•</span>
                     {strength}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-red-700 mb-4 flex items-center gap-2">
-                <span className="text-xl">!</span> Improvements
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+              <h3 className="font-semibold text-red-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <span className="text-lg sm:text-xl">!</span> Improvements
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {result.improvements.map((improvement, i) => (
-                  <li key={i} className="flex items-start gap-3 text-slate-700">
+                  <li key={i} className="flex items-start gap-2 sm:gap-3 text-slate-700 text-sm sm:text-base">
                     <span className="text-red-500 mt-1">{i + 1}.</span>
                     {improvement}
                   </li>
@@ -304,44 +304,44 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
           </div>
 
           {/* Structure Analysis */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200">
-            <h3 className="font-semibold text-slate-900 mb-4">Structure Analysis</h3>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className={`p-3 rounded-lg ${result.structureAnalysis.hasStrongOpening ? "bg-green-50" : "bg-red-50"}`}>
-                <span className={`text-sm font-medium ${result.structureAnalysis.hasStrongOpening ? "text-green-700" : "text-red-700"}`}>
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+            <h3 className="font-semibold text-slate-900 mb-3 sm:mb-4 text-sm sm:text-base">Structure Analysis</h3>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+              <div className={`p-2 sm:p-3 rounded-lg ${result.structureAnalysis.hasStrongOpening ? "bg-green-50" : "bg-red-50"}`}>
+                <span className={`text-xs sm:text-sm font-medium ${result.structureAnalysis.hasStrongOpening ? "text-green-700" : "text-red-700"}`}>
                   {result.structureAnalysis.hasStrongOpening ? "✓" : "✗"} Strong Opening
                 </span>
               </div>
-              <div className={`p-3 rounded-lg ${result.structureAnalysis.hasCallToAction ? "bg-green-50" : "bg-red-50"}`}>
-                <span className={`text-sm font-medium ${result.structureAnalysis.hasCallToAction ? "text-green-700" : "text-red-700"}`}>
+              <div className={`p-2 sm:p-3 rounded-lg ${result.structureAnalysis.hasCallToAction ? "bg-green-50" : "bg-red-50"}`}>
+                <span className={`text-xs sm:text-sm font-medium ${result.structureAnalysis.hasCallToAction ? "text-green-700" : "text-red-700"}`}>
                   {result.structureAnalysis.hasCallToAction ? "✓" : "✗"} Call to Action
                 </span>
               </div>
             </div>
-            <p className="text-slate-600">{result.structureAnalysis.feedback}</p>
+            <p className="text-slate-600 text-sm sm:text-base">{result.structureAnalysis.feedback}</p>
           </div>
 
           {/* Rewrite Suggestions */}
-          <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-            <h3 className="font-semibold text-blue-900 mb-4">Suggested Rewrites</h3>
-            <div className="space-y-4">
+          <div className="bg-blue-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-blue-200">
+            <h3 className="font-semibold text-blue-900 mb-3 sm:mb-4 text-sm sm:text-base">Suggested Rewrites</h3>
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <p className="text-sm font-medium text-blue-700 mb-2">Better Opening:</p>
-                <p className="text-slate-700 bg-white p-3 rounded-lg italic">"{result.rewriteSuggestions.opening}"</p>
+                <p className="text-xs sm:text-sm font-medium text-blue-700 mb-1 sm:mb-2">Better Opening:</p>
+                <p className="text-slate-700 bg-white p-2 sm:p-3 rounded-lg italic text-xs sm:text-sm">"{result.rewriteSuggestions.opening}"</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-blue-700 mb-2">Better Closing:</p>
-                <p className="text-slate-700 bg-white p-3 rounded-lg italic">"{result.rewriteSuggestions.closing}"</p>
+                <p className="text-xs sm:text-sm font-medium text-blue-700 mb-1 sm:mb-2">Better Closing:</p>
+                <p className="text-slate-700 bg-white p-2 sm:p-3 rounded-lg italic text-xs sm:text-sm">"{result.rewriteSuggestions.closing}"</p>
               </div>
             </div>
           </div>
 
           {result.missingElements.length > 0 && (
-            <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
-              <h3 className="font-semibold text-yellow-900 mb-4">Missing Elements</h3>
-              <ul className="space-y-2">
+            <div className="bg-yellow-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-yellow-200">
+              <h3 className="font-semibold text-yellow-900 mb-3 sm:mb-4 text-sm sm:text-base">Missing Elements</h3>
+              <ul className="space-y-1.5 sm:space-y-2">
                 {result.missingElements.map((element, i) => (
-                  <li key={i} className="flex items-start gap-2 text-yellow-800">
+                  <li key={i} className="flex items-start gap-2 text-yellow-800 text-sm sm:text-base">
                     <span>⚠</span>
                     {element}
                   </li>
@@ -352,7 +352,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
 
           <button
             onClick={resetForm}
-            className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+            className="w-full py-2.5 sm:py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors text-sm sm:text-base"
           >
             Analyze Another Cover Letter
           </button>
@@ -362,18 +362,18 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl p-6 border border-slate-200">
-        <h2 className="text-xl font-semibold text-slate-900 mb-2">Cover Letter Assistant</h2>
-        <p className="text-slate-600 mb-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+        <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2">Cover Letter Assistant</h2>
+        <p className="text-slate-600 mb-4 sm:mb-6 text-sm sm:text-base">
           Generate a tailored cover letter or get feedback on your existing one.
         </p>
 
         {/* Mode Toggle */}
-        <div className="flex gap-2 mb-6 bg-slate-100 p-1 rounded-xl">
+        <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 bg-slate-100 p-1 rounded-xl">
           <button
             onClick={() => setMode("generate")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-all ${
+            className={`flex-1 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
               mode === "generate"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
@@ -383,7 +383,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
           </button>
           <button
             onClick={() => setMode("analyze")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-all ${
+            className={`flex-1 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
               mode === "analyze"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
@@ -394,7 +394,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
         </div>
 
         {/* Job Description */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Job Description <span className="text-red-500">*</span>
           </label>
@@ -402,12 +402,12 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
             placeholder="Paste the job description here..."
-            className="w-full h-32 px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+            className="w-full h-28 sm:h-32 px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm sm:text-base"
           />
         </div>
 
         {/* Company Name */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Company Name
           </label>
@@ -416,19 +416,19 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             placeholder="e.g., Google Singapore, DBS Bank"
-            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm sm:text-base"
           />
         </div>
 
         {mode === "generate" && (
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Your Resume (Optional - helps personalize)
             </label>
             {/* Resume File Upload */}
             <div
               onClick={() => resumeFileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition-colors mb-3"
+              className="border-2 border-dashed border-slate-300 rounded-xl p-4 sm:p-6 text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition-colors mb-3"
             >
               <input
                 type="file"
@@ -437,29 +437,29 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
                 accept=".pdf,.docx,.txt"
                 className="hidden"
               />
-              <div className="text-3xl mb-2">📄</div>
-              <p className="font-medium text-slate-700">Click to upload resume</p>
-              <p className="text-sm text-slate-500 mt-1">PDF, DOCX, or TXT</p>
+              <div className="text-2xl sm:text-3xl mb-2">📄</div>
+              <p className="font-medium text-slate-700 text-sm sm:text-base">Click to upload resume</p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">PDF, DOCX, or TXT</p>
             </div>
-            <p className="text-center text-sm text-slate-500 mb-3">or paste below</p>
+            <p className="text-center text-xs sm:text-sm text-slate-500 mb-3">or paste below</p>
             <textarea
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               placeholder="Paste your resume text here for a more personalized cover letter..."
-              className="w-full h-32 px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              className="w-full h-28 sm:h-32 px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm sm:text-base"
             />
           </div>
         )}
 
         {mode === "analyze" && (
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Your Cover Letter <span className="text-red-500">*</span>
             </label>
             {/* File Upload */}
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition-colors mb-3"
+              className="border-2 border-dashed border-slate-300 rounded-xl p-4 sm:p-6 text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition-colors mb-3"
             >
               <input
                 type="file"
@@ -468,22 +468,22 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
                 accept=".pdf,.docx,.txt"
                 className="hidden"
               />
-              <div className="text-3xl mb-2">📄</div>
-              <p className="font-medium text-slate-700">Click to upload cover letter</p>
-              <p className="text-sm text-slate-500 mt-1">PDF, DOCX, or TXT</p>
+              <div className="text-2xl sm:text-3xl mb-2">📄</div>
+              <p className="font-medium text-slate-700 text-sm sm:text-base">Click to upload cover letter</p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">PDF, DOCX, or TXT</p>
             </div>
-            <p className="text-center text-sm text-slate-500 mb-3">or paste below</p>
+            <p className="text-center text-xs sm:text-sm text-slate-500 mb-3">or paste below</p>
             <textarea
               value={coverLetterText}
               onChange={(e) => setCoverLetterText(e.target.value)}
               placeholder="Paste your cover letter here to get feedback..."
-              className="w-full h-48 px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              className="w-full h-40 sm:h-48 px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm sm:text-base"
             />
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm sm:text-base">
             {error}
           </div>
         )}
@@ -491,7 +491,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
         <button
           onClick={handleSubmit}
           disabled={loading || !jobDescription.trim() || (mode === "analyze" && !coverLetterText.trim())}
-          className="w-full py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           {loading ? (
             <>
@@ -508,70 +508,70 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
       </div>
 
       {/* Tips Section */}
-      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-6 border border-slate-200">
-        <h3 className="font-semibold text-slate-900 mb-4">
+      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+        <h3 className="font-semibold text-slate-900 mb-3 sm:mb-4 text-sm sm:text-base">
           {mode === "generate" ? "Tips for Better Results" : "What We'll Analyze"}
         </h3>
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {mode === "generate" ? (
             <>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">📋</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">📋</span>
                 <div>
-                  <p className="font-medium text-slate-900">Complete Job Description</p>
-                  <p className="text-sm text-slate-600">Include full requirements and responsibilities</p>
+                  <p className="font-medium text-slate-900 text-sm sm:text-base">Job Description</p>
+                  <p className="text-xs sm:text-sm text-slate-600">Include full requirements</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">📄</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">📄</span>
                 <div>
-                  <p className="font-medium text-slate-900">Add Your Resume</p>
-                  <p className="text-sm text-slate-600">For personalized achievements and skills</p>
+                  <p className="font-medium text-slate-900 text-sm sm:text-base">Add Your Resume</p>
+                  <p className="text-xs sm:text-sm text-slate-600">For personalized content</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">🏢</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">🏢</span>
                 <div>
-                  <p className="font-medium text-slate-900">Company Name</p>
-                  <p className="text-sm text-slate-600">Helps tailor the letter to the company</p>
+                  <p className="font-medium text-slate-900 text-sm sm:text-base">Company Name</p>
+                  <p className="text-xs sm:text-sm text-slate-600">Helps tailor the letter</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">✏️</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">✏️</span>
                 <div>
-                  <p className="font-medium text-slate-900">Personalize After</p>
-                  <p className="text-sm text-slate-600">Add your unique voice to the generated letter</p>
+                  <p className="font-medium text-slate-900 text-sm sm:text-base">Personalize After</p>
+                  <p className="text-xs sm:text-sm text-slate-600">Add your unique voice</p>
                 </div>
               </div>
             </>
           ) : (
             <>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">🎯</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">🎯</span>
                 <div>
-                  <p className="font-medium text-slate-900">Job Relevance</p>
-                  <p className="text-sm text-slate-600">How well it addresses job requirements</p>
+                  <p className="font-medium text-slate-900 text-sm sm:text-base">Job Relevance</p>
+                  <p className="text-xs sm:text-sm text-slate-600">Addresses requirements</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">🎨</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">🎨</span>
                 <div>
-                  <p className="font-medium text-slate-900">Tone & Style</p>
-                  <p className="text-sm text-slate-600">Professional vs casual balance</p>
+                  <p className="font-medium text-slate-900 text-sm sm:text-base">Tone & Style</p>
+                  <p className="text-xs sm:text-sm text-slate-600">Professional balance</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">📐</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">📐</span>
                 <div>
-                  <p className="font-medium text-slate-900">Structure</p>
-                  <p className="text-sm text-slate-600">Opening hook and closing call-to-action</p>
+                  <p className="font-medium text-slate-900 text-sm sm:text-base">Structure</p>
+                  <p className="text-xs sm:text-sm text-slate-600">Opening and closing</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">⭐</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">⭐</span>
                 <div>
-                  <p className="font-medium text-slate-900">Specificity</p>
-                  <p className="text-sm text-slate-600">Generic vs personalized content</p>
+                  <p className="font-medium text-slate-900 text-sm sm:text-base">Specificity</p>
+                  <p className="text-xs sm:text-sm text-slate-600">Personalized content</p>
                 </div>
               </div>
             </>

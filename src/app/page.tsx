@@ -1114,24 +1114,24 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-white">
         {/* Nav */}
         <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm">
-          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-            <img src="/logo.png" alt="Internship.sg" className="h-12 w-auto" />
+          <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+            <img src="/logo.png" alt="Internship.sg" className="h-10 sm:h-12 w-auto" />
           </div>
         </nav>
 
         {/* Hero */}
-        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <div className="max-w-4xl mx-auto px-4 py-12 sm:py-20 text-center">
           <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
             AI-Powered Interview Prep
           </div>
 
-          <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 mb-4 sm:mb-6">
             Ace Your Internship
             <span className="text-red-600 block">Interview</span>
           </h1>
 
-          <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-slate-600 mb-8 sm:mb-10 max-w-2xl mx-auto px-2">
             Complete our 4-step preparation system: Career Profile → Resume → Cover Letter → Mock Interview.
             Get instant AI feedback and personalized tips.
           </p>
@@ -1191,34 +1191,34 @@ export default function Home() {
           </div>
 
           {/* Steps Preview */}
-          <div className="mt-16 grid sm:grid-cols-4 gap-4 text-left">
+          <div className="mt-10 sm:mt-16 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-left">
             {[
               { num: 1, title: "Career Profile", desc: "Tell us your target role" },
               { num: 2, title: "Resume", desc: "Paste your resume" },
               { num: 3, title: "Cover Letter", desc: "Add your cover letter" },
               { num: 4, title: "Mock Interview", desc: "Practice with AI" },
             ].map((step) => (
-              <div key={step.num} className="bg-white rounded-xl p-4 border border-slate-200">
-                <div className="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center font-bold text-sm mb-2">
+              <div key={step.num} className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm mb-2">
                   {step.num}
                 </div>
-                <h3 className="font-semibold text-slate-800">{step.title}</h3>
-                <p className="text-sm text-slate-500">{step.desc}</p>
+                <h3 className="font-semibold text-slate-800 text-sm sm:text-base">{step.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-500">{step.desc}</p>
               </div>
             ))}
           </div>
 
           {/* Employer Visibility Disclaimer */}
-          <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 text-left">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mt-8 sm:mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6 text-left">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-blue-900 mb-1">Your profile could be seen by future employer partners</h3>
-                <p className="text-sm text-blue-700">
+                <h3 className="font-semibold text-blue-900 mb-1 text-sm sm:text-base">Your profile could be seen by future employer partners</h3>
+                <p className="text-xs sm:text-sm text-blue-700">
                   We're building connections with companies seeking internship-ready students.
                   Staying active and completing practice sessions may increase your visibility to potential employers
                   — however, employer contact is not guaranteed.
@@ -1229,9 +1229,9 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-slate-200 py-8 mt-20">
-          <div className="max-w-6xl mx-auto px-4 text-center text-sm text-slate-500">
-            <div className="flex justify-center gap-6 mb-4">
+        <footer className="border-t border-slate-200 py-6 sm:py-8 mt-12 sm:mt-20">
+          <div className="max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm text-slate-500">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
               <a href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</a>
               <a href="/about" className="hover:text-red-600 transition-colors">About</a>
               <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
@@ -1851,9 +1851,9 @@ export default function Home() {
               </p>
 
               {/* Duration Selection */}
-              <div className="mb-8">
-                <p className="text-white/70 text-sm mb-4 uppercase tracking-wide">Select Interview Duration</p>
-                <div className="grid grid-cols-4 gap-4">
+              <div className="mb-6 sm:mb-8">
+                <p className="text-white/70 text-sm mb-3 sm:mb-4 uppercase tracking-wide">Select Interview Duration</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   <button
                     onClick={() => setInterviewDuration(2)}
                     className={`relative p-6 rounded-2xl border-2 transition-all ${

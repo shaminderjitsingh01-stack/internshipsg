@@ -296,17 +296,17 @@ export default function RoadmapPage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Navigation */}
       <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
+            <img src="/logo.png" alt="Internship.sg" className="h-8 sm:h-10 w-auto" />
           </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/about" className="text-slate-600 hover:text-red-600 transition-colors">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/about" className="text-slate-600 hover:text-red-600 transition-colors text-sm sm:text-base">
               About
             </Link>
             <Link
               href="/auth/signin"
-              className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+              className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors text-sm sm:text-base"
             >
               Get Started
             </Link>
@@ -315,18 +315,18 @@ export default function RoadmapPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-4 py-16 text-center">
-        <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+      <section className="max-w-6xl mx-auto px-4 py-10 sm:py-16 text-center">
+        <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
           <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
           Public Roadmap
         </div>
 
-        <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-6">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 sm:mb-6">
           Building the Future of
           <span className="text-red-600 block">Interview Preparation</span>
         </h1>
 
-        <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-8">
+        <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
           We're on a mission to help every student in Singapore ace their internship interviews.
           Here's what we're building — and what's coming next.
         </p>
@@ -351,34 +351,34 @@ export default function RoadmapPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-            <p className="text-3xl font-bold text-red-600">6</p>
-            <p className="text-sm text-slate-600">Features Live</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
+            <p className="text-2xl sm:text-3xl font-bold text-red-600">6</p>
+            <p className="text-xs sm:text-sm text-slate-600">Features Live</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-            <p className="text-3xl font-bold text-blue-600">12</p>
-            <p className="text-sm text-slate-600">In Development</p>
+          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
+            <p className="text-2xl sm:text-3xl font-bold text-blue-600">12</p>
+            <p className="text-xs sm:text-sm text-slate-600">In Development</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-            <p className="text-3xl font-bold text-slate-700">4</p>
-            <p className="text-sm text-slate-600">Quarters Planned</p>
+          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
+            <p className="text-2xl sm:text-3xl font-bold text-slate-700">4</p>
+            <p className="text-xs sm:text-sm text-slate-600">Quarters Planned</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-            <p className="text-3xl font-bold text-green-600">100%</p>
-            <p className="text-sm text-slate-600">Student-Focused</p>
+          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
+            <p className="text-2xl sm:text-3xl font-bold text-green-600">100%</p>
+            <p className="text-xs sm:text-sm text-slate-600">Student-Focused</p>
           </div>
         </div>
       </section>
 
       {/* Timeline Section */}
-      <section className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold text-slate-900 text-center mb-12">
+      <section className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-8 sm:mb-12">
           2026 Roadmap
         </h2>
 
         {/* Quarter Navigation */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-12">
           {roadmapData.map((quarter) => {
             const status = getQuarterStatus(quarter.status);
             return (
@@ -448,12 +448,12 @@ export default function RoadmapPage() {
 
                           {/* Card */}
                           <div
-                            className={`bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-red-200 cursor-pointer ${
+                            className={`bg-white rounded-xl p-4 sm:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-red-200 cursor-pointer ${
                               item.status === "completed" ? "border-l-4 border-l-green-500" : ""
                             }`}
                           >
-                            <div className="flex items-start justify-between mb-3">
-                              <span className="text-3xl">{item.icon}</span>
+                            <div className="flex items-start justify-between mb-2 sm:mb-3">
+                              <span className="text-2xl sm:text-3xl">{item.icon}</span>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.bg}`}>
                                 {badge.text}
                               </span>
@@ -480,25 +480,25 @@ export default function RoadmapPage() {
       </section>
 
       {/* Why It Matters Section */}
-      <section className="bg-slate-900 py-16">
+      <section className="bg-slate-900 py-10 sm:py-16">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-white text-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-3 sm:mb-4">
             Why This Matters
           </h2>
-          <p className="text-slate-400 text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-slate-400 text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base px-2">
             We're not just building features — we're building a platform that respects your time,
             protects your privacy, and genuinely helps you succeed.
           </p>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {whyItMatters.map((item, index) => (
               <div
                 key={index}
-                className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-red-500/50 transition-colors"
+                className="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700 hover:border-red-500/50 transition-colors"
               >
-                <span className="text-4xl mb-4 block">{item.icon}</span>
-                <h3 className="font-semibold text-white mb-2">{item.title}</h3>
-                <p className="text-sm text-slate-400">{item.description}</p>
+                <span className="text-3xl sm:text-4xl mb-3 sm:mb-4 block">{item.icon}</span>
+                <h3 className="font-semibold text-white mb-1 sm:mb-2 text-sm sm:text-base">{item.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-400">{item.description}</p>
               </div>
             ))}
           </div>
@@ -506,13 +506,13 @@ export default function RoadmapPage() {
       </section>
 
       {/* For Employers Preview */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 md:p-12 text-white">
+      <section className="max-w-6xl mx-auto px-4 py-10 sm:py-16">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 sm:p-8 md:p-12 text-white">
           <div className="max-w-3xl">
-            <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-medium mb-4">
+            <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
               Coming Q3 2026
             </span>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">
               For Employer Partners
             </h2>
             <p className="text-white/80 mb-6">
@@ -551,18 +551,18 @@ export default function RoadmapPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="max-w-6xl mx-auto px-4 py-16 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
+      <section className="max-w-6xl mx-auto px-4 py-10 sm:py-16 text-center">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-3 sm:mb-4">
           Ready to Start Preparing?
         </h2>
-        <p className="text-slate-600 mb-8 max-w-xl mx-auto">
+        <p className="text-slate-600 mb-6 sm:mb-8 max-w-xl mx-auto text-sm sm:text-base px-2">
           Don't wait for all the features. Start building your interview skills today.
           Every feature on this roadmap is being built for students like you.
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
           <Link
             href="/auth/signin"
-            className="px-8 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+            className="px-6 sm:px-8 py-3 sm:py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors text-sm sm:text-base"
           >
             Start Free Practice →
           </Link>
@@ -570,7 +570,7 @@ export default function RoadmapPage() {
             href="https://github.com/shaminderjitsingh01-stack/internshipsg"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-8 py-4 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold hover:border-slate-300 transition-colors"
+            className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold hover:border-slate-300 transition-colors text-sm sm:text-base"
           >
             Follow on GitHub
           </a>
@@ -578,15 +578,15 @@ export default function RoadmapPage() {
       </section>
 
       {/* Feedback Section */}
-      <section className="bg-slate-50 py-12 border-t border-slate-200">
+      <section className="bg-slate-50 py-8 sm:py-12 border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <h3 className="font-semibold text-slate-900 mb-2">Have a Feature Request?</h3>
-          <p className="text-slate-600 mb-4">
+          <h3 className="font-semibold text-slate-900 mb-2 text-sm sm:text-base">Have a Feature Request?</h3>
+          <p className="text-slate-600 mb-4 text-sm sm:text-base">
             We're building this for you. Tell us what features would help you most.
           </p>
           <a
             href="mailto:feedback@internship.sg"
-            className="text-red-600 font-medium hover:underline"
+            className="text-red-600 font-medium hover:underline text-sm sm:text-base"
           >
             Send us feedback →
           </a>
@@ -594,9 +594,9 @@ export default function RoadmapPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-8">
-        <div className="max-w-6xl mx-auto px-4 text-center text-sm text-slate-500">
-          <div className="flex justify-center gap-6 mb-4">
+      <footer className="border-t border-slate-200 py-6 sm:py-8">
+        <div className="max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm text-slate-500">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
             <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
             <Link href="/about" className="hover:text-red-600 transition-colors">About</Link>
             <Link href="/dashboard" className="hover:text-red-600 transition-colors">Dashboard</Link>

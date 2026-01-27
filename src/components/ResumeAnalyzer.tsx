@@ -155,39 +155,39 @@ export default function ResumeAnalyzer({ userEmail }: Props) {
 
   if (analysis) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Score Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`${getScoreBg(analysis.overallScore)} rounded-2xl p-6 text-center`}>
-            <p className="text-sm font-medium text-slate-600 mb-2">Overall Score</p>
-            <p className={`text-5xl font-bold ${getScoreColor(analysis.overallScore)}`}>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className={`${getScoreBg(analysis.overallScore)} rounded-xl sm:rounded-2xl p-3 sm:p-6 text-center`}>
+            <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1 sm:mb-2">Overall Score</p>
+            <p className={`text-3xl sm:text-5xl font-bold ${getScoreColor(analysis.overallScore)}`}>
               {analysis.overallScore}
             </p>
-            <p className="text-sm text-slate-500 mt-1">/100</p>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">/100</p>
           </div>
-          <div className={`${getScoreBg(analysis.atsScore)} rounded-2xl p-6 text-center`}>
-            <p className="text-sm font-medium text-slate-600 mb-2">ATS Compatibility</p>
-            <p className={`text-5xl font-bold ${getScoreColor(analysis.atsScore)}`}>
+          <div className={`${getScoreBg(analysis.atsScore)} rounded-xl sm:rounded-2xl p-3 sm:p-6 text-center`}>
+            <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1 sm:mb-2">ATS</p>
+            <p className={`text-3xl sm:text-5xl font-bold ${getScoreColor(analysis.atsScore)}`}>
               {analysis.atsScore}
             </p>
-            <p className="text-sm text-slate-500 mt-1">/100</p>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">/100</p>
           </div>
-          <div className={`${getScoreBg(analysis.keywordAnalysis.industryRelevance)} rounded-2xl p-6 text-center`}>
-            <p className="text-sm font-medium text-slate-600 mb-2">Industry Match</p>
-            <p className={`text-5xl font-bold ${getScoreColor(analysis.keywordAnalysis.industryRelevance)}`}>
+          <div className={`${getScoreBg(analysis.keywordAnalysis.industryRelevance)} rounded-xl sm:rounded-2xl p-3 sm:p-6 text-center`}>
+            <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1 sm:mb-2">Industry</p>
+            <p className={`text-3xl sm:text-5xl font-bold ${getScoreColor(analysis.keywordAnalysis.industryRelevance)}`}>
               {analysis.keywordAnalysis.industryRelevance}
             </p>
-            <p className="text-sm text-slate-500 mt-1">/100</p>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">/100</p>
           </div>
         </div>
 
         {/* Section Tabs */}
-        <div className="flex gap-2 flex-wrap bg-slate-100 p-1 rounded-xl">
+        <div className="flex gap-1 sm:gap-2 flex-wrap bg-slate-100 p-1 rounded-xl overflow-x-auto">
           {["overview", "sections", "keywords", "improvements"].map((section) => (
             <button
               key={section}
               onClick={() => setActiveSection(section)}
-              className={`px-4 py-2 rounded-lg font-medium capitalize transition-all ${
+              className={`px-3 sm:px-4 py-2 rounded-lg font-medium capitalize transition-all text-sm sm:text-base whitespace-nowrap ${
                 activeSection === section
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
@@ -200,27 +200,27 @@ export default function ResumeAnalyzer({ userEmail }: Props) {
 
         {/* Overview Section */}
         {activeSection === "overview" && (
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-green-700 mb-4 flex items-center gap-2">
-                <span className="text-xl">✓</span> Strengths
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+              <h3 className="font-semibold text-green-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <span className="text-lg sm:text-xl">✓</span> Strengths
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {analysis.strengths.map((strength, i) => (
-                  <li key={i} className="flex items-start gap-3 text-slate-700">
+                  <li key={i} className="flex items-start gap-2 sm:gap-3 text-slate-700 text-sm sm:text-base">
                     <span className="text-green-500 mt-1">•</span>
                     {strength}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-red-700 mb-4 flex items-center gap-2">
-                <span className="text-xl">!</span> Top Improvements
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+              <h3 className="font-semibold text-red-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <span className="text-lg sm:text-xl">!</span> Top Improvements
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {analysis.topImprovements.map((improvement, i) => (
-                  <li key={i} className="flex items-start gap-3 text-slate-700">
+                  <li key={i} className="flex items-start gap-2 sm:gap-3 text-slate-700 text-sm sm:text-base">
                     <span className="text-red-500 mt-1">{i + 1}.</span>
                     {improvement}
                   </li>
@@ -232,24 +232,24 @@ export default function ResumeAnalyzer({ userEmail }: Props) {
 
         {/* Sections Feedback */}
         {activeSection === "sections" && (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {Object.entries(analysis.sectionFeedback).map(([key, section]) => (
-              <div key={key} className="bg-white rounded-2xl p-6 border border-slate-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-slate-900 capitalize">
+              <div key={key} className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <h3 className="font-semibold text-slate-900 capitalize text-sm sm:text-base">
                     {key.replace(/([A-Z])/g, " $1").trim()}
                   </h3>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreBg(section.score)} ${getScoreColor(section.score)}`}>
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getScoreBg(section.score)} ${getScoreColor(section.score)}`}>
                     {section.score}/100
                   </span>
                 </div>
-                <p className="text-slate-600 mb-4">{section.feedback}</p>
+                <p className="text-slate-600 mb-3 sm:mb-4 text-sm sm:text-base">{section.feedback}</p>
                 {section.suggestions.length > 0 && (
-                  <div className="bg-slate-50 rounded-xl p-4">
-                    <p className="text-sm font-medium text-slate-700 mb-2">Suggestions:</p>
-                    <ul className="space-y-2">
+                  <div className="bg-slate-50 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm font-medium text-slate-700 mb-2">Suggestions:</p>
+                    <ul className="space-y-1 sm:space-y-2">
                       {section.suggestions.map((suggestion, i) => (
-                        <li key={i} className="text-sm text-slate-600 flex items-start gap-2">
+                        <li key={i} className="text-xs sm:text-sm text-slate-600 flex items-start gap-2">
                           <span className="text-blue-500">→</span>
                           {suggestion}
                         </li>
@@ -264,43 +264,43 @@ export default function ResumeAnalyzer({ userEmail }: Props) {
 
         {/* Keywords Section */}
         {activeSection === "keywords" && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-green-700 mb-4">Keywords Found</h3>
-              <div className="flex flex-wrap gap-2">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+              <h3 className="font-semibold text-green-700 mb-3 sm:mb-4 text-sm sm:text-base">Keywords Found</h3>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {analysis.keywordAnalysis.found.map((keyword, i) => (
-                  <span key={i} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                  <span key={i} className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm">
                     {keyword}
                   </span>
                 ))}
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-red-700 mb-4">Missing Keywords</h3>
-              <div className="flex flex-wrap gap-2">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+              <h3 className="font-semibold text-red-700 mb-3 sm:mb-4 text-sm sm:text-base">Missing Keywords</h3>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {analysis.keywordAnalysis.missing.map((keyword, i) => (
-                  <span key={i} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">
+                  <span key={i} className="px-2 sm:px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs sm:text-sm">
                     + {keyword}
                   </span>
                 ))}
               </div>
             </div>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl p-6 border border-slate-200">
-                <h3 className="font-semibold text-slate-900 mb-4">Strong Action Verbs</h3>
-                <div className="flex flex-wrap gap-2">
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+                <h3 className="font-semibold text-slate-900 mb-3 sm:mb-4 text-sm sm:text-base">Strong Action Verbs</h3>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {analysis.actionVerbs.strong.map((verb, i) => (
-                    <span key={i} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                    <span key={i} className="px-2 sm:px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm">
                       {verb}
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-6 border border-slate-200">
-                <h3 className="font-semibold text-slate-900 mb-4">Weak Verbs to Replace</h3>
-                <div className="flex flex-wrap gap-2">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+                <h3 className="font-semibold text-slate-900 mb-3 sm:mb-4 text-sm sm:text-base">Weak Verbs to Replace</h3>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {analysis.actionVerbs.weak.map((verb, i) => (
-                    <span key={i} className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
+                    <span key={i} className="px-2 sm:px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs sm:text-sm">
                       {verb}
                     </span>
                   ))}
@@ -371,21 +371,21 @@ export default function ResumeAnalyzer({ userEmail }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl p-6 border border-slate-200">
-        <h2 className="text-xl font-semibold text-slate-900 mb-2">Smart Resume Analysis</h2>
-        <p className="text-slate-600 mb-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+        <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2">Smart Resume Analysis</h2>
+        <p className="text-slate-600 mb-4 sm:mb-6 text-sm sm:text-base">
           Get instant AI-powered feedback on your resume with actionable improvement tips.
         </p>
 
         {/* File Upload */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Upload Your Resume
           </label>
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition-colors"
+            className="border-2 border-dashed border-slate-300 rounded-xl p-6 sm:p-8 text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition-colors"
           >
             <input
               type="file"
@@ -394,9 +394,9 @@ export default function ResumeAnalyzer({ userEmail }: Props) {
               accept=".pdf,.docx,.txt"
               className="hidden"
             />
-            <div className="text-4xl mb-2">📄</div>
-            <p className="font-medium text-slate-700">Click to upload or drag and drop</p>
-            <p className="text-sm text-slate-500 mt-1">PDF, DOCX, or TXT (max 5MB)</p>
+            <div className="text-3xl sm:text-4xl mb-2">📄</div>
+            <p className="font-medium text-slate-700 text-sm sm:text-base">Click to upload or drag and drop</p>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">PDF, DOCX, or TXT (max 5MB)</p>
           </div>
         </div>
 
@@ -457,35 +457,35 @@ export default function ResumeAnalyzer({ userEmail }: Props) {
       </div>
 
       {/* What You'll Get */}
-      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-6 border border-slate-200">
-        <h3 className="font-semibold text-slate-900 mb-4">What You'll Get</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="flex items-start gap-3">
-            <span className="text-xl">📈</span>
+      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200">
+        <h3 className="font-semibold text-slate-900 mb-3 sm:mb-4 text-sm sm:text-base">What You'll Get</h3>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <span className="text-lg sm:text-xl">📈</span>
             <div>
-              <p className="font-medium text-slate-900">Overall Score</p>
-              <p className="text-sm text-slate-600">See how your resume ranks out of 100</p>
+              <p className="font-medium text-slate-900 text-sm sm:text-base">Overall Score</p>
+              <p className="text-xs sm:text-sm text-slate-600">See how your resume ranks out of 100</p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <span className="text-xl">🤖</span>
+          <div className="flex items-start gap-2 sm:gap-3">
+            <span className="text-lg sm:text-xl">🤖</span>
             <div>
-              <p className="font-medium text-slate-900">ATS Compatibility</p>
-              <p className="text-sm text-slate-600">Check if your resume passes automated screening</p>
+              <p className="font-medium text-slate-900 text-sm sm:text-base">ATS Compatibility</p>
+              <p className="text-xs sm:text-sm text-slate-600">Check if your resume passes screening</p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <span className="text-xl">🔑</span>
+          <div className="flex items-start gap-2 sm:gap-3">
+            <span className="text-lg sm:text-xl">🔑</span>
             <div>
-              <p className="font-medium text-slate-900">Keyword Analysis</p>
-              <p className="text-sm text-slate-600">Identify missing keywords for your target role</p>
+              <p className="font-medium text-slate-900 text-sm sm:text-base">Keyword Analysis</p>
+              <p className="text-xs sm:text-sm text-slate-600">Identify missing keywords for your role</p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <span className="text-xl">✨</span>
+          <div className="flex items-start gap-2 sm:gap-3">
+            <span className="text-lg sm:text-xl">✨</span>
             <div>
-              <p className="font-medium text-slate-900">Section-by-Section Feedback</p>
-              <p className="text-sm text-slate-600">Detailed tips for each resume section</p>
+              <p className="font-medium text-slate-900 text-sm sm:text-base">Section Feedback</p>
+              <p className="text-xs sm:text-sm text-slate-600">Detailed tips for each resume section</p>
             </div>
           </div>
         </div>

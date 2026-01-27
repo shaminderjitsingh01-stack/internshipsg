@@ -89,26 +89,26 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto" />
+            <img src="/logo.png" alt="Internship.sg" className="h-7 sm:h-8 w-auto" />
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link
               href="/"
-              className="px-4 py-2 text-slate-600 hover:text-red-600 font-medium transition-colors"
+              className="hidden sm:block px-4 py-2 text-slate-600 hover:text-red-600 font-medium transition-colors"
             >
               New Interview
             </Link>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {session.user?.image ? (
                 <img
                   src={session.user.image}
                   alt={session.user.name || "User"}
-                  className="w-9 h-9 rounded-full border-2 border-slate-200"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-slate-200"
                 />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-red-100 flex items-center justify-center">
                   <span className="text-red-600 font-semibold text-sm">
                     {session.user?.name?.charAt(0) || "U"}
                   </span>
@@ -116,7 +116,7 @@ export default function DashboardPage() {
               )}
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-slate-600 hover:text-red-600 font-medium transition-colors"
+                className="px-3 sm:px-4 py-2 text-slate-600 hover:text-red-600 font-medium transition-colors text-sm sm:text-base"
               >
                 Logout
               </button>
@@ -125,26 +125,26 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
             Welcome back, {session.user?.name?.split(" ")[0] || "there"}!
           </h1>
-          <p className="text-slate-600">Manage your account and review your interview practice sessions.</p>
+          <p className="text-slate-600 text-sm sm:text-base">Manage your account and review your interview practice sessions.</p>
         </div>
 
         {/* Employer Visibility Disclaimer */}
-        <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-6 sm:mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-5">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">Your profile could be seen by future employer partners</h3>
-              <p className="text-sm text-blue-700">
+              <h3 className="font-semibold text-blue-900 mb-1 text-sm sm:text-base">Your profile could be seen by future employer partners</h3>
+              <p className="text-xs sm:text-sm text-blue-700">
                 We're building connections with companies seeking internship-ready students.
                 Staying active and completing practice sessions may increase your visibility to potential employers
                 — however, employer contact is not guaranteed.
@@ -154,10 +154,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-8 bg-slate-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 mb-8 bg-slate-100 p-1 rounded-xl w-full sm:w-fit overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+            className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base ${
               activeTab === "overview"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
@@ -167,17 +167,17 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab("interviews")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+            className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base ${
               activeTab === "interviews"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Interview History
+            History
           </button>
           <button
             onClick={() => setActiveTab("resume")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+            className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base ${
               activeTab === "resume"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
@@ -187,7 +187,7 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab("cover-letter")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+            className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base ${
               activeTab === "cover-letter"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
@@ -197,7 +197,7 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab("billing")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+            className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base ${
               activeTab === "billing"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
@@ -221,9 +221,9 @@ export default function DashboardPage() {
               />
             )}
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
             {/* Profile Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Profile</h2>
               <div className="flex items-center gap-4 mb-6">
                 {session.user?.image ? (
@@ -251,7 +251,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Stats</h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -276,7 +276,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl p-6 text-white">
+            <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl p-4 sm:p-6 text-white">
               <h2 className="text-lg font-semibold mb-4">Ready to Practice?</h2>
               <p className="text-white/80 mb-6">
                 Start a new mock interview session and improve your skills.
@@ -385,9 +385,9 @@ export default function DashboardPage() {
 
         {/* Billing Tab */}
         {activeTab === "billing" && (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
             {/* Current Plan */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Current Plan</h2>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -423,7 +423,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Upgrade Card */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 sm:p-6 text-white">
               <div className="flex items-center gap-2 mb-4">
                 <span className="px-2 py-1 bg-yellow-500 text-yellow-900 text-xs font-bold rounded">PRO</span>
                 <span className="text-white/60 text-sm">Coming Soon</span>
@@ -470,9 +470,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-8 mt-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
-          <div className="flex justify-center gap-6 mb-4">
+      <footer className="border-t border-slate-200 py-6 sm:py-8 mt-8 sm:mt-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 text-center text-xs sm:text-sm text-slate-500">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
             <a href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</a>
             <a href="/about" className="hover:text-red-600 transition-colors">About</a>
             <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
