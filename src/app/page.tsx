@@ -135,7 +135,7 @@ export default function Home() {
   const [interviewLoading, setInterviewLoading] = useState(false);
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(0);
-  const [interviewDuration, setInterviewDuration] = useState<1 | 5 | 15 | 30>(1);
+  const [interviewDuration, setInterviewDuration] = useState<2 | 5 | 15 | 30>(2);
   const [interviewStartTime, setInterviewStartTime] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const elapsedTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -772,9 +772,11 @@ export default function Home() {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       setElapsedTime(elapsed);
 
-      // Check if interview time is up
-      if (elapsed >= interviewDuration * 60) {
-        // Time's up - end the interview immediately
+      // Check if interview time is up AND minimum questions answered
+      // Minimum 2 questions required (questionNumberRef >= 3 means 2 Q&As completed)
+      const minQuestionsCompleted = questionNumberRef.current >= 3;
+      if (elapsed >= interviewDuration * 60 && minQuestionsCompleted) {
+        // Time's up and minimum questions answered - end the interview
         if (elapsedTimerRef.current) {
           clearInterval(elapsedTimerRef.current);
           elapsedTimerRef.current = null;
@@ -811,8 +813,10 @@ export default function Home() {
     const totalSeconds = interviewDuration * 60;
     const remainingSeconds = Math.max(0, totalSeconds - currentElapsed);
 
-    // If less than 40 seconds left, wrap up the interview instead of asking another question
-    if (remainingSeconds <= 40) {
+    // If less than 40 seconds left AND at least 2 questions answered, wrap up the interview
+    // Minimum 2 questions required before ending (questionNumber >= 3 means we've completed 2 Q&As)
+    const minimumQuestionsAnswered = questionNumberRef.current >= 3;
+    if (remainingSeconds <= 40 && minimumQuestionsAnswered) {
       // Stop all timers
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -1851,14 +1855,14 @@ export default function Home() {
                 <p className="text-white/70 text-sm mb-4 uppercase tracking-wide">Select Interview Duration</p>
                 <div className="grid grid-cols-4 gap-4">
                   <button
-                    onClick={() => setInterviewDuration(1)}
+                    onClick={() => setInterviewDuration(2)}
                     className={`relative p-6 rounded-2xl border-2 transition-all ${
-                      interviewDuration === 1
+                      interviewDuration === 2
                         ? "border-red-500 bg-red-500/10"
                         : "border-white/10 bg-white/5 hover:border-white/20"
                     }`}
                   >
-                    {interviewDuration === 1 && (
+                    {interviewDuration === 2 && (
                       <div className="absolute top-3 right-3 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -1866,8 +1870,8 @@ export default function Home() {
                       </div>
                     )}
                     <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded-full">Test</div>
-                    <div className="text-3xl font-bold mb-1">1</div>
-                    <div className="text-white/50 text-sm">minute</div>
+                    <div className="text-3xl font-bold mb-1">2</div>
+                    <div className="text-white/50 text-sm">minutes</div>
                     <div className="text-white/30 text-xs mt-2">Quick Test</div>
                   </button>
                   <button
