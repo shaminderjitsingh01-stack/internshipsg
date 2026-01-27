@@ -118,6 +118,9 @@ export default function Home() {
   const interviewPhaseRef = useRef<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "complete">("setup");
   const questionNumberRef = useRef<number>(0);
   const interviewMessagesRef = useRef<InterviewMessage[]>([]);
+  const silencePromptCountRef = useRef<number>(0);
+  const noSpeechTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const listeningStartTimeRef = useRef<number>(0);
 
   // Results
   const [results, setResults] = useState<ResultsData | null>(null);
@@ -340,6 +343,42 @@ export default function Home() {
     });
   };
 
+  // Handle silence - prompt user if they haven't spoken
+  const handleSilenceCheck = async () => {
+    if (interviewPhaseRef.current !== "answering") return;
+
+    // Only check if no speech has been detected yet
+    const hasSpoken = transcriptRef.current.trim().length > 0 || interimTranscriptRef.current.trim().length > 0;
+
+    if (!hasSpoken) {
+      silencePromptCountRef.current += 1;
+
+      if (silencePromptCountRef.current === 1) {
+        // First prompt - ask if they're there
+        await speakText("Are you still there? Take your time, I'm ready when you are.");
+        startNoSpeechTimer();
+      } else if (silencePromptCountRef.current === 2) {
+        // Second prompt
+        await speakText("No worries if you need a moment. Let me know when you're ready to continue.");
+        startNoSpeechTimer();
+      } else {
+        // After 2 prompts, move to next question
+        await speakText("Let's move on to the next question.");
+        handleAutoSubmit();
+      }
+    }
+  };
+
+  // Start timer to check for no speech
+  const startNoSpeechTimer = () => {
+    if (noSpeechTimerRef.current) {
+      clearTimeout(noSpeechTimerRef.current);
+    }
+    noSpeechTimerRef.current = setTimeout(() => {
+      handleSilenceCheck();
+    }, 10000); // 10 seconds
+  };
+
   // Speech recognition for candidate answers with auto-detection
   const startListening = () => {
     if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
@@ -347,17 +386,30 @@ export default function Home() {
       return;
     }
 
+    // Reset silence prompt count when starting to listen
+    silencePromptCountRef.current = 0;
+    listeningStartTimeRef.current = Date.now();
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
+    // Start the no-speech timer
+    startNoSpeechTimer();
+
     recognition.onresult = (event) => {
       // Reset silence timer on any speech activity
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
       }
+      // Reset no-speech timer since user is speaking
+      if (noSpeechTimerRef.current) {
+        clearTimeout(noSpeechTimerRef.current);
+        noSpeechTimerRef.current = null;
+      }
+      silencePromptCountRef.current = 0; // Reset prompt count since user spoke
 
       let finalTranscript = "";
       let interimTranscript = "";
@@ -500,6 +552,10 @@ export default function Home() {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
     }
+    if (noSpeechTimerRef.current) {
+      clearTimeout(noSpeechTimerRef.current);
+      noSpeechTimerRef.current = null;
+    }
   };
 
   // Start the video interview
@@ -624,6 +680,7 @@ export default function Home() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (noSpeechTimerRef.current) clearTimeout(noSpeechTimerRef.current);
       if (recognitionRef.current) recognitionRef.current.stop();
       if (typeof window !== "undefined" && window.speechSynthesis) {
         window.speechSynthesis.cancel();
