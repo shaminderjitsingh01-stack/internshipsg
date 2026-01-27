@@ -301,7 +301,7 @@ export default function DashboardPage() {
                 <h3 className="font-semibold text-slate-900 mb-2">No interviews yet</h3>
                 <p className="text-slate-500 mb-6">Start your first mock interview to see your history here.</p>
                 <Link
-                  href="/"
+                  href="/?start=interview"
                   className="inline-block px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
                 >
                   Start Your First Interview
