@@ -7,7 +7,7 @@ const anthropic = new Anthropic({
 
 export async function POST(req: NextRequest) {
   try {
-    const { jobDescription, resume, action, transcript } = await req.json();
+    const { jobDescription, resume, coverLetter, action, transcript } = await req.json();
 
     if (!jobDescription) {
       return NextResponse.json({ error: "Job description is required" }, { status: 400 });
@@ -36,7 +36,7 @@ GOOD TO HAVE:
 ${jobDescription.requirements?.goodToHave?.join("\n- ") || "None specified"}
 
 ${resume ? `CANDIDATE'S RESUME:\n${resume}\n` : ""}
-
+${coverLetter ? `CANDIDATE'S COVER LETTER:\n${coverLetter}\n` : ""}
 Generate 8-10 targeted interview questions that:
 1. Assess the non-negotiable requirements (2-3 questions)
 2. Explore the good-to-have skills (1-2 questions)
@@ -97,7 +97,7 @@ GOOD TO HAVE REQUIREMENTS:
 ${jobDescription.requirements?.goodToHave?.map((r: string, i: number) => `${i + 1}. ${r}`).join("\n") || "None specified"}
 
 ${resume ? `CANDIDATE'S RESUME:\n${resume}\n` : ""}
-
+${coverLetter ? `CANDIDATE'S COVER LETTER:\n${coverLetter}\n` : ""}
 INTERVIEW TRANSCRIPT:
 ${transcript}
 

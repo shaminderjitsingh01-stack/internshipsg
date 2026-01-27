@@ -8,7 +8,6 @@ import StreakWidget from "@/components/StreakWidget";
 import StreakCard from "@/components/StreakCard";
 import ResumeAnalyzer from "@/components/ResumeAnalyzer";
 import CoverLetterAssistant from "@/components/CoverLetterAssistant";
-import QuestionOfTheDay from "@/components/QuestionOfTheDay";
 import ConfidenceMeter from "@/components/ConfidenceMeter";
 import PrepChecklist from "@/components/PrepChecklist";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
@@ -256,12 +255,6 @@ export default function DashboardPage() {
                 }}
               />
             )}
-
-            {/* Question of the Day - Full Width */}
-            {session?.user?.email && (
-              <QuestionOfTheDay userEmail={session.user.email} />
-            )}
-
             <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
               {/* Profile Card */}
               <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">

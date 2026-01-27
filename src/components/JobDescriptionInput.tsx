@@ -20,22 +20,40 @@ interface Props {
 }
 
 export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }: Props) {
-  const [inputMode, setInputMode] = useState<"url" | "upload" | "paste">("url");
+  const [inputMode, setInputMode] = useState<"url" | "upload" | "paste">("paste"); // Default to paste since it's most reliable
   const [url, setUrl] = useState("");
   const [pastedText, setPastedText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorType, setErrorType] = useState<"blocked" | "generic" | "">("");
   const [fileName, setFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUrlSubmit = async () => {
     if (!url.trim()) {
       setError("Please enter a job posting URL");
+      setErrorType("generic");
       return;
     }
 
     setLoading(true);
     setError("");
+    setErrorType("");
+
+    // Check if URL is from a blocked domain
+    const blockedDomains = ["linkedin.com", "indeed.com", "glassdoor.com"];
+    const urlLower = url.toLowerCase();
+    const isBlockedDomain = blockedDomains.some(domain => urlLower.includes(domain));
+
+    if (isBlockedDomain) {
+      const platform = urlLower.includes("linkedin") ? "LinkedIn" :
+                       urlLower.includes("indeed") ? "Indeed" : "Glassdoor";
+      setError(`${platform} requires login to view job postings. Please copy the job description from the page and paste it below.`);
+      setErrorType("blocked");
+      setLoading(false);
+      setInputMode("paste"); // Auto-switch to paste mode
+      return;
+    }
 
     try {
       const res = await fetch("/api/parse-job-url", {
@@ -46,7 +64,15 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to fetch job description");
+        const errorMsg = data.error || "Failed to fetch job description";
+        // Check if error mentions login/blocked
+        if (errorMsg.toLowerCase().includes("login") || errorMsg.toLowerCase().includes("paste")) {
+          setErrorType("blocked");
+          setInputMode("paste"); // Auto-switch to paste mode
+        } else {
+          setErrorType("generic");
+        }
+        throw new Error(errorMsg);
       }
 
       const data = await res.json();
@@ -69,6 +95,7 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
     setFileName(file.name);
     setLoading(true);
     setError("");
+    setErrorType("");
 
     try {
       const formData = new FormData();
@@ -91,6 +118,7 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
       });
     } catch (err: any) {
       setError(err.message || "Failed to parse document");
+      setErrorType("generic");
     } finally {
       setLoading(false);
     }
@@ -99,11 +127,13 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
   const handlePasteSubmit = async () => {
     if (!pastedText.trim() || pastedText.trim().length < 100) {
       setError("Please paste a complete job description (minimum 100 characters)");
+      setErrorType("generic");
       return;
     }
 
     setLoading(true);
     setError("");
+    setErrorType("");
 
     try {
       const res = await fetch("/api/parse-job-text", {
@@ -124,6 +154,7 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
       });
     } catch (err: any) {
       setError(err.message || "Failed to parse job description");
+      setErrorType("generic");
     } finally {
       setLoading(false);
     }
@@ -146,7 +177,18 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
       {/* Input Mode Tabs */}
       <div className="flex gap-1 bg-slate-100 p-1 rounded-lg mb-4">
         <button
-          onClick={() => setInputMode("url")}
+          onClick={() => { setInputMode("paste"); setError(""); setErrorType(""); }}
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors relative ${
+            inputMode === "paste"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Paste
+          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] px-1 rounded">Best</span>
+        </button>
+        <button
+          onClick={() => { setInputMode("url"); setError(""); setErrorType(""); }}
           className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
             inputMode === "url"
               ? "bg-white text-slate-900 shadow-sm"
@@ -156,7 +198,7 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
           <span className="hidden sm:inline">Job </span>URL
         </button>
         <button
-          onClick={() => setInputMode("upload")}
+          onClick={() => { setInputMode("upload"); setError(""); setErrorType(""); }}
           className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
             inputMode === "upload"
               ? "bg-white text-slate-900 shadow-sm"
@@ -165,21 +207,17 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
         >
           Upload
         </button>
-        <button
-          onClick={() => setInputMode("paste")}
-          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-            inputMode === "paste"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          Paste
-        </button>
       </div>
 
       {/* URL Input */}
       {inputMode === "url" && (
         <div className="space-y-3">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-3">
+            <p className="text-xs text-amber-700">
+              <strong>Note:</strong> LinkedIn, Indeed & Glassdoor require login and block direct access.
+              For these sites, use the <strong>Paste</strong> tab instead.
+            </p>
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Job Posting URL
@@ -188,11 +226,11 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://linkedin.com/jobs/... or https://indeed.com/..."
+              placeholder="https://careers.company.com/jobs/..."
               className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             />
             <p className="mt-1 text-xs text-slate-500">
-              Supports LinkedIn, Indeed, Glassdoor, and most company career pages
+              Works with company career pages, JobStreet, MyCareersFuture
             </p>
           </div>
           <button
@@ -243,6 +281,12 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
       {/* Paste Text */}
       {inputMode === "paste" && (
         <div className="space-y-3">
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
+            <p className="text-xs text-green-700">
+              <strong>Recommended:</strong> Copy the full job description from LinkedIn, Indeed, or any job site and paste it here.
+              This method works with all job boards.
+            </p>
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Paste Job Description
@@ -250,7 +294,9 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
             <textarea
               value={pastedText}
               onChange={(e) => setPastedText(e.target.value)}
-              placeholder="Paste the complete job description here including requirements, responsibilities, and qualifications..."
+              placeholder="Open the job posting → Select all text (Ctrl+A) → Copy (Ctrl+C) → Paste here (Ctrl+V)
+
+Include: Job title, company name, responsibilities, requirements, qualifications..."
               className="w-full min-h-[200px] px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-y"
             />
             <p className="mt-1 text-xs text-slate-500">
@@ -271,13 +317,23 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }
       {error && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600">{error}</p>
+          {errorType === "blocked" && (
+            <div className="mt-3 pt-3 border-t border-red-100">
+              <p className="text-xs text-red-500 mb-2">
+                <strong>Quick tip:</strong> Open the job posting in your browser, select all text (Ctrl+A), copy it (Ctrl+C), then paste below.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
       {/* Supported Platforms */}
       <div className="mt-4 pt-4 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center">
-          Supported: LinkedIn, Indeed, Glassdoor, JobStreet, MyCareersFuture, company career pages
+          <strong>Best method:</strong> Copy & paste job description from any job board
+        </p>
+        <p className="text-xs text-slate-400 text-center mt-1">
+          URL parsing works with: JobStreet, MyCareersFuture, company career pages
         </p>
       </div>
     </div>
