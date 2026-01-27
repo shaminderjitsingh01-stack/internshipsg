@@ -84,7 +84,12 @@ interface Progress {
   reflectionsCompleted: number;
 }
 
-type AppState = "landing" | "onboarding" | "dashboard" | "blog" | "resources" | "glossary";
+type AppState = "landing" | "onboarding" | "dashboard" | "blog" | "resources" | "glossary" | "mock-interview";
+
+interface InterviewMessage {
+  role: "user" | "assistant";
+  content: string;
+}
 
 // Glossary terms
 const glossaryTerms = [
@@ -251,6 +256,13 @@ export default function Home() {
   const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
   const [error, setError] = useState("");
 
+  // Mock interview state
+  const [interviewMessages, setInterviewMessages] = useState<InterviewMessage[]>([]);
+  const [interviewInput, setInterviewInput] = useState("");
+  const [interviewLoading, setInterviewLoading] = useState(false);
+  const [interviewComplete, setInterviewComplete] = useState(false);
+  const [questionNumber, setQuestionNumber] = useState(0);
+
   // Check if user signed in via OAuth - auto-generate and go to dashboard
   useEffect(() => {
     console.log("OAuth useEffect - status:", status, "session:", session?.user?.email, "appState:", appState);
@@ -407,6 +419,78 @@ export default function Home() {
     if (numScore >= 8) return "text-emerald-600 bg-emerald-50";
     if (numScore >= 6) return "text-amber-600 bg-amber-50";
     return "text-rose-600 bg-rose-50";
+  };
+
+  // Start mock interview
+  const startInterview = async () => {
+    setInterviewMessages([]);
+    setInterviewComplete(false);
+    setInterviewLoading(true);
+    setQuestionNumber(1);
+    setAppState("mock-interview");
+
+    try {
+      const res = await fetch("/api/interview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "start",
+          userProfile: formData,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setInterviewMessages([{ role: "assistant", content: data.message }]);
+      setQuestionNumber(data.questionNumber);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to start interview";
+      setError(message);
+      setAppState("dashboard");
+    } finally {
+      setInterviewLoading(false);
+    }
+  };
+
+  // Send interview response
+  const sendInterviewResponse = async () => {
+    if (!interviewInput.trim() || interviewLoading) return;
+
+    const userMessage = interviewInput.trim();
+    setInterviewInput("");
+    setInterviewLoading(true);
+
+    const newMessages: InterviewMessage[] = [...interviewMessages, { role: "user", content: userMessage }];
+    setInterviewMessages(newMessages);
+
+    try {
+      const res = await fetch("/api/interview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "respond",
+          messages: newMessages,
+          userProfile: formData,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setInterviewMessages([...newMessages, { role: "assistant", content: data.message }]);
+      setQuestionNumber(data.questionNumber);
+
+      if (data.isComplete) {
+        setInterviewComplete(true);
+        updateProgress("mockInterviews", progress.mockInterviews + 1);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to send response";
+      setError(message);
+    } finally {
+      setInterviewLoading(false);
+    }
   };
 
   // ==================== LOADING SCREEN (for OAuth auto-generation) ====================
@@ -809,6 +893,153 @@ export default function Home() {
     );
   }
 
+  // ==================== MOCK INTERVIEW PAGE ====================
+  if (appState === "mock-interview") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-white">
+        {/* Header */}
+        <nav className="glass sticky top-0 z-50 border-b border-white/20">
+          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
+              <span className="font-semibold text-slate-800">Mock Interview</span>
+            </div>
+            <div className="flex items-center gap-4">
+              {!interviewComplete && (
+                <span className="text-sm text-slate-600">Question {questionNumber} of 5</span>
+              )}
+              <button
+                onClick={() => setAppState("dashboard")}
+                className="text-slate-600 hover:text-red-600 text-sm font-medium"
+              >
+                Exit Interview
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          {/* Interview Chat */}
+          <div className="card-premium p-6 mb-6 min-h-[400px] max-h-[60vh] overflow-y-auto">
+            {interviewMessages.length === 0 && interviewLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-red-200 border-t-red-600 mx-auto mb-3"></div>
+                  <p className="text-slate-600">Starting your interview...</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {interviewMessages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                        msg.role === "user"
+                          ? "bg-red-600 text-white"
+                          : "bg-slate-100 text-slate-800"
+                      }`}
+                    >
+                      {msg.role === "assistant" && (
+                        <div className="flex items-center gap-2 mb-2 text-sm font-medium text-red-600">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          Interviewer
+                        </div>
+                      )}
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    </div>
+                  </div>
+                ))}
+                {interviewLoading && interviewMessages.length > 0 && (
+                  <div className="flex justify-start">
+                    <div className="bg-slate-100 rounded-2xl px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="animate-pulse flex gap-1">
+                          <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
+                          <div className="w-2 h-2 bg-slate-400 rounded-full animation-delay-200"></div>
+                          <div className="w-2 h-2 bg-slate-400 rounded-full animation-delay-400"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Input Area */}
+          {!interviewComplete ? (
+            <div className="card-premium p-4">
+              <div className="flex gap-3">
+                <textarea
+                  value={interviewInput}
+                  onChange={(e) => setInterviewInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendInterviewResponse();
+                    }
+                  }}
+                  placeholder="Type your answer here... (Press Enter to send)"
+                  className="flex-1 input-premium resize-none"
+                  rows={3}
+                  disabled={interviewLoading}
+                />
+                <button
+                  onClick={sendInterviewResponse}
+                  disabled={interviewLoading || !interviewInput.trim()}
+                  className="btn-premium px-6 self-end disabled:opacity-50"
+                >
+                  {interviewLoading ? (
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                Tip: Use the STAR method (Situation, Task, Action, Result) for behavioral questions
+              </p>
+            </div>
+          ) : (
+            <div className="card-premium p-6 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">Interview Complete!</h3>
+              <p className="text-slate-600 mb-6">Great job completing your mock interview. Review the feedback above.</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={startInterview}
+                  className="btn-premium px-6 py-3"
+                >
+                  Practice Again
+                </button>
+                <button
+                  onClick={() => setAppState("dashboard")}
+                  className="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-semibold hover:bg-slate-50"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // ==================== BLOG PAGE ====================
   if (appState === "blog") {
     return (
@@ -1199,7 +1430,31 @@ export default function Home() {
           {/* Career Paths */}
           {activeTab === "careers" && careerData && (
             <div className="space-y-6 fade-in-up">
-              <h3 className="text-2xl font-bold text-slate-900">Recommended Career Paths</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-slate-900">Recommended Career Paths</h3>
+                <button
+                  onClick={() => {
+                    setCareerData(null);
+                    setFormData({
+                      name: "",
+                      email: "",
+                      course: "",
+                      skills: "",
+                      interests: "",
+                      experience: "",
+                      goal: "",
+                    });
+                    localStorage.removeItem("internship_user");
+                    setAppState("onboarding");
+                  }}
+                  className="text-sm text-slate-500 hover:text-red-600 flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Start Over
+                </button>
+              </div>
               <div className="grid gap-4">
                 {careerData.career_suggestions.map((career, i) => (
                   <div key={i} className="border border-slate-100 rounded-2xl p-6 hover:border-indigo-200 hover:shadow-lg transition-all">
@@ -1247,9 +1502,28 @@ export default function Home() {
           {/* Mock Interview */}
           {activeTab === "interview" && careerData && (
             <div className="space-y-6 fade-in-up">
+              {/* Start Live Interview CTA */}
+              <div className="gradient-premium rounded-2xl p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">Live AI Mock Interview</h3>
+                    <p className="text-red-100">Practice with our AI interviewer and get real-time feedback</p>
+                  </div>
+                  <button
+                    onClick={startInterview}
+                    className="bg-white text-red-600 font-bold px-6 py-3 rounded-xl hover:bg-red-50 transition-all flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Start Interview
+                  </button>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-900">Mock Interview Practice</h3>
+                  <h3 className="text-2xl font-bold text-slate-900">Practice Questions</h3>
                   <p className="text-slate-500">Click any question to see example answers and AI feedback</p>
                 </div>
                 <button onClick={() => updateProgress("mockInterviews", progress.mockInterviews + 1)} className="btn-premium text-sm px-4 py-2">
