@@ -578,8 +578,9 @@ export default function DashboardPage() {
       <footer className={`border-t py-6 sm:py-8 mt-8 sm:mt-12 ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
         <div className={`max-w-7xl mx-auto px-4 text-center text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
-            <a href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</a>
-            <a href="/about" className="hover:text-red-600 transition-colors">About</a>
+            <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+            <Link href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</Link>
+            <Link href="/about" className="hover:text-red-600 transition-colors">About</Link>
             <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
           </div>
           <p>Made by <a href="https://shaminder.sg" className="text-red-600 hover:underline">shaminder.sg</a></p>

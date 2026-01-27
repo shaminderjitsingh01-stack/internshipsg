@@ -183,8 +183,11 @@ export default function AboutPage() {
       <footer className={`border-t py-6 sm:py-8 ${isDarkTheme ? 'border-slate-800 bg-slate-950' : 'border-slate-200'}`}>
         <div className={`max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
-            <Link href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</Link>
+            <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+            <Link href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</Link>
             <Link href="/about" className="hover:text-red-600 transition-colors">About</Link>
+            <Link href="/dashboard" className="hover:text-red-600 transition-colors">Dashboard</Link>
+            <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
           </div>
           <p>Made by <a href="https://shaminder.sg" className="text-red-600 hover:underline">shaminder.sg</a></p>
           <p className="mt-1">Shaminder Technologies | UEN 53517136J</p>

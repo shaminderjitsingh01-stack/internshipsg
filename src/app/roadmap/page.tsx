@@ -618,6 +618,7 @@ export default function RoadmapPage() {
         <div className={`max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
             <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+            <Link href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</Link>
             <Link href="/about" className="hover:text-red-600 transition-colors">About</Link>
             <Link href="/dashboard" className="hover:text-red-600 transition-colors">Dashboard</Link>
             <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
