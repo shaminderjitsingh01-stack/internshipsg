@@ -259,7 +259,7 @@ export default function DashboardPage() {
                 Start a new mock interview session and improve your skills.
               </p>
               <Link
-                href="/"
+                href="/?start=interview"
                 className="block w-full py-3 bg-white text-red-600 rounded-xl font-semibold text-center hover:bg-red-50 transition-colors"
               >
                 Start New Interview

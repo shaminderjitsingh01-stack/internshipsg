@@ -68,6 +68,19 @@ export default function Home() {
   // Current step
   const [currentStep, setCurrentStep] = useState<Step>("landing");
 
+  // Check for start parameter to auto-start interview flow
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const startParam = urlParams.get("start");
+      if (startParam === "interview" && status === "authenticated") {
+        setCurrentStep("career");
+        // Clear the URL parameter
+        window.history.replaceState({}, "", "/");
+      }
+    }
+  }, [status]);
+
   // User data
   const [profile, setProfile] = useState({
     name: "",
