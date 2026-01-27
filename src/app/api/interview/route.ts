@@ -12,11 +12,19 @@ interface Message {
   content: string;
 }
 
-const TOTAL_QUESTIONS = 7;
-
 export async function POST(request: NextRequest) {
   try {
-    const { messages, userProfile, action, resumeText, coverLetterText } = await request.json();
+    const {
+      messages,
+      userProfile,
+      action,
+      resumeText,
+      coverLetterText,
+      interviewDuration = 15,
+      elapsedMinutes = 0,
+      remainingMinutes = 15,
+      isTimeUp = false
+    } = await request.json();
 
     // Build context from resume and cover letter
     const candidateContext = `
@@ -29,9 +37,32 @@ CANDIDATE'S COVER LETTER:
 ${coverLetterText.substring(0, 1500)}
 ` : ""}`;
 
+    const questionCount = messages?.filter((m: Message) => m.role === "assistant").length || 0;
+
+    // Determine question category based on time and question number
+    // Rotate through: Communication -> Technical -> Soft Skills
+    const getQuestionCategory = (qNum: number, elapsed: number, duration: number) => {
+      const progress = elapsed / duration; // 0 to 1
+
+      if (qNum === 1) return "ice-breaker";
+      if (qNum === 2) return "background";
+
+      // Rotate through categories
+      const categories = [
+        { name: "communication", focus: "Clear articulation, confidence, storytelling ability" },
+        { name: "technical", focus: "Industry knowledge, problem-solving, analytical thinking" },
+        { name: "soft-skills", focus: "Teamwork, leadership, adaptability, emotional intelligence" },
+      ];
+
+      const categoryIndex = (qNum - 3) % 3;
+      return categories[categoryIndex];
+    };
+
+    const currentCategory = getQuestionCategory(questionCount + 1, elapsedMinutes, interviewDuration);
+
     // Start new interview
     if (action === "start") {
-      const systemPrompt = `You are a friendly and professional AI interviewer conducting a mock interview for a Singapore internship candidate.
+      const systemPrompt = `You are a warm, professional AI interview coach helping a Singapore internship candidate practice and improve their interview skills.
 
 Candidate Profile:
 - Name: ${userProfile?.name || "Candidate"}
@@ -39,27 +70,24 @@ Candidate Profile:
 - Experience Level: ${userProfile?.experience || "Student"}
 ${candidateContext}
 
+INTERVIEW SESSION: ${interviewDuration} minutes
+Focus Areas: Communication Skills, Technical Knowledge, Soft Skills
+
 YOUR TASK FOR THIS FIRST TURN:
-Give a warm, friendly welcome to ${userProfile?.name || "the candidate"}. Be personable and help them feel at ease. Then ask your FIRST question which should be a simple ice-breaker to help them relax.
+Give a warm, encouraging welcome to ${userProfile?.name || "the candidate"}. Let them know this is a safe space to practice. Mention this is a ${interviewDuration}-minute session. Then ask a simple ice-breaker question to help them relax.
 
-IMPORTANT: You have access to their resume and cover letter above. Use this information throughout the interview to ask personalized, relevant questions about their specific experiences, projects, skills, and aspirations mentioned in their documents.
-
-Question Flow (${TOTAL_QUESTIONS} questions total):
-1. Ice-breaker (easy, get them talking)
-2. Background/Introduction (tell me about yourself - reference their resume)
-3. Interest/Motivation (why this industry - connect to their cover letter)
-4. Behavioral question (ask about specific experiences from their resume)
-5. Industry-specific question (based on their target role and skills)
-6. Situational/problem-solving question (relevant to their field)
-7. Goals and wrap-up question
+COACHING APPROACH:
+- Your goal is to help them IMPROVE their interview skills
+- Focus on building their confidence
+- Ask questions that will help them practice articulating their experiences clearly
+- After each answer, you'll provide brief coaching feedback along with the next question
 
 RULES:
-- Be warm, encouraging, and conversational
-- Keep your response SHORT - just the welcome and ONE question
-- Don't overwhelm them with information
+- Be warm, encouraging, and supportive
+- Keep your welcome SHORT - just 2-3 sentences + ONE question
 - Use their name to personalize
-- Make them feel comfortable
-- Do NOT introduce yourself by name - just be friendly and professional
+- Do NOT introduce yourself by name
+- Make them feel this is a supportive practice session, not a test
 
 Start now with your warm welcome and first ice-breaker question.`;
 
@@ -81,22 +109,75 @@ Start now with your warm welcome and first ice-breaker question.`;
 
     // Continue interview
     if (action === "respond") {
-      const questionCount = messages.filter((m: Message) => m.role === "assistant").length;
-      const isLastQuestion = questionCount >= TOTAL_QUESTIONS;
+      // Time's up - provide final feedback
+      if (isTimeUp) {
+        const feedbackPrompt = `You are a supportive AI interview coach. The ${interviewDuration}-minute practice session has ended.
 
-      const questionTypes = [
-        "ice-breaker",
-        "background/introduction",
-        "motivation and interest",
-        "behavioral",
-        "industry-specific technical",
-        "situational problem-solving",
-        "goals and closing"
-      ];
+Candidate Profile:
+- Name: ${userProfile?.name || "Candidate"}
+- Target Role/Industry: ${userProfile?.targetRole || "Internship"}
+${candidateContext}
 
-      const currentQuestionType = questionTypes[Math.min(questionCount, questionTypes.length - 1)];
+CONVERSATION SO FAR:
+${messages?.map((m: Message) => `${m.role === "assistant" ? "Coach" : "Candidate"}: ${m.content}`).join("\n\n")}
 
-      const systemPrompt = `You are a friendly AI interviewer conducting a mock interview for a Singapore internship candidate.
+Provide comprehensive, encouraging feedback:
+
+1. OPENING: Congratulate them on completing the practice session!
+
+2. OVERALL IMPRESSION (2-3 sentences): How they came across overall
+
+3. COMMUNICATION SKILLS (Score /10):
+   - Clarity of expression
+   - Confidence level
+   - Storytelling ability
+   - Areas to improve
+
+4. TECHNICAL KNOWLEDGE (Score /10):
+   - Understanding of their field
+   - Problem-solving approach
+   - Areas to develop
+
+5. SOFT SKILLS (Score /10):
+   - Teamwork examples
+   - Leadership potential
+   - Adaptability shown
+
+6. TOP 3 SPECIFIC TIPS for their ${userProfile?.targetRole || "internship"} interviews
+
+7. CLOSING: End with encouragement and a confidence boost
+
+Be warm, specific (reference their actual answers), and constructive. This is practice - help them improve!`;
+
+        const message = await anthropic.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1500,
+          system: feedbackPrompt,
+          messages: [{ role: "user", content: "Please provide feedback on my interview practice." }],
+        });
+
+        const responseText = message.content[0].type === "text" ? message.content[0].text : "";
+
+        return NextResponse.json({
+          message: responseText,
+          questionNumber: questionCount + 1,
+          isComplete: true,
+        });
+      }
+
+      // Build question type description
+      let questionTypeDesc = "";
+      if (typeof currentCategory === "string") {
+        if (currentCategory === "ice-breaker") {
+          questionTypeDesc = "ice-breaker question to build rapport";
+        } else if (currentCategory === "background") {
+          questionTypeDesc = "background question about their experience";
+        }
+      } else {
+        questionTypeDesc = `${currentCategory.name.toUpperCase()} question - Focus: ${currentCategory.focus}`;
+      }
+
+      const systemPrompt = `You are a supportive AI interview coach helping a Singapore internship candidate improve their interview skills.
 
 Candidate Profile:
 - Name: ${userProfile?.name || "Candidate"}
@@ -104,50 +185,51 @@ Candidate Profile:
 - Experience Level: ${userProfile?.experience || "Student"}
 ${candidateContext}
 
-Current Progress: Question ${questionCount} of ${TOTAL_QUESTIONS} completed.
-${isLastQuestion ? "" : `Next question type: ${currentQuestionType}`}
+SESSION INFO:
+- Duration: ${interviewDuration} minutes
+- Time elapsed: ${elapsedMinutes} minutes
+- Time remaining: ${remainingMinutes} minutes
+- Question #${questionCount + 1}
 
-${isLastQuestion ? `
-THIS WAS THE FINAL QUESTION. Now provide comprehensive, encouraging feedback:
+NEXT QUESTION TYPE: ${questionTypeDesc}
 
-1. Start with genuine praise - they completed a full mock interview!
-2. Give an Overall Score (1-10) with brief justification
-3. List 2-3 Key Strengths you observed (reference specific things they said)
-4. List 2-3 Areas for Improvement (be constructive, not critical)
-5. Give 2-3 Specific Tips for their ${userProfile?.targetRole || "internship"} interviews
-6. End with encouragement and confidence boost
+YOUR COACHING APPROACH:
+1. First, give brief MICRO-FEEDBACK on their previous answer (1-2 sentences):
+   - What they did well (be specific!)
+   - One quick tip to improve (if applicable)
 
-Be warm and supportive in your feedback. This is practice - help them improve!
-` : `
-YOUR TASK:
-1. Briefly acknowledge their answer (1-2 sentences, be encouraging and specific to what they said)
-2. NATURALLY TRANSITION to your next question by connecting it to something they just mentioned
-3. Ask your next question (type: ${currentQuestionType})
+2. Then TRANSITION naturally to your next question
+
+3. Ask your next question based on the type above:
+
+   COMMUNICATION questions test:
+   - "Walk me through..." (tests explanation clarity)
+   - "How would you explain X to someone non-technical?"
+   - "Tell me about a time you had to communicate a complex idea"
+
+   TECHNICAL questions test:
+   - Industry-specific knowledge for ${userProfile?.targetRole || "their field"}
+   - Problem-solving scenarios
+   - "How would you approach..." questions
+
+   SOFT SKILLS questions test:
+   - Teamwork: "Tell me about working in a team..."
+   - Leadership: "Describe a time you took initiative..."
+   - Adaptability: "How did you handle a sudden change..."
+   - Conflict resolution: "Tell me about a disagreement..."
 
 IMPORTANT - PERSONALIZE YOUR QUESTIONS:
-- Reference specific projects, experiences, or skills from their resume
-- Connect questions to their cover letter motivations
+- Reference specific items from their resume
+- Connect to their cover letter goals
 - Build on what they've shared in previous answers
-- Make the conversation feel natural and flowing, not scripted
-
-Question Guidelines by Type:
-- Ice-breaker: Something fun/easy to build rapport
-- Background: Ask about specific experiences from their resume
-- Motivation: Connect to their cover letter - why this industry/company interests them
-- Behavioral: "Tell me about a time when..." - reference specific projects or roles from their resume
-- Industry-specific: Questions relevant to ${userProfile?.targetRole || "their field"} and their stated skills
-- Situational: "What would you do if..." scenarios related to their target role
-- Goals: Where they see themselves, what they hope to learn from the internship
+- Make the conversation feel natural
 
 CRITICAL RULES:
-- Do NOT introduce yourself or say your name
-- Do NOT repeat greetings or welcomes
-- DIRECTLY acknowledge their previous answer and flow into the next question
-- Keep responses SHORT and conversational
-- ONE question only
-- Each question should feel like a natural continuation of the conversation
-- Reference their resume/cover letter when relevant
-`}`;
+- Do NOT introduce yourself or repeat greetings
+- Keep micro-feedback brief and encouraging
+- ONE question only after your feedback
+- Reference their actual answer in your feedback
+- Match your question to the category type above`;
 
       const apiMessages = messages.map((m: Message) => ({
         role: m.role,
@@ -156,7 +238,7 @@ CRITICAL RULES:
 
       const message = await anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
-        max_tokens: isLastQuestion ? 1200 : 400,
+        max_tokens: 500,
         system: systemPrompt,
         messages: apiMessages,
       });
@@ -166,7 +248,7 @@ CRITICAL RULES:
       return NextResponse.json({
         message: responseText,
         questionNumber: questionCount + 1,
-        isComplete: isLastQuestion,
+        isComplete: false,
       });
     }
 

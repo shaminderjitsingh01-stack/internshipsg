@@ -84,6 +84,10 @@ export default function Home() {
   const [interviewLoading, setInterviewLoading] = useState(false);
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(0);
+  const [interviewDuration, setInterviewDuration] = useState<15 | 30 | 60>(15);
+  const [interviewStartTime, setInterviewStartTime] = useState<number>(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const elapsedTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Video interview states
   const [interviewPhase, setInterviewPhase] = useState<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "complete">("setup");
@@ -466,12 +470,37 @@ export default function Home() {
     setInterviewPhase("countdown");
     await new Promise(resolve => setTimeout(resolve, 3000));
 
+    // Start elapsed time tracking
+    const startTime = Date.now();
+    setInterviewStartTime(startTime);
+    setElapsedTime(0);
+
+    // Update elapsed time every second
+    elapsedTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setElapsedTime(elapsed);
+
+      // Check if interview time is up
+      if (elapsed >= interviewDuration * 60) {
+        // Time's up - end interview after current question
+        if (elapsedTimerRef.current) {
+          clearInterval(elapsedTimerRef.current);
+        }
+      }
+    }, 1000);
+
     // Get first question
     await askNextQuestion();
   };
 
   // Ask the next question
   const askNextQuestion = async () => {
+    // Calculate remaining time
+    const currentElapsed = interviewStartTime > 0 ? Math.floor((Date.now() - interviewStartTime) / 1000) : 0;
+    const totalSeconds = interviewDuration * 60;
+    const remainingSeconds = Math.max(0, totalSeconds - currentElapsed);
+    const isTimeUp = remainingSeconds <= 60; // Less than 1 minute left = wrap up
+
     setInterviewPhase("question");
     setInterviewLoading(true);
     transcriptRef.current = "";
@@ -492,6 +521,10 @@ export default function Home() {
           },
           resumeText,
           coverLetterText,
+          interviewDuration,
+          elapsedMinutes: Math.floor(currentElapsed / 60),
+          remainingMinutes: Math.floor(remainingSeconds / 60),
+          isTimeUp,
         }),
       });
 
@@ -505,7 +538,11 @@ export default function Home() {
       // Speak the question
       await speakText(data.message);
 
-      if (data.isComplete) {
+      if (data.isComplete || isTimeUp) {
+        // Stop elapsed timer
+        if (elapsedTimerRef.current) {
+          clearInterval(elapsedTimerRef.current);
+        }
         setInterviewPhase("complete");
         setInterviewComplete(true);
       } else {
@@ -550,17 +587,17 @@ export default function Home() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [interviewMessages]);
 
-  // Handle OAuth sign-in
+  // Handle OAuth sign-in - only populate profile, don't auto-redirect
   useEffect(() => {
-    if (status === "authenticated" && session?.user && currentStep === "landing") {
+    if (status === "authenticated" && session?.user) {
       setProfile(prev => ({
         ...prev,
         name: session.user?.name || "",
         email: session.user?.email || "",
       }));
-      setCurrentStep("career");
+      // Don't auto-redirect - let user click "Get Started"
     }
-  }, [session, status, currentStep]);
+  }, [session, status]);
 
   // Step indicator
   const steps = [
@@ -1376,9 +1413,14 @@ export default function Home() {
                 </span>
               )}
               {questionNumber > 0 && !interviewComplete && (
-                <span className="text-sm text-white/70 bg-white/10 px-3 py-1 rounded-full">
-                  Question {questionNumber} / 7
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-white/70 bg-white/10 px-3 py-1 rounded-full">
+                    Q{questionNumber}
+                  </span>
+                  <span className="text-sm font-mono text-white/70 bg-white/10 px-3 py-1 rounded-full">
+                    {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')} / {interviewDuration}:00
+                  </span>
+                </div>
               )}
             </div>
           </div>
@@ -1388,38 +1430,129 @@ export default function Home() {
         <div className="min-h-screen flex items-center justify-center p-4">
           {/* Setup Phase */}
           {interviewPhase === "setup" && (
-            <div className="text-center max-w-xl">
-              <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center max-w-2xl">
+              <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-red-500/30">
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h1 className="text-3xl font-bold mb-4">AI Video Interview</h1>
-              <p className="text-white/70 mb-8">
-                You&apos;ll be asked 7 questions tailored to <span className="text-red-400 font-medium">{profile.targetRole}</span>.
-                Speak your answers naturally - our AI will listen and transcribe your responses.
+              <h1 className="text-3xl font-bold mb-2">AI Interview Practice</h1>
+              <p className="text-white/50 mb-8">
+                Personalized for <span className="text-red-400 font-medium">{profile.targetRole}</span>
               </p>
-              <div className="bg-white/10 rounded-xl p-4 mb-8 text-left text-sm">
-                <h3 className="font-semibold mb-2">Before you start:</h3>
-                <ul className="space-y-2 text-white/70">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400">✓</span>
-                    Find a quiet place with good lighting
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400">✓</span>
-                    Allow camera and microphone access
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400">✓</span>
-                    You have 2 minutes to answer each question
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400">✓</span>
-                    Speak clearly - AI will transcribe your answers
-                  </li>
-                </ul>
+
+              {/* Duration Selection */}
+              <div className="mb-8">
+                <p className="text-white/70 text-sm mb-4 uppercase tracking-wide">Select Interview Duration</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <button
+                    onClick={() => setInterviewDuration(15)}
+                    className={`relative p-6 rounded-2xl border-2 transition-all ${
+                      interviewDuration === 15
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    {interviewDuration === 15 && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="text-3xl font-bold mb-1">15</div>
+                    <div className="text-white/50 text-sm">minutes</div>
+                    <div className="text-white/30 text-xs mt-2">Quick Practice</div>
+                  </button>
+                  <button
+                    onClick={() => setInterviewDuration(30)}
+                    className={`relative p-6 rounded-2xl border-2 transition-all ${
+                      interviewDuration === 30
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    {interviewDuration === 30 && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-red-500 text-xs px-2 py-0.5 rounded-full">Popular</div>
+                    <div className="text-3xl font-bold mb-1">30</div>
+                    <div className="text-white/50 text-sm">minutes</div>
+                    <div className="text-white/30 text-xs mt-2">Standard Session</div>
+                  </button>
+                  <button
+                    onClick={() => setInterviewDuration(60)}
+                    className={`relative p-6 rounded-2xl border-2 transition-all ${
+                      interviewDuration === 60
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    {interviewDuration === 60 && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="text-3xl font-bold mb-1">60</div>
+                    <div className="text-white/50 text-sm">minutes</div>
+                    <div className="text-white/30 text-xs mt-2">Deep Practice</div>
+                  </button>
+                </div>
               </div>
+
+              {/* What You'll Practice */}
+              <div className="bg-gradient-to-br from-white/5 to-white/[0.02] rounded-2xl p-6 mb-8 text-left border border-white/5">
+                <h3 className="font-semibold mb-4 text-center">What You&apos;ll Practice</h3>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <div className="text-sm font-medium">Communication</div>
+                    <div className="text-xs text-white/40">Clarity & confidence</div>
+                  </div>
+                  <div className="p-3">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                    <div className="text-sm font-medium">Technical Skills</div>
+                    <div className="text-xs text-white/40">Industry knowledge</div>
+                  </div>
+                  <div className="p-3">
+                    <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div className="text-sm font-medium">Soft Skills</div>
+                    <div className="text-xs text-white/40">Teamwork & leadership</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="flex flex-wrap justify-center gap-3 mb-8 text-xs">
+                <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full text-white/60">
+                  <span className="text-green-400">✓</span> Quiet environment
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full text-white/60">
+                  <span className="text-green-400">✓</span> Camera & mic ready
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full text-white/60">
+                  <span className="text-green-400">✓</span> Speak naturally
+                </span>
+              </div>
+
               {error && (
                 <div className="bg-red-500/20 text-red-300 px-4 py-2 rounded-lg mb-4 text-sm">
                   {error}
@@ -1428,15 +1561,15 @@ export default function Home() {
               <div className="flex gap-4 justify-center">
                 <button
                   onClick={() => setCurrentStep("cover-letter")}
-                  className="px-6 py-4 border-2 border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 transition-all"
+                  className="px-6 py-4 border border-white/20 text-white/70 rounded-xl font-medium hover:bg-white/5 transition-all"
                 >
                   ← Back
                 </button>
                 <button
                   onClick={startVideoInterview}
-                  className="px-8 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all text-lg"
+                  className="px-8 py-4 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl font-semibold hover:from-red-500 hover:to-red-400 transition-all text-lg shadow-lg shadow-red-500/25"
                 >
-                  Start Interview
+                  Start {interviewDuration} Min Interview
                 </button>
               </div>
             </div>
@@ -1457,13 +1590,24 @@ export default function Home() {
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                  <span className="text-white/60 text-sm font-medium tracking-wide uppercase">Live Interview</span>
+                  <span className="text-white/60 text-sm font-medium tracking-wide uppercase">{interviewDuration} Min Session</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-white/40 text-sm">Question {questionNumber} of 7</span>
+                  <span className="text-white/40 text-sm">Q{questionNumber}</span>
+                  {/* Elapsed Time */}
+                  <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full">
+                    <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className={`font-mono text-sm ${
+                      elapsedTime >= (interviewDuration * 60 - 120) ? "text-red-400" : "text-white/70"
+                    }`}>
+                      {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')} / {interviewDuration}:00
+                    </span>
+                  </div>
                   {interviewPhase === "answering" && (
-                    <div className={`px-4 py-1.5 rounded-full font-mono text-sm font-bold ${
-                      answerTimer <= 30 ? "bg-red-600/80 text-white" : "bg-white/10 text-white/80"
+                    <div className={`px-3 py-1.5 rounded-full font-mono text-sm ${
+                      answerTimer <= 30 ? "bg-red-600/80 text-white" : "bg-white/10 text-white/60"
                     }`}>
                       {formatTime(answerTimer)}
                     </div>
