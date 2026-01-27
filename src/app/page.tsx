@@ -1186,7 +1186,7 @@ export default function Home() {
         <section className="relative z-10 max-w-6xl mx-auto px-4 pt-16 sm:pt-24 pb-16 text-center">
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8 border ${isDarkTheme ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-red-50 text-red-600 border-red-200'}`}>
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            Free AI-Powered Interview Prep
+            Singapore's #1 Interview Prep
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
