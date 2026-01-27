@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import StreakWidget from "@/components/StreakWidget";
 import StreakCard from "@/components/StreakCard";
+import ResumeAnalyzer from "@/components/ResumeAnalyzer";
+import CoverLetterAssistant from "@/components/CoverLetterAssistant";
 
 interface Interview {
   id: string;
@@ -21,7 +23,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "interviews" | "billing">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "interviews" | "resume" | "cover-letter" | "billing">("overview");
   const [showShareCard, setShowShareCard] = useState(false);
   const [streakForShare, setStreakForShare] = useState(0);
 
@@ -172,6 +174,26 @@ export default function DashboardPage() {
             }`}
           >
             Interview History
+          </button>
+          <button
+            onClick={() => setActiveTab("resume")}
+            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+              activeTab === "resume"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Resume
+          </button>
+          <button
+            onClick={() => setActiveTab("cover-letter")}
+            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+              activeTab === "cover-letter"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Cover Letter
           </button>
           <button
             onClick={() => setActiveTab("billing")}
@@ -348,6 +370,16 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Resume Tab */}
+        {activeTab === "resume" && session?.user?.email && (
+          <ResumeAnalyzer userEmail={session.user.email} />
+        )}
+
+        {/* Cover Letter Tab */}
+        {activeTab === "cover-letter" && session?.user?.email && (
+          <CoverLetterAssistant userEmail={session.user.email} />
         )}
 
         {/* Billing Tab */}
