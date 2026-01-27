@@ -2244,7 +2244,7 @@ export default function Home() {
             <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white text-center">
               <div className="text-5xl font-bold mb-2">{results.interviewScore}</div>
               <div className="text-red-100 text-sm font-medium">Overall Score</div>
-              <div className="text-red-200 text-xs mt-1">out of 10</div>
+              <div className="text-red-200 text-xs mt-1">out of 100</div>
             </div>
 
             {/* Communication Score */}
@@ -2350,10 +2350,10 @@ export default function Home() {
                     <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-indigo-500 rounded-full"
-                        style={{ width: `${(results.confidenceIndicators?.overallConfidence || 7) * 10}%` }}
+                        style={{ width: `${results.confidenceIndicators?.overallConfidence || 75}%` }}
                       />
                     </div>
-                    <span className="text-sm font-medium text-slate-800">{results.confidenceIndicators?.overallConfidence || 7}/10</span>
+                    <span className="text-sm font-medium text-slate-800">{results.confidenceIndicators?.overallConfidence || 75}/100</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -2450,11 +2450,11 @@ export default function Home() {
                         <span className="font-medium text-slate-800 text-sm">{q.question.substring(0, 60)}...</span>
                       </div>
                       <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                        q.score >= 8 ? "bg-green-100 text-green-700" :
-                        q.score >= 6 ? "bg-yellow-100 text-yellow-700" :
+                        q.score >= 80 ? "bg-green-100 text-green-700" :
+                        q.score >= 60 ? "bg-yellow-100 text-yellow-700" :
                         "bg-red-100 text-red-700"
                       }`}>
-                        {q.score}/10
+                        {q.score}/100
                       </div>
                     </div>
                     <div className="p-4 space-y-3">

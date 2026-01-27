@@ -48,13 +48,13 @@ Analyze all materials and provide feedback in this exact JSON format:
     {"skill": "skill name", "tip": "how to improve"},
     {"skill": "skill name", "tip": "how to improve"}
   ],
-  "interviewScore": 7,
+  "interviewScore": 75,
   "interviewFeedback": "2-3 sentence overall feedback on interview performance",
-  "communicationScore": 7,
+  "communicationScore": 72,
   "communicationFeedback": "Brief feedback on clarity, confidence, and articulation",
-  "technicalScore": 6,
+  "technicalScore": 68,
   "technicalFeedback": "Brief feedback on industry knowledge and problem-solving",
-  "softSkillsScore": 8,
+  "softSkillsScore": 80,
   "softSkillsFeedback": "Brief feedback on teamwork, adaptability, leadership",
   "strengths": ["strength1", "strength2", "strength3"],
   "areasToImprove": ["area1", "area2", "area3"],
@@ -62,14 +62,14 @@ Analyze all materials and provide feedback in this exact JSON format:
     {
       "question": "The interview question asked",
       "answerSummary": "Brief summary of candidate's answer",
-      "score": 7,
+      "score": 75,
       "whatWentWell": "Specific positive aspect of the answer",
       "improvement": "Specific suggestion for improvement",
       "idealAnswer": "Brief example of what a strong answer would include"
     }
   ],
   "confidenceIndicators": {
-    "overallConfidence": 7,
+    "overallConfidence": 75,
     "fillerWordsCount": "low/medium/high",
     "answerStructure": "good/needs-work",
     "specificExamples": "used/lacking",
@@ -87,10 +87,10 @@ Guidelines:
 - Cover letter tips: Focus on structure, hook, specificity, call-to-action
 - Prep tips: Actionable interview preparation advice based on their performance
 - Soft skills: Skills they should develop based on their interview answers
-- Interview score: 1-10 based on answer quality, structure, and confidence
-- Communication score: 1-10 based on clarity, confidence, storytelling
-- Technical score: 1-10 based on industry knowledge, problem-solving approach
-- Soft skills score: 1-10 based on teamwork, leadership, adaptability shown
+- Interview score: 0-100 based on answer quality, structure, and confidence
+- Communication score: 0-100 based on clarity, confidence, storytelling
+- Technical score: 0-100 based on industry knowledge, problem-solving approach
+- Soft skills score: 0-100 based on teamwork, leadership, adaptability shown
 - Strengths: 3 specific things they did well in the interview
 - Areas to improve: 3 specific things they can work on
 - questionBreakdown: For EACH question-answer pair in the transcript, provide detailed scoring
