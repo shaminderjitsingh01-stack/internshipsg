@@ -97,7 +97,7 @@ export default function Home() {
   const [interviewLoading, setInterviewLoading] = useState(false);
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(0);
-  const [interviewDuration, setInterviewDuration] = useState<15 | 30 | 60>(15);
+  const [interviewDuration, setInterviewDuration] = useState<5 | 15 | 30>(5);
   const [interviewStartTime, setInterviewStartTime] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const elapsedTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -1632,6 +1632,25 @@ export default function Home() {
                 <p className="text-white/70 text-sm mb-4 uppercase tracking-wide">Select Interview Duration</p>
                 <div className="grid grid-cols-3 gap-4">
                   <button
+                    onClick={() => setInterviewDuration(5)}
+                    className={`relative p-6 rounded-2xl border-2 transition-all ${
+                      interviewDuration === 5
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    {interviewDuration === 5 && (
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="text-3xl font-bold mb-1">5</div>
+                    <div className="text-white/50 text-sm">minutes</div>
+                    <div className="text-white/30 text-xs mt-2">Quick Practice</div>
+                  </button>
+                  <button
                     onClick={() => setInterviewDuration(15)}
                     className={`relative p-6 rounded-2xl border-2 transition-all ${
                       interviewDuration === 15
@@ -1646,9 +1665,10 @@ export default function Home() {
                         </svg>
                       </div>
                     )}
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-red-500 text-xs px-2 py-0.5 rounded-full">Popular</div>
                     <div className="text-3xl font-bold mb-1">15</div>
                     <div className="text-white/50 text-sm">minutes</div>
-                    <div className="text-white/30 text-xs mt-2">Quick Practice</div>
+                    <div className="text-white/30 text-xs mt-2">Standard Session</div>
                   </button>
                   <button
                     onClick={() => setInterviewDuration(30)}
@@ -1665,27 +1685,7 @@ export default function Home() {
                         </svg>
                       </div>
                     )}
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-red-500 text-xs px-2 py-0.5 rounded-full">Popular</div>
                     <div className="text-3xl font-bold mb-1">30</div>
-                    <div className="text-white/50 text-sm">minutes</div>
-                    <div className="text-white/30 text-xs mt-2">Standard Session</div>
-                  </button>
-                  <button
-                    onClick={() => setInterviewDuration(60)}
-                    className={`relative p-6 rounded-2xl border-2 transition-all ${
-                      interviewDuration === 60
-                        ? "border-red-500 bg-red-500/10"
-                        : "border-white/10 bg-white/5 hover:border-white/20"
-                    }`}
-                  >
-                    {interviewDuration === 60 && (
-                      <div className="absolute top-3 right-3 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="text-3xl font-bold mb-1">60</div>
                     <div className="text-white/50 text-sm">minutes</div>
                     <div className="text-white/30 text-xs mt-2">Deep Practice</div>
                   </button>
