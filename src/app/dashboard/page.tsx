@@ -223,7 +223,7 @@ export default function DashboardPage() {
               </div>
               <div className="pt-4 border-t border-slate-100">
                 <p className="text-sm text-slate-500">Member since</p>
-                <p className="font-medium text-slate-900">January 2025</p>
+                <p className="font-medium text-slate-900">January 2026</p>
               </div>
             </div>
 
