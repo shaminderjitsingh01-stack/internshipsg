@@ -214,7 +214,8 @@ export default function DashboardPage() {
             {session?.user?.email && (
               <StreakWidget
                 userEmail={session.user.email}
-                onShare={() => {
+                onShare={(streakCount) => {
+                  setStreakForShare(streakCount);
                   setShowShareCard(true);
                 }}
               />
