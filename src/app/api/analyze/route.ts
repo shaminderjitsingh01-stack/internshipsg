@@ -57,7 +57,29 @@ Analyze all materials and provide feedback in this exact JSON format:
   "softSkillsScore": 8,
   "softSkillsFeedback": "Brief feedback on teamwork, adaptability, leadership",
   "strengths": ["strength1", "strength2", "strength3"],
-  "areasToImprove": ["area1", "area2", "area3"]
+  "areasToImprove": ["area1", "area2", "area3"],
+  "questionBreakdown": [
+    {
+      "question": "The interview question asked",
+      "answerSummary": "Brief summary of candidate's answer",
+      "score": 7,
+      "whatWentWell": "Specific positive aspect of the answer",
+      "improvement": "Specific suggestion for improvement",
+      "idealAnswer": "Brief example of what a strong answer would include"
+    }
+  ],
+  "confidenceIndicators": {
+    "overallConfidence": 7,
+    "fillerWordsCount": "low/medium/high",
+    "answerStructure": "good/needs-work",
+    "specificExamples": "used/lacking",
+    "enthusiasmLevel": "high/medium/low"
+  },
+  "comparisonToTopPerformers": {
+    "percentile": 75,
+    "aboveAverage": ["area1", "area2"],
+    "belowAverage": ["area1"]
+  }
 }
 
 Guidelines:
@@ -71,14 +93,17 @@ Guidelines:
 - Soft skills score: 1-10 based on teamwork, leadership, adaptability shown
 - Strengths: 3 specific things they did well in the interview
 - Areas to improve: 3 specific things they can work on
-- Be specific and actionable, reference their actual answers
+- questionBreakdown: For EACH question-answer pair in the transcript, provide detailed scoring
+- confidenceIndicators: Analyze speaking patterns, filler words, structure
+- comparisonToTopPerformers: Estimate percentile vs typical internship candidates
+- Be specific and actionable, reference their actual answers with quotes
 - Singapore internship market context
 
 Return ONLY valid JSON, no markdown.`;
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
+      max_tokens: 4000,
       messages: [{ role: "user", content: prompt }],
     });
 

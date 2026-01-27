@@ -51,6 +51,29 @@ interface InterviewMessage {
   content: string;
 }
 
+interface QuestionBreakdown {
+  question: string;
+  answerSummary: string;
+  score: number;
+  whatWentWell: string;
+  improvement: string;
+  idealAnswer: string;
+}
+
+interface ConfidenceIndicators {
+  overallConfidence: number;
+  fillerWordsCount: "low" | "medium" | "high";
+  answerStructure: "good" | "needs-work";
+  specificExamples: "used" | "lacking";
+  enthusiasmLevel: "high" | "medium" | "low";
+}
+
+interface ComparisonToTopPerformers {
+  percentile: number;
+  aboveAverage: string[];
+  belowAverage: string[];
+}
+
 interface ResultsData {
   resumeTips: string[];
   coverLetterTips: string[];
@@ -67,6 +90,12 @@ interface ResultsData {
   softSkillsFeedback?: string;
   strengths?: string[];
   areasToImprove?: string[];
+  // Question-by-question breakdown
+  questionBreakdown?: QuestionBreakdown[];
+  // Confidence analysis
+  confidenceIndicators?: ConfidenceIndicators;
+  // Comparison to others
+  comparisonToTopPerformers?: ComparisonToTopPerformers;
 }
 
 type Step = "landing" | "career" | "resume" | "cover-letter" | "interview" | "results";
@@ -2242,6 +2271,158 @@ export default function Home() {
               </ul>
             </div>
           </div>
+
+          {/* Confidence Indicators & Comparison */}
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            {/* Confidence Indicators */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6">
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </span>
+                Confidence Analysis
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Overall Confidence</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-indigo-500 rounded-full"
+                        style={{ width: `${(results.confidenceIndicators?.overallConfidence || 7) * 10}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-slate-800">{results.confidenceIndicators?.overallConfidence || 7}/10</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Filler Words (um, uh)</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    results.confidenceIndicators?.fillerWordsCount === "low" ? "bg-green-100 text-green-700" :
+                    results.confidenceIndicators?.fillerWordsCount === "high" ? "bg-red-100 text-red-700" :
+                    "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {results.confidenceIndicators?.fillerWordsCount || "medium"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Answer Structure</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    results.confidenceIndicators?.answerStructure === "good" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {results.confidenceIndicators?.answerStructure || "good"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Specific Examples</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    results.confidenceIndicators?.specificExamples === "used" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {results.confidenceIndicators?.specificExamples || "used"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Enthusiasm Level</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    results.confidenceIndicators?.enthusiasmLevel === "high" ? "bg-green-100 text-green-700" :
+                    results.confidenceIndicators?.enthusiasmLevel === "low" ? "bg-red-100 text-red-700" :
+                    "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {results.confidenceIndicators?.enthusiasmLevel || "medium"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Comparison to Top Performers */}
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                vs. Other Candidates
+              </h3>
+              <div className="text-center mb-4">
+                <div className="text-5xl font-bold mb-1">{results.comparisonToTopPerformers?.percentile || 75}%</div>
+                <div className="text-indigo-200 text-sm">Percentile Ranking</div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-xs text-indigo-200 uppercase tracking-wide mb-1">Above Average In</div>
+                  <div className="flex flex-wrap gap-1">
+                    {(results.comparisonToTopPerformers?.aboveAverage || ["Communication", "Enthusiasm"]).map((item, i) => (
+                      <span key={i} className="text-xs bg-white/20 px-2 py-1 rounded-full">{item}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-indigo-200 uppercase tracking-wide mb-1">Room to Grow</div>
+                  <div className="flex flex-wrap gap-1">
+                    {(results.comparisonToTopPerformers?.belowAverage || ["Technical depth"]).map((item, i) => (
+                      <span key={i} className="text-xs bg-white/10 px-2 py-1 rounded-full">{item}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Question-by-Question Breakdown */}
+          {results.questionBreakdown && results.questionBreakdown.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </span>
+                Question-by-Question Breakdown
+              </h2>
+              <div className="space-y-4">
+                {results.questionBreakdown.map((q, i) => (
+                  <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                    <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold text-sm">
+                          Q{i + 1}
+                        </span>
+                        <span className="font-medium text-slate-800 text-sm">{q.question.substring(0, 60)}...</span>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                        q.score >= 8 ? "bg-green-100 text-green-700" :
+                        q.score >= 6 ? "bg-yellow-100 text-yellow-700" :
+                        "bg-red-100 text-red-700"
+                      }`}>
+                        {q.score}/10
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">Your Answer</div>
+                        <p className="text-sm text-slate-600 italic">&quot;{q.answerSummary}&quot;</p>
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div className="bg-green-50 rounded-lg p-3">
+                          <div className="text-xs text-green-700 font-medium mb-1">✓ What Went Well</div>
+                          <p className="text-sm text-green-800">{q.whatWentWell}</p>
+                        </div>
+                        <div className="bg-amber-50 rounded-lg p-3">
+                          <div className="text-xs text-amber-700 font-medium mb-1">→ To Improve</div>
+                          <p className="text-sm text-amber-800">{q.improvement}</p>
+                        </div>
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <div className="text-xs text-blue-700 font-medium mb-1">💡 Ideal Answer Would Include</div>
+                        <p className="text-sm text-blue-800">{q.idealAnswer}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Tips Grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-6">
