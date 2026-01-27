@@ -12,31 +12,60 @@ interface Message {
   content: string;
 }
 
+const TOTAL_QUESTIONS = 7;
+
 export async function POST(request: NextRequest) {
   try {
-    const { messages, userProfile, action } = await request.json();
+    const { messages, userProfile, action, resumeText, coverLetterText } = await request.json();
+
+    // Build context from resume and cover letter
+    const candidateContext = `
+${resumeText ? `
+CANDIDATE'S RESUME:
+${resumeText.substring(0, 3000)}
+` : ""}
+${coverLetterText ? `
+CANDIDATE'S COVER LETTER:
+${coverLetterText.substring(0, 1500)}
+` : ""}`;
 
     // Start new interview
     if (action === "start") {
-      const systemPrompt = `You are an experienced interviewer conducting a mock interview for a Singapore internship candidate.
+      const systemPrompt = `You are a friendly and professional AI interviewer conducting a mock interview for a Singapore internship candidate.
 
 Candidate Profile:
 - Name: ${userProfile?.name || "Candidate"}
-- Target Role: ${userProfile?.targetRole || "Internship"}
-- Experience: ${userProfile?.experience || "Student"}
+- Target Role/Industry: ${userProfile?.targetRole || "Internship"}
+- Experience Level: ${userProfile?.experience || "Student"}
+${candidateContext}
 
-IMPORTANT RULES:
-1. Ask ONE question at a time
-2. Wait for the candidate's response before asking the next question
-3. Be encouraging but professional
-4. Ask 5 questions total, mixing behavioral, situational, and role-specific questions
-5. After the 5th answer, provide comprehensive feedback
+YOUR TASK FOR THIS FIRST TURN:
+Give a warm, friendly welcome to ${userProfile?.name || "the candidate"}. Be personable and help them feel at ease. Then ask your FIRST question which should be a simple ice-breaker to help them relax.
 
-Start by greeting the candidate briefly and asking your first interview question.`;
+IMPORTANT: You have access to their resume and cover letter above. Use this information throughout the interview to ask personalized, relevant questions about their specific experiences, projects, skills, and aspirations mentioned in their documents.
+
+Question Flow (${TOTAL_QUESTIONS} questions total):
+1. Ice-breaker (easy, get them talking)
+2. Background/Introduction (tell me about yourself - reference their resume)
+3. Interest/Motivation (why this industry - connect to their cover letter)
+4. Behavioral question (ask about specific experiences from their resume)
+5. Industry-specific question (based on their target role and skills)
+6. Situational/problem-solving question (relevant to their field)
+7. Goals and wrap-up question
+
+RULES:
+- Be warm, encouraging, and conversational
+- Keep your response SHORT - just the welcome and ONE question
+- Don't overwhelm them with information
+- Use their name to personalize
+- Make them feel comfortable
+- Do NOT introduce yourself by name - just be friendly and professional
+
+Start now with your warm welcome and first ice-breaker question.`;
 
       const message = await anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 500,
+        max_tokens: 400,
         system: systemPrompt,
         messages: [{ role: "user", content: "Start the interview" }],
       });
@@ -53,32 +82,71 @@ Start by greeting the candidate briefly and asking your first interview question
     // Continue interview
     if (action === "respond") {
       const questionCount = messages.filter((m: Message) => m.role === "assistant").length;
-      const isLastQuestion = questionCount >= 5;
+      const isLastQuestion = questionCount >= TOTAL_QUESTIONS;
 
-      const systemPrompt = `You are an experienced interviewer conducting a mock interview for a Singapore internship candidate.
+      const questionTypes = [
+        "ice-breaker",
+        "background/introduction",
+        "motivation and interest",
+        "behavioral",
+        "industry-specific technical",
+        "situational problem-solving",
+        "goals and closing"
+      ];
+
+      const currentQuestionType = questionTypes[Math.min(questionCount, questionTypes.length - 1)];
+
+      const systemPrompt = `You are a friendly AI interviewer conducting a mock interview for a Singapore internship candidate.
 
 Candidate Profile:
 - Name: ${userProfile?.name || "Candidate"}
-- Target Role: ${userProfile?.targetRole || "Internship"}
-- Experience: ${userProfile?.experience || "Student"}
+- Target Role/Industry: ${userProfile?.targetRole || "Internship"}
+- Experience Level: ${userProfile?.experience || "Student"}
+${candidateContext}
 
-This is question ${questionCount + 1} of 5.
+Current Progress: Question ${questionCount} of ${TOTAL_QUESTIONS} completed.
+${isLastQuestion ? "" : `Next question type: ${currentQuestionType}`}
 
-RULES:
 ${isLastQuestion ? `
-This was the FINAL question. Now provide comprehensive feedback:
-1. Overall Performance Score (1-10)
-2. Strengths (2-3 points)
-3. Areas for Improvement (2-3 points)
-4. Specific Tips for each answer
-5. Encouragement for their internship journey
+THIS WAS THE FINAL QUESTION. Now provide comprehensive, encouraging feedback:
 
-Format the feedback clearly with headers.
+1. Start with genuine praise - they completed a full mock interview!
+2. Give an Overall Score (1-10) with brief justification
+3. List 2-3 Key Strengths you observed (reference specific things they said)
+4. List 2-3 Areas for Improvement (be constructive, not critical)
+5. Give 2-3 Specific Tips for their ${userProfile?.targetRole || "internship"} interviews
+6. End with encouragement and confidence boost
+
+Be warm and supportive in your feedback. This is practice - help them improve!
 ` : `
-1. Briefly acknowledge their answer (1 sentence)
-2. Ask your next interview question
-3. Keep it professional and encouraging
-4. Mix question types: behavioral, situational, technical, motivational
+YOUR TASK:
+1. Briefly acknowledge their answer (1-2 sentences, be encouraging and specific to what they said)
+2. NATURALLY TRANSITION to your next question by connecting it to something they just mentioned
+3. Ask your next question (type: ${currentQuestionType})
+
+IMPORTANT - PERSONALIZE YOUR QUESTIONS:
+- Reference specific projects, experiences, or skills from their resume
+- Connect questions to their cover letter motivations
+- Build on what they've shared in previous answers
+- Make the conversation feel natural and flowing, not scripted
+
+Question Guidelines by Type:
+- Ice-breaker: Something fun/easy to build rapport
+- Background: Ask about specific experiences from their resume
+- Motivation: Connect to their cover letter - why this industry/company interests them
+- Behavioral: "Tell me about a time when..." - reference specific projects or roles from their resume
+- Industry-specific: Questions relevant to ${userProfile?.targetRole || "their field"} and their stated skills
+- Situational: "What would you do if..." scenarios related to their target role
+- Goals: Where they see themselves, what they hope to learn from the internship
+
+CRITICAL RULES:
+- Do NOT introduce yourself or say your name
+- Do NOT repeat greetings or welcomes
+- DIRECTLY acknowledge their previous answer and flow into the next question
+- Keep responses SHORT and conversational
+- ONE question only
+- Each question should feel like a natural continuation of the conversation
+- Reference their resume/cover letter when relevant
 `}`;
 
       const apiMessages = messages.map((m: Message) => ({
@@ -88,7 +156,7 @@ Format the feedback clearly with headers.
 
       const message = await anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
-        max_tokens: isLastQuestion ? 1500 : 500,
+        max_tokens: isLastQuestion ? 1200 : 400,
         system: systemPrompt,
         messages: apiMessages,
       });

@@ -3,6 +3,48 @@
 import { useState, useEffect, useRef } from "react";
 import { signIn, useSession } from "next-auth/react";
 
+// TypeScript declarations for Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: Event & { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
 // Types
 interface InterviewMessage {
   role: "user" | "assistant";
@@ -31,7 +73,7 @@ export default function Home() {
     name: "",
     email: "",
     targetRole: "",
-    experience: "student",
+    experience: "no-internship",
   });
   const [resumeText, setResumeText] = useState("");
   const [coverLetterText, setCoverLetterText] = useState("");
@@ -43,6 +85,18 @@ export default function Home() {
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(0);
 
+  // Video interview states
+  const [interviewPhase, setInterviewPhase] = useState<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "complete">("setup");
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [answerTimer, setAnswerTimer] = useState(120); // 2 minutes per answer
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [lastSpeechTime, setLastSpeechTime] = useState(0);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Results
   const [results, setResults] = useState<ResultsData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,10 +104,428 @@ export default function Home() {
 
   // Video interview
   const [videoEnabled, setVideoEnabled] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Extract text from PDF client-side
+  const extractPdfText = async (file: File): Promise<string> => {
+    // Dynamically import pdfjs-dist
+    const pdfjsLib = await import("pdfjs-dist");
+
+    // Use CDN worker matching our installed version
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://unpkg.com/pdfjs-dist@5.4.530/build/pdf.worker.min.mjs";
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    let fullText = "";
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item) => ("str" in item ? item.str : ""))
+        .join(" ");
+      fullText += pageText + "\n";
+    }
+
+    return fullText.trim();
+  };
+
+  // Start camera and recording
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: 640, height: 480 },
+        audio: true
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setVideoEnabled(true);
+
+      // Start recording
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "video/webm;codecs=vp9,opus"
+      });
+      mediaRecorderRef.current = mediaRecorder;
+
+      const chunks: Blob[] = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      mediaRecorder.onstop = () => {
+        setRecordedChunks(chunks);
+      };
+
+      mediaRecorder.start(1000); // Capture in 1-second chunks
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Camera error:", err);
+      setError("Could not access camera. Please allow camera permissions.");
+    }
+  };
+
+  // Stop camera and recording
+  const stopCamera = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setVideoEnabled(false);
+  };
+
+  // Upload recorded video
+  const uploadVideo = async (): Promise<string | null> => {
+    if (recordedChunks.length === 0) return null;
+
+    setUploadingVideo(true);
+    try {
+      const blob = new Blob(recordedChunks, { type: "video/webm" });
+      const formData = new FormData();
+      formData.append("video", blob, "interview.webm");
+      formData.append("userEmail", profile.email);
+
+      const res = await fetch("/api/upload-video", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      return data.url;
+    } catch (err) {
+      console.error("Upload error:", err);
+      return null;
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  // Save interview to database
+  const saveInterview = async (videoUrl: string | null, score: number, feedback: string) => {
+    try {
+      await fetch("/api/interviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: profile.email,
+          userName: profile.name,
+          targetRole: profile.targetRole,
+          videoUrl,
+          transcript: interviewMessages,
+          score,
+          feedback,
+        }),
+      });
+    } catch (err) {
+      console.error("Save interview error:", err);
+    }
+  };
+
+  // Text-to-speech for AI interviewer - natural female voice
+  const speakText = (text: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!("speechSynthesis" in window)) {
+        resolve();
+        return;
+      }
+      setIsSpeaking(true);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95; // Slightly slower for more natural pacing
+      utterance.pitch = 1.05; // Slightly higher for warmth
+      utterance.volume = 1;
+
+      // Find the most natural-sounding female voice
+      const voices = speechSynthesis.getVoices();
+
+      // Priority order: Premium/Neural voices first, then standard female voices
+      const preferredVoices = [
+        // Windows natural voices (Edge/Chrome)
+        "Microsoft Aria Online (Natural)",
+        "Microsoft Jenny Online (Natural)",
+        "Microsoft Zira",
+        "Microsoft Zira Desktop",
+        // Google voices
+        "Google UK English Female",
+        "Google US English Female",
+        // macOS voices
+        "Samantha",
+        "Karen",
+        "Victoria",
+        "Allison",
+        // Generic female matches
+        "Female",
+        "female",
+      ];
+
+      let selectedVoice = null;
+      for (const preferred of preferredVoices) {
+        const found = voices.find(v => v.name.includes(preferred));
+        if (found) {
+          selectedVoice = found;
+          break;
+        }
+      }
+
+      // Fallback: find any English female voice
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v =>
+          v.lang.startsWith("en") &&
+          (v.name.toLowerCase().includes("female") ||
+           v.name.includes("Zira") ||
+           v.name.includes("Samantha") ||
+           v.name.includes("Karen"))
+        );
+      }
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        resolve();
+      };
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        resolve();
+      };
+      speechSynthesis.speak(utterance);
+    });
+  };
+
+  // Speech recognition for candidate answers with auto-detection
+  const startListening = () => {
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      setError("Speech recognition not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      // Reset silence timer on any speech
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+
+      let finalTranscript = "";
+      let interimTranscript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += text + " ";
+        } else {
+          interimTranscript += text;
+        }
+      }
+
+      if (finalTranscript) {
+        setTranscript(prev => prev + finalTranscript);
+        setLastSpeechTime(Date.now());
+
+        // Start 4-second silence timer after final speech
+        silenceTimerRef.current = setTimeout(() => {
+          // Auto-submit after 4 seconds of silence
+          handleAutoSubmit();
+        }, 4000);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+    };
+
+    recognition.onend = () => {
+      // Restart if still listening
+      if (isListening && interviewPhase === "answering") {
+        try {
+          recognition.start();
+        } catch (e) {
+          console.error("Failed to restart recognition:", e);
+        }
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  };
+
+  // Auto-submit when silence detected
+  const handleAutoSubmit = async () => {
+    if (interviewPhase !== "answering") return;
+
+    // Only auto-submit if user has said something
+    if (transcript.trim().length > 10) {
+      // Notify user we're moving on
+      setInterviewPhase("processing");
+      stopListening();
+
+      // Clear timers
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      // Save answer and get next question
+      const answer = transcript.trim();
+      setInterviewMessages(prev => [...prev, { role: "user", content: answer }]);
+      setTranscript("");
+      setAnswerTimer(120);
+
+      // Get next question
+      await askNextQuestion();
+    }
+  };
+
+  // Manual submit button
+  const manualSubmit = async () => {
+    if (interviewPhase !== "answering") return;
+
+    setInterviewPhase("processing");
+    stopListening();
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+
+    const answer = transcript.trim() || "(No response provided)";
+    setInterviewMessages(prev => [...prev, { role: "user", content: answer }]);
+    setTranscript("");
+    setAnswerTimer(120);
+
+    await askNextQuestion();
+  };
+
+  const stopListening = () => {
+    setIsListening(false);
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.error("Error stopping recognition:", e);
+      }
+      recognitionRef.current = null;
+    }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+  };
+
+  // Start the video interview
+  const startVideoInterview = async () => {
+    // Start camera first
+    await startCamera();
+
+    // 3 second countdown
+    setInterviewPhase("countdown");
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Get first question
+    await askNextQuestion();
+  };
+
+  // Ask the next question
+  const askNextQuestion = async () => {
+    setInterviewPhase("question");
+    setInterviewLoading(true);
+    setTranscript("");
+    setAnswerTimer(120);
+
+    try {
+      const res = await fetch("/api/interview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: questionNumber === 0 ? "start" : "respond",
+          messages: interviewMessages,
+          userProfile: {
+            name: profile.name,
+            targetRole: profile.targetRole,
+            experience: profile.experience,
+          },
+          resumeText,
+          coverLetterText,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setCurrentQuestion(data.message);
+      setQuestionNumber(data.questionNumber);
+      setInterviewMessages(prev => [...prev, { role: "assistant", content: data.message }]);
+
+      // Speak the question
+      await speakText(data.message);
+
+      if (data.isComplete) {
+        setInterviewPhase("complete");
+        setInterviewComplete(true);
+      } else {
+        // Start listening for answer
+        setInterviewPhase("answering");
+        startListening();
+
+        // Start answer timer as backup (2 minutes max)
+        timerRef.current = setInterval(() => {
+          setAnswerTimer(prev => {
+            if (prev <= 1) {
+              handleAutoSubmit();
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to get question");
+    } finally {
+      setInterviewLoading(false);
+    }
+  };
+
+  // Submit the candidate's answer
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (recognitionRef.current) recognitionRef.current.stop();
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -101,6 +573,8 @@ export default function Home() {
             targetRole: profile.targetRole,
             experience: profile.experience,
           },
+          resumeText,
+          coverLetterText,
         }),
       });
 
@@ -139,6 +613,8 @@ export default function Home() {
             targetRole: profile.targetRole,
             experience: profile.experience,
           },
+          resumeText,
+          coverLetterText,
         }),
       });
 
@@ -158,8 +634,8 @@ export default function Home() {
     }
   };
 
-  // Generate results
-  const generateResults = async () => {
+  // Generate results and save interview
+  const generateResults = async (videoUrl?: string | null) => {
     setLoading(true);
     setError("");
 
@@ -177,6 +653,11 @@ export default function Home() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+
+      // Save interview with results
+      if (profile.email) {
+        await saveInterview(videoUrl || null, data.interviewScore, data.interviewFeedback);
+      }
 
       setResults(data);
       setCurrentStep("results");
@@ -380,14 +861,156 @@ export default function Home() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Target Role / Industry</label>
-            <input
-              type="text"
+            <label className="block text-sm font-medium text-slate-700 mb-1">Target Industry</label>
+            <select
               value={profile.targetRole}
               onChange={(e) => setProfile({ ...profile, targetRole: e.target.value })}
               className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="e.g., Marketing Intern, Software Developer, Data Analyst"
-            />
+            >
+              <option value="">Select an industry...</option>
+              <optgroup label="Technology & IT">
+                <option value="Software Development">Software Development</option>
+                <option value="Data Science & Analytics">Data Science & Analytics</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+                <option value="Cloud Computing">Cloud Computing</option>
+                <option value="Artificial Intelligence / Machine Learning">Artificial Intelligence / Machine Learning</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Mobile App Development">Mobile App Development</option>
+                <option value="IT Support & Infrastructure">IT Support & Infrastructure</option>
+                <option value="UI/UX Design">UI/UX Design</option>
+                <option value="Product Management (Tech)">Product Management (Tech)</option>
+                <option value="DevOps & Site Reliability">DevOps & Site Reliability</option>
+                <option value="Game Development">Game Development</option>
+              </optgroup>
+              <optgroup label="Finance & Banking">
+                <option value="Investment Banking">Investment Banking</option>
+                <option value="Corporate Finance">Corporate Finance</option>
+                <option value="Financial Analysis">Financial Analysis</option>
+                <option value="Accounting & Audit">Accounting & Audit</option>
+                <option value="Risk Management">Risk Management</option>
+                <option value="Wealth Management">Wealth Management</option>
+                <option value="FinTech">FinTech</option>
+                <option value="Insurance">Insurance</option>
+                <option value="Private Equity / Venture Capital">Private Equity / Venture Capital</option>
+              </optgroup>
+              <optgroup label="Marketing & Communications">
+                <option value="Digital Marketing">Digital Marketing</option>
+                <option value="Content Marketing">Content Marketing</option>
+                <option value="Social Media Marketing">Social Media Marketing</option>
+                <option value="Brand Management">Brand Management</option>
+                <option value="Public Relations">Public Relations</option>
+                <option value="Advertising">Advertising</option>
+                <option value="Market Research">Market Research</option>
+                <option value="SEO / SEM">SEO / SEM</option>
+                <option value="Communications">Communications</option>
+              </optgroup>
+              <optgroup label="Sales & Business Development">
+                <option value="Sales">Sales</option>
+                <option value="Business Development">Business Development</option>
+                <option value="Account Management">Account Management</option>
+                <option value="Retail Sales">Retail Sales</option>
+                <option value="B2B Sales">B2B Sales</option>
+              </optgroup>
+              <optgroup label="Consulting & Strategy">
+                <option value="Management Consulting">Management Consulting</option>
+                <option value="Strategy Consulting">Strategy Consulting</option>
+                <option value="Business Analysis">Business Analysis</option>
+                <option value="Operations Consulting">Operations Consulting</option>
+              </optgroup>
+              <optgroup label="Human Resources">
+                <option value="HR Generalist">HR Generalist</option>
+                <option value="Talent Acquisition / Recruitment">Talent Acquisition / Recruitment</option>
+                <option value="Learning & Development">Learning & Development</option>
+                <option value="Compensation & Benefits">Compensation & Benefits</option>
+                <option value="HR Analytics">HR Analytics</option>
+              </optgroup>
+              <optgroup label="Healthcare & Life Sciences">
+                <option value="Healthcare Administration">Healthcare Administration</option>
+                <option value="Pharmaceutical">Pharmaceutical</option>
+                <option value="Biotechnology">Biotechnology</option>
+                <option value="Medical Devices">Medical Devices</option>
+                <option value="Clinical Research">Clinical Research</option>
+                <option value="Public Health">Public Health</option>
+                <option value="Nursing">Nursing</option>
+              </optgroup>
+              <optgroup label="Engineering">
+                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                <option value="Electrical Engineering">Electrical Engineering</option>
+                <option value="Civil Engineering">Civil Engineering</option>
+                <option value="Chemical Engineering">Chemical Engineering</option>
+                <option value="Aerospace Engineering">Aerospace Engineering</option>
+                <option value="Environmental Engineering">Environmental Engineering</option>
+                <option value="Industrial Engineering">Industrial Engineering</option>
+              </optgroup>
+              <optgroup label="Legal">
+                <option value="Corporate Law">Corporate Law</option>
+                <option value="Litigation">Litigation</option>
+                <option value="Intellectual Property">Intellectual Property</option>
+                <option value="Compliance">Compliance</option>
+                <option value="Legal Operations">Legal Operations</option>
+              </optgroup>
+              <optgroup label="Media & Entertainment">
+                <option value="Journalism">Journalism</option>
+                <option value="Film & Video Production">Film & Video Production</option>
+                <option value="Music Industry">Music Industry</option>
+                <option value="Broadcasting">Broadcasting</option>
+                <option value="Graphic Design">Graphic Design</option>
+                <option value="Animation">Animation</option>
+              </optgroup>
+              <optgroup label="Education">
+                <option value="Teaching">Teaching</option>
+                <option value="EdTech">EdTech</option>
+                <option value="Curriculum Development">Curriculum Development</option>
+                <option value="Educational Administration">Educational Administration</option>
+              </optgroup>
+              <optgroup label="Hospitality & Tourism">
+                <option value="Hotel Management">Hotel Management</option>
+                <option value="Event Management">Event Management</option>
+                <option value="Travel & Tourism">Travel & Tourism</option>
+                <option value="Food & Beverage">Food & Beverage</option>
+              </optgroup>
+              <optgroup label="Real Estate & Construction">
+                <option value="Real Estate">Real Estate</option>
+                <option value="Property Management">Property Management</option>
+                <option value="Construction Management">Construction Management</option>
+                <option value="Architecture">Architecture</option>
+              </optgroup>
+              <optgroup label="Supply Chain & Logistics">
+                <option value="Supply Chain Management">Supply Chain Management</option>
+                <option value="Logistics">Logistics</option>
+                <option value="Procurement">Procurement</option>
+                <option value="Warehouse Operations">Warehouse Operations</option>
+              </optgroup>
+              <optgroup label="Manufacturing">
+                <option value="Production Management">Production Management</option>
+                <option value="Quality Assurance">Quality Assurance</option>
+                <option value="Process Engineering">Process Engineering</option>
+              </optgroup>
+              <optgroup label="Government & Public Sector">
+                <option value="Public Administration">Public Administration</option>
+                <option value="Policy Analysis">Policy Analysis</option>
+                <option value="Urban Planning">Urban Planning</option>
+                <option value="International Relations">International Relations</option>
+              </optgroup>
+              <optgroup label="Non-Profit & Social Impact">
+                <option value="Non-Profit Management">Non-Profit Management</option>
+                <option value="Social Work">Social Work</option>
+                <option value="Sustainability / ESG">Sustainability / ESG</option>
+                <option value="Community Development">Community Development</option>
+              </optgroup>
+              <optgroup label="E-commerce & Retail">
+                <option value="E-commerce">E-commerce</option>
+                <option value="Retail Management">Retail Management</option>
+                <option value="Merchandising">Merchandising</option>
+                <option value="Customer Experience">Customer Experience</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="General Business">General Business</option>
+                <option value="Entrepreneurship / Startups">Entrepreneurship / Startups</option>
+                <option value="Research & Development">Research & Development</option>
+                <option value="Other">Other</option>
+              </optgroup>
+            </select>
           </div>
 
           <div>
@@ -397,9 +1020,34 @@ export default function Home() {
               onChange={(e) => setProfile({ ...profile, experience: e.target.value })}
               className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
-              <option value="student">Student (no internships yet)</option>
-              <option value="1-internship">Completed 1 internship</option>
-              <option value="2+-internships">Completed 2+ internships</option>
+              <optgroup label="Student">
+                <option value="secondary-student">Secondary School Student</option>
+                <option value="jc-student">JC / Pre-University Student</option>
+                <option value="poly-student">Polytechnic Student</option>
+                <option value="ite-student">ITE Student</option>
+                <option value="uni-year1-2">University Year 1-2</option>
+                <option value="uni-year3-4">University Year 3-4</option>
+                <option value="masters-student">Masters / Postgraduate Student</option>
+              </optgroup>
+              <optgroup label="Fresh Graduate">
+                <option value="fresh-grad-poly">Fresh Graduate (Polytechnic)</option>
+                <option value="fresh-grad-uni">Fresh Graduate (University)</option>
+                <option value="fresh-grad-masters">Fresh Graduate (Masters)</option>
+              </optgroup>
+              <optgroup label="Working Professional">
+                <option value="0-1-years">0-1 Years Experience</option>
+                <option value="1-2-years">1-2 Years Experience</option>
+                <option value="2-3-years">2-3 Years Experience</option>
+                <option value="3-5-years">3-5 Years Experience</option>
+                <option value="5+-years">5+ Years Experience</option>
+                <option value="career-switcher">Career Switcher</option>
+              </optgroup>
+              <optgroup label="Internship Experience">
+                <option value="no-internship">No internship experience</option>
+                <option value="1-internship">Completed 1 internship</option>
+                <option value="2-internships">Completed 2 internships</option>
+                <option value="3+-internships">Completed 3+ internships</option>
+              </optgroup>
             </select>
           </div>
 
@@ -425,18 +1073,30 @@ export default function Home() {
       setError("");
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
+        const fileName = file.name.toLowerCase();
 
-        const res = await fetch("/api/parse-resume", {
-          method: "POST",
-          body: formData,
-        });
+        // Handle PDF client-side
+        if (fileName.endsWith(".pdf")) {
+          const text = await extractPdfText(file);
+          if (!text.trim()) {
+            throw new Error("Could not extract text from PDF. Please paste the text instead.");
+          }
+          setResumeText(text);
+        } else {
+          // Handle DOCX and TXT server-side
+          const formData = new FormData();
+          formData.append("file", file);
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+          const res = await fetch("/api/parse-resume", {
+            method: "POST",
+            body: formData,
+          });
 
-        setResumeText(data.text);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+
+          setResumeText(data.text);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to parse file");
       } finally {
@@ -545,18 +1205,30 @@ export default function Home() {
       setError("");
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
+        const fileName = file.name.toLowerCase();
 
-        const res = await fetch("/api/parse-resume", {
-          method: "POST",
-          body: formData,
-        });
+        // Handle PDF client-side
+        if (fileName.endsWith(".pdf")) {
+          const text = await extractPdfText(file);
+          if (!text.trim()) {
+            throw new Error("Could not extract text from PDF. Please paste the text instead.");
+          }
+          setCoverLetterText(text);
+        } else {
+          // Handle DOCX and TXT server-side
+          const formData = new FormData();
+          formData.append("file", file);
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+          const res = await fetch("/api/parse-resume", {
+            method: "POST",
+            body: formData,
+          });
 
-        setCoverLetterText(data.text);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+
+          setCoverLetterText(data.text);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to parse file");
       } finally {
@@ -649,11 +1321,10 @@ export default function Home() {
             <button
               onClick={() => {
                 setCurrentStep("interview");
-                startInterview();
               }}
               className="flex-1 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all"
             >
-              Next: Mock Interview →
+              Next: AI Interview →
             </button>
           </div>
         </div>
@@ -661,119 +1332,243 @@ export default function Home() {
     );
   }
 
-  // ==================== STEP 4: MOCK INTERVIEW ====================
+  // ==================== STEP 4: AI VIDEO INTERVIEW ====================
   if (currentStep === "interview") {
+    // Format timer as MM:SS
+    const formatTime = (seconds: number) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-white">
-        {/* Nav */}
-        <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="min-h-screen bg-slate-900 text-white">
+        {/* Header */}
+        <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-slate-900/90 to-transparent p-4">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Internship.sg" className="h-10 w-auto" />
-              <span className="font-medium text-slate-600">Mock Interview</span>
+              <img src="/logo.png" alt="Internship.sg" className="h-8 w-auto brightness-0 invert" />
+              <span className="font-medium text-white/80">AI Interview</span>
             </div>
             <div className="flex items-center gap-4">
-              {!interviewComplete && (
-                <span className="text-sm text-slate-500">Question {questionNumber} of 5</span>
+              {isRecording && (
+                <span className="flex items-center gap-2 text-sm bg-red-600 px-3 py-1 rounded-full">
+                  <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                  REC
+                </span>
+              )}
+              {questionNumber > 0 && !interviewComplete && (
+                <span className="text-sm text-white/70 bg-white/10 px-3 py-1 rounded-full">
+                  Question {questionNumber} / 7
+                </span>
               )}
             </div>
           </div>
-        </nav>
+        </div>
 
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          {/* Chat Area */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-4 min-h-[400px] max-h-[60vh] overflow-y-auto p-4">
-            {interviewMessages.length === 0 && interviewLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-red-200 border-t-red-600 mx-auto mb-3"></div>
-                  <p className="text-slate-600">Starting interview...</p>
+        {/* Main Content */}
+        <div className="min-h-screen flex items-center justify-center p-4">
+          {/* Setup Phase */}
+          {interviewPhase === "setup" && (
+            <div className="text-center max-w-xl">
+              <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold mb-4">AI Video Interview</h1>
+              <p className="text-white/70 mb-8">
+                You&apos;ll be asked 7 questions tailored to <span className="text-red-400 font-medium">{profile.targetRole}</span>.
+                Speak your answers naturally - our AI will listen and transcribe your responses.
+              </p>
+              <div className="bg-white/10 rounded-xl p-4 mb-8 text-left text-sm">
+                <h3 className="font-semibold mb-2">Before you start:</h3>
+                <ul className="space-y-2 text-white/70">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400">✓</span>
+                    Find a quiet place with good lighting
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400">✓</span>
+                    Allow camera and microphone access
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400">✓</span>
+                    You have 2 minutes to answer each question
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400">✓</span>
+                    Speak clearly - AI will transcribe your answers
+                  </li>
+                </ul>
+              </div>
+              {error && (
+                <div className="bg-red-500/20 text-red-300 px-4 py-2 rounded-lg mb-4 text-sm">
+                  {error}
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {interviewMessages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                      msg.role === "user" ? "bg-red-600 text-white" : "bg-slate-100 text-slate-800"
-                    }`}>
-                      {msg.role === "assistant" && (
-                        <div className="text-xs font-medium text-red-600 mb-1">Interviewer</div>
-                      )}
-                      <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
-                    </div>
-                  </div>
-                ))}
-                {interviewLoading && interviewMessages.length > 0 && (
-                  <div className="flex justify-start">
-                    <div className="bg-slate-100 rounded-2xl px-4 py-3">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-            )}
-          </div>
-
-          {/* Input or Complete */}
-          {!interviewComplete ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-4">
-              <div className="flex gap-3">
-                <textarea
-                  value={interviewInput}
-                  onChange={(e) => setInterviewInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendInterviewResponse();
-                    }
-                  }}
-                  placeholder="Type your answer... (Enter to send)"
-                  className="flex-1 px-4 py-3 border border-slate-200 rounded-xl resize-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  rows={2}
-                  disabled={interviewLoading}
-                />
+              )}
+              <div className="flex gap-4 justify-center">
                 <button
-                  onClick={sendInterviewResponse}
-                  disabled={interviewLoading || !interviewInput.trim()}
-                  className="px-6 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 self-end"
+                  onClick={() => setCurrentStep("cover-letter")}
+                  className="px-6 py-4 border-2 border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 transition-all"
                 >
-                  Send
+                  ← Back
+                </button>
+                <button
+                  onClick={startVideoInterview}
+                  className="px-8 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all text-lg"
+                >
+                  Start Interview
                 </button>
               </div>
-              <p className="text-xs text-slate-500 mt-2">
-                Tip: Use STAR method (Situation, Task, Action, Result) for behavioral questions
-              </p>
             </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          )}
+
+          {/* Countdown Phase */}
+          {interviewPhase === "countdown" && (
+            <div className="text-center">
+              <div className="text-8xl font-bold text-red-500 animate-pulse mb-4">3</div>
+              <p className="text-white/70">Get ready...</p>
+            </div>
+          )}
+
+          {/* Interview Active Phases */}
+          {(interviewPhase === "question" || interviewPhase === "answering" || interviewPhase === "processing") && (
+            <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-6">
+              {/* Video Feed */}
+              <div className="relative">
+                <div className="bg-slate-800 rounded-2xl overflow-hidden aspect-video relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                    style={{ transform: "scaleX(-1)" }}
+                  />
+                  {/* Timer Overlay */}
+                  {interviewPhase === "answering" && (
+                    <div className="absolute top-4 right-4">
+                      <div className={`px-4 py-2 rounded-lg font-mono text-xl font-bold ${
+                        answerTimer <= 30 ? "bg-red-600" : "bg-slate-700/80"
+                      }`}>
+                        {formatTime(answerTimer)}
+                      </div>
+                    </div>
+                  )}
+                  {/* Listening Indicator */}
+                  {isListening && (
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="bg-red-600/90 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-3">
+                        <div className="flex gap-1">
+                          <div className="w-1 h-4 bg-white rounded animate-pulse"></div>
+                          <div className="w-1 h-6 bg-white rounded animate-pulse" style={{ animationDelay: "0.1s" }}></div>
+                          <div className="w-1 h-3 bg-white rounded animate-pulse" style={{ animationDelay: "0.2s" }}></div>
+                          <div className="w-1 h-5 bg-white rounded animate-pulse" style={{ animationDelay: "0.3s" }}></div>
+                        </div>
+                        <span className="text-sm font-medium">Listening... Speak your answer</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* Speaking Indicator */}
+                  {isSpeaking && (
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="bg-blue-600/90 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-3">
+                        <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                        </svg>
+                        <span className="text-sm font-medium">AI Interviewer speaking...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Question & Transcript Panel */}
+              <div className="flex flex-col gap-4">
+                {/* Current Question */}
+                <div className="bg-slate-800 rounded-2xl p-6">
+                  <div className="flex items-center gap-2 text-red-400 text-sm mb-3">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    </svg>
+                    AI Interviewer
+                  </div>
+                  <p className="text-lg leading-relaxed">{currentQuestion || "Loading question..."}</p>
+                </div>
+
+                {/* Live Transcript */}
+                <div className="bg-slate-800 rounded-2xl p-6 flex-1">
+                  <div className="flex items-center gap-2 text-green-400 text-sm mb-3">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Your Answer (Live Transcript)
+                  </div>
+                  <p className="text-white/80 min-h-[100px]">
+                    {transcript || (isListening ? "Start speaking..." : "Waiting...")}
+                  </p>
+                </div>
+
+                {/* Submit Button */}
+                {interviewPhase === "answering" && (
+                  <div className="bg-slate-800/50 rounded-xl p-4 text-center text-white/60 text-sm">
+                    <p>AI will automatically detect when you&apos;re done speaking and move to the next question.</p>
+                    <p className="mt-1 text-white/40">Pause for 4 seconds when finished.</p>
+                  </div>
+                )}
+
+                {/* Processing Indicator */}
+                {interviewPhase === "processing" && (
+                  <div className="bg-slate-800 rounded-xl p-4 flex items-center justify-center gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white"></div>
+                    <span>Processing your answer...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Complete Phase */}
+          {interviewPhase === "complete" && (
+            <div className="text-center max-w-xl">
+              <div className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">Interview Complete!</h3>
-              <p className="text-slate-600 mb-6">Great job! Now let&apos;s generate your personalized feedback.</p>
+              <h1 className="text-3xl font-bold mb-4">Interview Complete!</h1>
+              <p className="text-white/70 mb-8">
+                Great job! You&apos;ve completed all 7 questions. Let&apos;s analyze your performance and provide personalized feedback to help you ace your real interview.
+              </p>
               <button
-                onClick={generateResults}
-                disabled={loading}
-                className="px-8 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50"
+                onClick={async () => {
+                  stopCamera();
+                  const videoUrl = await uploadVideo();
+                  await generateResults(videoUrl);
+                }}
+                disabled={loading || uploadingVideo}
+                className="px-8 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all text-lg disabled:opacity-50"
               >
-                {loading ? (
+                {uploadingVideo ? (
                   <span className="flex items-center gap-2">
                     <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Analyzing...
+                    Uploading Recording...
+                  </span>
+                ) : loading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Analyzing Performance...
                   </span>
                 ) : (
-                  "Get My Results →"
+                  "Get My Results"
                 )}
               </button>
             </div>

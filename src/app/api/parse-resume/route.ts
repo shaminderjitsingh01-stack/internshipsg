@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mammoth from "mammoth";
 
 export const maxDuration = 30;
 
@@ -18,15 +19,40 @@ export async function POST(request: NextRequest) {
     if (fileName.endsWith(".txt")) {
       // Plain text
       text = buffer.toString("utf-8");
-    } else if (fileName.endsWith(".pdf") || fileName.endsWith(".docx") || fileName.endsWith(".doc")) {
-      // For PDF/DOCX, prompt user to paste text instead
+    } else if (fileName.endsWith(".pdf")) {
+      // PDF parsing with pdf-parse
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const pdfParse = require("pdf-parse");
+        const result = await pdfParse(buffer);
+        text = result.text || "";
+      } catch (pdfError) {
+        console.error("PDF parse error:", pdfError);
+        return NextResponse.json(
+          { error: "Could not parse PDF. Please copy the text and paste it instead." },
+          { status: 400 }
+        );
+      }
+    } else if (fileName.endsWith(".docx")) {
+      // DOCX parsing with mammoth
+      try {
+        const result = await mammoth.extractRawText({ buffer });
+        text = result.value || "";
+      } catch (docxError) {
+        console.error("DOCX parse error:", docxError);
+        return NextResponse.json(
+          { error: "Could not parse DOCX. Please copy the text and paste it instead." },
+          { status: 400 }
+        );
+      }
+    } else if (fileName.endsWith(".doc")) {
       return NextResponse.json(
-        { error: "PDF/DOCX parsing not available. Please copy the text from your document and paste it instead." },
+        { error: "Old .doc format not supported. Please save as .docx or paste the text instead." },
         { status: 400 }
       );
     } else {
       return NextResponse.json(
-        { error: "Unsupported file type. Please paste your resume text instead." },
+        { error: "Unsupported file type. Please use PDF, DOCX, or TXT files." },
         { status: 400 }
       );
     }
