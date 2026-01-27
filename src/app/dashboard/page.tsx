@@ -4,6 +4,8 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import StreakWidget from "@/components/StreakWidget";
+import StreakCard from "@/components/StreakCard";
 
 interface Interview {
   id: string;
@@ -20,6 +22,8 @@ export default function DashboardPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "interviews" | "billing">("overview");
+  const [showShareCard, setShowShareCard] = useState(false);
+  const [streakForShare, setStreakForShare] = useState(0);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -183,7 +187,18 @@ export default function DashboardPage() {
 
         {/* Overview Tab */}
         {activeTab === "overview" && (
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="space-y-6">
+            {/* Streak Widget - Full Width */}
+            {session?.user?.email && (
+              <StreakWidget
+                userEmail={session.user.email}
+                onShare={() => {
+                  setShowShareCard(true);
+                }}
+              />
+            )}
+
+            <div className="grid md:grid-cols-3 gap-6">
             {/* Profile Card */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Profile</h2>
@@ -251,6 +266,17 @@ export default function DashboardPage() {
               </Link>
             </div>
           </div>
+          </div>
+        )}
+
+        {/* Share Card Modal */}
+        {showShareCard && session?.user && (
+          <StreakCard
+            streak={streakForShare || 1}
+            title="Career Streak"
+            userName={session.user.name || undefined}
+            onClose={() => setShowShareCard(false)}
+          />
         )}
 
         {/* Interviews Tab */}

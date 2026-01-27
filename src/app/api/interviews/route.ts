@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { recordActivity, getMotivationalMessage } from "@/lib/streaks";
 
 export const maxDuration = 30;
 
@@ -42,7 +43,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ interview: data, success: true });
+    // Update streak after successful interview save
+    let streakResult = null;
+    if (userEmail) {
+      try {
+        streakResult = await recordActivity(userEmail);
+      } catch (streakError) {
+        console.error("Streak update error:", streakError);
+        // Don't fail the request if streak update fails
+      }
+    }
+
+    return NextResponse.json({
+      interview: data,
+      success: true,
+      streak: streakResult?.streak || null,
+      newBadges: streakResult?.newBadges || [],
+      streakMessage: streakResult?.streak
+        ? getMotivationalMessage(streakResult.streak.current_streak, streakResult.isNewDay)
+        : null,
+    });
   } catch (error) {
     console.error("Save interview error:", error);
     return NextResponse.json(
