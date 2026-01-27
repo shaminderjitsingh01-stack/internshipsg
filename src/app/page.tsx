@@ -277,15 +277,16 @@ export default function Home() {
             body: JSON.stringify(oauthFormData),
           });
 
-          if (!res.ok) throw new Error("Failed to generate guidance");
-
           const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to generate guidance");
+
           setCareerData(data);
           setFormData(oauthFormData);
           setAppState("dashboard");
           setActiveTab("careers");
-        } catch {
-          setError("Failed to generate. Please try again.");
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Failed to generate";
+          setError(message);
           setAppState("onboarding");
         } finally {
           setLoading(false);
@@ -374,16 +375,17 @@ export default function Home() {
         body: JSON.stringify(emailFormData),
       });
 
-      if (!res.ok) throw new Error("Failed to generate guidance");
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate guidance");
+
       setCareerData(data);
       setFormData(emailFormData);
       localStorage.setItem("internship_user", JSON.stringify({ name: emailFormData.name, email: emailFormData.email }));
       setAppState("dashboard");
       setActiveTab("careers");
-    } catch {
-      setError("Failed to set up. Please try again.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to set up";
+      setError(message);
     } finally {
       setLoading(false);
     }

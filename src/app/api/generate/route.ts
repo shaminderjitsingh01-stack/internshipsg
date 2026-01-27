@@ -120,8 +120,9 @@ Return ONLY valid JSON, no markdown code blocks, no explanation text. Ensure all
     return NextResponse.json(parsedResponse);
   } catch (error) {
     console.error("API Error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to generate career guidance" },
+      { error: `Failed to generate: ${errorMessage}` },
       { status: 500 }
     );
   }
