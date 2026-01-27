@@ -137,6 +137,7 @@ export default function Home() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const cachedVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
   // Extract text from PDF client-side
   const extractPdfText = async (file: File): Promise<string> => {
@@ -271,6 +272,64 @@ export default function Home() {
     }
   };
 
+  // Select and cache the best voice for consistent speech
+  const selectVoice = (): SpeechSynthesisVoice | null => {
+    // Return cached voice if available
+    if (cachedVoiceRef.current) {
+      return cachedVoiceRef.current;
+    }
+
+    const voices = speechSynthesis.getVoices();
+    if (voices.length === 0) return null;
+
+    // Priority order: Premium/Neural voices first, then standard female voices
+    const preferredVoices = [
+      // Windows natural voices (Edge/Chrome)
+      "Microsoft Aria Online (Natural)",
+      "Microsoft Jenny Online (Natural)",
+      "Microsoft Zira",
+      "Microsoft Zira Desktop",
+      // Google voices
+      "Google UK English Female",
+      "Google US English Female",
+      // macOS voices
+      "Samantha",
+      "Karen",
+      "Victoria",
+      "Allison",
+      // Generic female matches
+      "Female",
+      "female",
+    ];
+
+    let selectedVoice: SpeechSynthesisVoice | null = null;
+    for (const preferred of preferredVoices) {
+      const found = voices.find(v => v.name.includes(preferred));
+      if (found) {
+        selectedVoice = found;
+        break;
+      }
+    }
+
+    // Fallback: find any English female voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v =>
+        v.lang.startsWith("en") &&
+        (v.name.toLowerCase().includes("female") ||
+         v.name.includes("Zira") ||
+         v.name.includes("Samantha") ||
+         v.name.includes("Karen"))
+      ) || null;
+    }
+
+    // Cache the selected voice for future use
+    if (selectedVoice) {
+      cachedVoiceRef.current = selectedVoice;
+    }
+
+    return selectedVoice;
+  };
+
   // Text-to-speech for AI interviewer - natural female voice
   const speakText = (text: string): Promise<void> => {
     return new Promise((resolve) => {
@@ -284,51 +343,10 @@ export default function Home() {
       utterance.pitch = 1.05; // Slightly higher for warmth
       utterance.volume = 1;
 
-      // Find the most natural-sounding female voice
-      const voices = speechSynthesis.getVoices();
-
-      // Priority order: Premium/Neural voices first, then standard female voices
-      const preferredVoices = [
-        // Windows natural voices (Edge/Chrome)
-        "Microsoft Aria Online (Natural)",
-        "Microsoft Jenny Online (Natural)",
-        "Microsoft Zira",
-        "Microsoft Zira Desktop",
-        // Google voices
-        "Google UK English Female",
-        "Google US English Female",
-        // macOS voices
-        "Samantha",
-        "Karen",
-        "Victoria",
-        "Allison",
-        // Generic female matches
-        "Female",
-        "female",
-      ];
-
-      let selectedVoice = null;
-      for (const preferred of preferredVoices) {
-        const found = voices.find(v => v.name.includes(preferred));
-        if (found) {
-          selectedVoice = found;
-          break;
-        }
-      }
-
-      // Fallback: find any English female voice
-      if (!selectedVoice) {
-        selectedVoice = voices.find(v =>
-          v.lang.startsWith("en") &&
-          (v.name.toLowerCase().includes("female") ||
-           v.name.includes("Zira") ||
-           v.name.includes("Samantha") ||
-           v.name.includes("Karen"))
-        );
-      }
-
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
+      // Use cached voice for consistency
+      const voice = selectVoice();
+      if (voice) {
+        utterance.voice = voice;
       }
 
       utterance.onend = () => {
@@ -686,6 +704,19 @@ export default function Home() {
         window.speechSynthesis.cancel();
       }
     };
+  }, []);
+
+  // Pre-cache voice when voices load (they load asynchronously)
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      // Try to select voice immediately
+      selectVoice();
+
+      // Also listen for voices to load (Chrome loads them async)
+      speechSynthesis.onvoiceschanged = () => {
+        selectVoice();
+      };
+    }
   }, []);
 
   // Keep refs in sync for closure-safe access
