@@ -206,6 +206,12 @@ export default function Home() {
   // Start camera and recording
   const startCamera = async () => {
     try {
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setError("Camera not supported in this browser. Please use Chrome or Edge.");
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: 640, height: 480 },
         audio: true
@@ -213,6 +219,8 @@ export default function Home() {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Ensure video plays
+        await videoRef.current.play().catch(e => console.log("Video play error:", e));
       }
       setVideoEnabled(true);
 
@@ -242,9 +250,18 @@ export default function Home() {
 
       mediaRecorder.start(1000); // Capture in 1-second chunks
       setIsRecording(true);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Camera error:", err);
-      setError("Could not access camera. Please allow camera permissions.");
+      const error = err as Error & { name?: string };
+      if (error.name === "NotAllowedError") {
+        setError("Camera permission denied. Please click the camera icon in your browser's address bar and allow access.");
+      } else if (error.name === "NotFoundError") {
+        setError("No camera found. Please connect a camera and try again.");
+      } else if (error.name === "NotReadableError") {
+        setError("Camera is being used by another application. Please close other apps using the camera.");
+      } else {
+        setError(`Camera error: ${error.message || "Could not access camera. Please check permissions."}`);
+      }
     }
   };
 
@@ -751,16 +768,35 @@ export default function Home() {
     setElapsedTime(0);
 
     // Update elapsed time every second
-    elapsedTimerRef.current = setInterval(() => {
+    elapsedTimerRef.current = setInterval(async () => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       setElapsedTime(elapsed);
 
       // Check if interview time is up
       if (elapsed >= interviewDuration * 60) {
-        // Time's up - end interview after current question
+        // Time's up - end the interview immediately
         if (elapsedTimerRef.current) {
           clearInterval(elapsedTimerRef.current);
+          elapsedTimerRef.current = null;
         }
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        if (noSpeechTimerRef.current) {
+          clearTimeout(noSpeechTimerRef.current);
+          noSpeechTimerRef.current = null;
+        }
+        stopListening();
+
+        // Speak completion message then show complete screen
+        await speakText("That's all the time we have for today. Great job completing this practice session!");
+        setInterviewPhase("complete");
+        setInterviewComplete(true);
       }
     }, 1000);
 
@@ -774,7 +810,14 @@ export default function Home() {
     const currentElapsed = interviewStartTime > 0 ? Math.floor((Date.now() - interviewStartTime) / 1000) : 0;
     const totalSeconds = interviewDuration * 60;
     const remainingSeconds = Math.max(0, totalSeconds - currentElapsed);
-    const isTimeUp = remainingSeconds <= 60; // Less than 1 minute left = wrap up
+    const isTimeUp = remainingSeconds <= 30; // Less than 30 seconds left = wrap up
+
+    // If time is completely up, end immediately
+    if (remainingSeconds <= 0) {
+      setInterviewPhase("complete");
+      setInterviewComplete(true);
+      return;
+    }
 
     setInterviewPhase("question");
     setInterviewLoading(true);
