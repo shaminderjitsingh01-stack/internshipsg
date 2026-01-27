@@ -872,8 +872,9 @@ export default function Home() {
         <footer className="border-t border-slate-200 py-8 mt-20">
           <div className="max-w-6xl mx-auto px-4 text-center text-sm text-slate-500">
             <div className="flex justify-center gap-6 mb-4">
-              <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
+              <a href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</a>
               <a href="/about" className="hover:text-red-600 transition-colors">About</a>
+              <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
             </div>
             <p>Made by <a href="https://shaminder.sg" className="text-red-600 hover:underline">shaminder.sg</a></p>
             <p className="mt-1">Shaminder Technologies | UEN 53517136J</p>
@@ -1976,8 +1977,9 @@ export default function Home() {
         <footer className="border-t border-slate-200 py-8 mt-12">
           <div className="max-w-4xl mx-auto px-4 text-center text-sm text-slate-500">
             <div className="flex justify-center gap-6 mb-4">
-              <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
+              <a href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</a>
               <a href="/about" className="hover:text-red-600 transition-colors">About</a>
+              <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
             </div>
             <p>Made by <a href="https://shaminder.sg" className="text-red-600 hover:underline">shaminder.sg</a></p>
             <p className="mt-1">Shaminder Technologies | UEN 53517136J</p>
