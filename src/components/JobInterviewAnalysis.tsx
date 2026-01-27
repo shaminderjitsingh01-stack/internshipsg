@@ -56,9 +56,9 @@ export default function JobInterviewAnalysis({ analysis, jobTitle, company }: Pr
   const [expandedRequirement, setExpandedRequirement] = useState<string | null>(null);
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return "text-green-600 bg-green-100";
-    if (score >= 6) return "text-blue-600 bg-blue-100";
-    if (score >= 4) return "text-yellow-600 bg-yellow-100";
+    if (score >= 80) return "text-green-600 bg-green-100";
+    if (score >= 60) return "text-blue-600 bg-blue-100";
+    if (score >= 40) return "text-yellow-600 bg-yellow-100";
     return "text-red-600 bg-red-100";
   };
 
@@ -119,8 +119,8 @@ export default function JobInterviewAnalysis({ analysis, jobTitle, company }: Pr
           </div>
           <div className="flex items-center gap-4">
             <div className="text-center">
-              <div className={`text-3xl sm:text-4xl font-bold ${analysis.overallScore >= 7 ? "text-green-400" : analysis.overallScore >= 5 ? "text-yellow-400" : "text-red-400"}`}>
-                {analysis.overallScore}/10
+              <div className={`text-3xl sm:text-4xl font-bold ${analysis.overallScore >= 70 ? "text-green-400" : analysis.overallScore >= 50 ? "text-yellow-400" : "text-red-400"}`}>
+                {analysis.overallScore}/100
               </div>
               <p className="text-xs text-slate-400">Overall Score</p>
             </div>
@@ -230,7 +230,7 @@ export default function JobInterviewAnalysis({ analysis, jobTitle, company }: Pr
                       <h4 className="font-medium text-slate-900">{dim.label}</h4>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(data.score)}`}>
-                      {data.score}/10
+                      {data.score}/100
                     </span>
                   </div>
                   <div className="p-4 space-y-3">

@@ -103,42 +103,42 @@ ${transcript}
 
 Provide a comprehensive analysis. Return ONLY valid JSON:
 {
-  "overallScore": 0-10,
+  "overallScore": 0-100,
   "overallFeedback": "2-3 sentence overall assessment",
 
   "dimensionalAnalysis": {
     "communicationSkills": {
-      "score": 0-10,
+      "score": 0-100,
       "videoInsights": "What the interview revealed about communication",
       "cvGap": "What wasn't evident from CV alone",
       "examples": ["specific quote or behavior from transcript"]
     },
     "problemSolving": {
-      "score": 0-10,
+      "score": 0-100,
       "videoInsights": "Problem-solving approach shown in interview",
       "cvGap": "What CV doesn't show about their approach",
       "examples": ["specific examples from transcript"]
     },
     "adaptabilityLearning": {
-      "score": 0-10,
+      "score": 0-100,
       "videoInsights": "Evidence of adaptability and learning mindset",
       "cvGap": "What CV doesn't reveal",
       "examples": ["specific examples"]
     },
     "passionMotivation": {
-      "score": 0-10,
+      "score": 0-100,
       "videoInsights": "Passion and motivation demonstrated",
       "cvGap": "What CV doesn't convey",
       "examples": ["specific examples"]
     },
     "handlingFailures": {
-      "score": 0-10,
+      "score": 0-100,
       "videoInsights": "How they discussed setbacks or challenges",
       "cvGap": "CV typically doesn't show this",
       "examples": ["specific examples"]
     },
     "culturalFit": {
-      "score": 0-10,
+      "score": 0-100,
       "videoInsights": "Cultural fit indicators from interview",
       "cvGap": "What CV doesn't indicate",
       "examples": ["specific examples"]
