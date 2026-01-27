@@ -98,7 +98,7 @@ interface ResultsData {
   comparisonToTopPerformers?: ComparisonToTopPerformers;
 }
 
-type Step = "landing" | "career" | "resume" | "cover-letter" | "interview" | "results";
+type Step = "landing" | "choose-mode" | "career" | "resume" | "cover-letter" | "interview" | "results";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -112,7 +112,7 @@ export default function Home() {
       const urlParams = new URLSearchParams(window.location.search);
       const startParam = urlParams.get("start");
       if (startParam === "interview" && status === "authenticated") {
-        setCurrentStep("career");
+        setCurrentStep("choose-mode");
         // Clear the URL parameter
         window.history.replaceState({}, "", "/");
       }
@@ -1150,10 +1150,10 @@ export default function Home() {
                   </svg>
                 </a>
                 <button
-                  onClick={() => setCurrentStep("career")}
+                  onClick={() => setCurrentStep("choose-mode")}
                   className="w-full px-6 py-4 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold hover:border-red-300 hover:bg-red-50 transition-all"
                 >
-                  Start New Interview
+                  Start Interview Prep →
                 </button>
               </>
             ) : (
@@ -1305,6 +1305,114 @@ export default function Home() {
       </div>
     </div>
   );
+
+  // ==================== STEP 0: CHOOSE MODE ====================
+  if (currentStep === "choose-mode") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
+        {/* Header */}
+        <header className="bg-white border-b border-slate-200">
+          <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+            <img src="/logo.png" alt="Internship.sg" className="h-8 sm:h-10 w-auto" />
+            {session && (
+              <a href="/dashboard" className="text-sm text-slate-600 hover:text-red-600">
+                Dashboard
+              </a>
+            )}
+          </div>
+        </header>
+
+        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+              Choose Your Prep Mode
+            </h1>
+            <p className="text-slate-600">
+              How would you like to practice today?
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+            {/* Option 1: General Interview */}
+            <button
+              onClick={() => setCurrentStep("career")}
+              className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 hover:border-red-400 hover:shadow-lg transition-all text-left group"
+            >
+              <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-200 transition-colors">
+                <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">General Interview Prep</h2>
+              <p className="text-slate-600 text-sm mb-4">
+                Choose your target career field and experience level. Get general interview questions to practice common scenarios.
+              </p>
+              <ul className="text-sm text-slate-500 space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Choose from 10+ career fields
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> General behavioral questions
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Resume & cover letter tips
+                </li>
+              </ul>
+              <div className="mt-6 flex items-center text-red-600 font-semibold">
+                Start General Prep
+                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </button>
+
+            {/* Option 2: Job-Specific Interview */}
+            <a
+              href="/job-interview"
+              className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all text-left group"
+            >
+              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+                <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Job-Specific Interview</h2>
+              <p className="text-slate-600 text-sm mb-4">
+                Paste a job URL or description. Get tailored questions based on specific job requirements.
+              </p>
+              <ul className="text-sm text-slate-500 space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Supports LinkedIn, Indeed, etc.
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Role-specific questions
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Requirement match analysis
+                </li>
+              </ul>
+              <div className="mt-6 flex items-center text-blue-600 font-semibold">
+                Start Job-Specific Prep
+                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </a>
+          </div>
+
+          {/* Back button */}
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => setCurrentStep("landing")}
+              className="text-slate-500 hover:text-slate-700 text-sm"
+            >
+              ← Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ==================== STEP 1: CAREER PROFILE ====================
   if (currentStep === "career") {

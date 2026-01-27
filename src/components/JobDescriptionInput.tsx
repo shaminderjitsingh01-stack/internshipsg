@@ -1,0 +1,285 @@
+"use client";
+
+import { useState, useRef } from "react";
+
+interface JobDescription {
+  title: string;
+  company: string;
+  description: string;
+  requirements: {
+    nonNegotiable: string[];
+    goodToHave: string[];
+  };
+  source: "url" | "upload" | "paste";
+  sourceUrl?: string;
+}
+
+interface Props {
+  onJobDescriptionReady: (jobDescription: JobDescription) => void;
+  isLoading?: boolean;
+}
+
+export default function JobDescriptionInput({ onJobDescriptionReady, isLoading }: Props) {
+  const [inputMode, setInputMode] = useState<"url" | "upload" | "paste">("url");
+  const [url, setUrl] = useState("");
+  const [pastedText, setPastedText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [fileName, setFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUrlSubmit = async () => {
+    if (!url.trim()) {
+      setError("Please enter a job posting URL");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/parse-job-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to fetch job description");
+      }
+
+      const data = await res.json();
+      onJobDescriptionReady({
+        ...data.jobDescription,
+        source: "url",
+        sourceUrl: url.trim(),
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to parse job URL");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setFileName(file.name);
+    setLoading(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/parse-job-document", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to parse document");
+      }
+
+      const data = await res.json();
+      onJobDescriptionReady({
+        ...data.jobDescription,
+        source: "upload",
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to parse document");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasteSubmit = async () => {
+    if (!pastedText.trim() || pastedText.trim().length < 100) {
+      setError("Please paste a complete job description (minimum 100 characters)");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/parse-job-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: pastedText.trim() }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to parse job description");
+      }
+
+      const data = await res.json();
+      onJobDescriptionReady({
+        ...data.jobDescription,
+        source: "paste",
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to parse job description");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="font-semibold text-slate-900">Job-Specific Interview Prep</h3>
+          <p className="text-sm text-slate-500">Practice for a specific role with tailored questions</p>
+        </div>
+      </div>
+
+      {/* Input Mode Tabs */}
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-lg mb-4">
+        <button
+          onClick={() => setInputMode("url")}
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+            inputMode === "url"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <span className="hidden sm:inline">Job </span>URL
+        </button>
+        <button
+          onClick={() => setInputMode("upload")}
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+            inputMode === "upload"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Upload
+        </button>
+        <button
+          onClick={() => setInputMode("paste")}
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+            inputMode === "paste"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Paste
+        </button>
+      </div>
+
+      {/* URL Input */}
+      {inputMode === "url" && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Job Posting URL
+            </label>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://linkedin.com/jobs/... or https://indeed.com/..."
+              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Supports LinkedIn, Indeed, Glassdoor, and most company career pages
+            </p>
+          </div>
+          <button
+            onClick={handleUrlSubmit}
+            disabled={loading || isLoading || !url.trim()}
+            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Fetching Job Details..." : "Load Job Description"}
+          </button>
+        </div>
+      )}
+
+      {/* File Upload */}
+      {inputMode === "upload" && (
+        <div className="space-y-3">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <svg className="w-10 h-10 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            {fileName ? (
+              <p className="text-sm text-blue-600 font-medium">{fileName}</p>
+            ) : (
+              <>
+                <p className="text-sm text-slate-600 font-medium">Click to upload job description</p>
+                <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX, or TXT</p>
+              </>
+            )}
+          </div>
+          {loading && (
+            <div className="text-center py-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-sm text-slate-500 mt-2">Processing document...</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Paste Text */}
+      {inputMode === "paste" && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Paste Job Description
+            </label>
+            <textarea
+              value={pastedText}
+              onChange={(e) => setPastedText(e.target.value)}
+              placeholder="Paste the complete job description here including requirements, responsibilities, and qualifications..."
+              className="w-full min-h-[200px] px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-y"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              {pastedText.length} characters {pastedText.length < 100 && "(minimum 100)"}
+            </p>
+          </div>
+          <button
+            onClick={handlePasteSubmit}
+            disabled={loading || isLoading || pastedText.length < 100}
+            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Analyzing Job Description..." : "Analyze & Continue"}
+          </button>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+
+      {/* Supported Platforms */}
+      <div className="mt-4 pt-4 border-t border-slate-100">
+        <p className="text-xs text-slate-500 text-center">
+          Supported: LinkedIn, Indeed, Glassdoor, JobStreet, MyCareersFuture, company career pages
+        </p>
+      </div>
+    </div>
+  );
+}
