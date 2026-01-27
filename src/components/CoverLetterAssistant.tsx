@@ -43,6 +43,7 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
   const [result, setResult] = useState<Result | null>(null);
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resumeFileInputRef = useRef<HTMLInputElement>(null);
 
   const extractPdfText = async (file: File): Promise<string> => {
     const pdfjsLib = await import("pdfjs-dist");
@@ -424,6 +425,23 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Your Resume (Optional - helps personalize)
             </label>
+            {/* Resume File Upload */}
+            <div
+              onClick={() => resumeFileInputRef.current?.click()}
+              className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition-colors mb-3"
+            >
+              <input
+                type="file"
+                ref={resumeFileInputRef}
+                onChange={(e) => handleFileUpload(e, "resume")}
+                accept=".pdf,.docx,.txt"
+                className="hidden"
+              />
+              <div className="text-3xl mb-2">📄</div>
+              <p className="font-medium text-slate-700">Click to upload resume</p>
+              <p className="text-sm text-slate-500 mt-1">PDF, DOCX, or TXT</p>
+            </div>
+            <p className="text-center text-sm text-slate-500 mb-3">or paste below</p>
             <textarea
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
