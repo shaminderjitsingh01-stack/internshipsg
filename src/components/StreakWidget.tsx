@@ -114,7 +114,7 @@ export default function StreakWidget({ userEmail, onShare }: Props) {
           <div className="mb-4">
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="opacity-80">Next: {nextBadge.badge.icon} {nextBadge.badge.name}</span>
-              <span className="opacity-80">{nextBadge.daysRemaining} days to go</span>
+              <span className="opacity-80">{nextBadge.daysRemaining} more day{nextBadge.daysRemaining !== 1 ? "s" : ""} to unlock</span>
             </div>
             <div className="h-2 bg-white/20 rounded-full overflow-hidden">
               <div
