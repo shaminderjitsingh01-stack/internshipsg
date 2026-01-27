@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { signIn, useSession } from "next-auth/react";
+import { useTheme } from "@/context/ThemeContext";
 
 // TypeScript declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
@@ -102,6 +103,9 @@ type Step = "landing" | "choose-mode" | "career" | "resume" | "cover-letter" | "
 
 export default function Home() {
   const { data: session, status } = useSession();
+
+  // Theme from global context
+  const { isDarkTheme, toggleTheme } = useTheme();
 
   // Current step
   const [currentStep, setCurrentStep] = useState<Step>("landing");
@@ -1129,91 +1133,121 @@ export default function Home() {
   // ==================== LANDING PAGE ====================
   if (currentStep === "landing") {
     return (
-      <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
+      <div className={`min-h-screen overflow-hidden transition-colors duration-300 ${isDarkTheme ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'}`}>
         {/* Animated Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-red-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-3/4 -right-20 w-80 h-80 bg-red-600/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/5 rounded-full blur-3xl"></div>
+          <div className={`absolute top-1/4 -left-20 w-96 h-96 rounded-full blur-3xl animate-pulse ${isDarkTheme ? 'bg-red-500/20' : 'bg-red-500/10'}`}></div>
+          <div className={`absolute top-3/4 -right-20 w-80 h-80 rounded-full blur-3xl animate-pulse ${isDarkTheme ? 'bg-red-600/15' : 'bg-red-400/10'}`} style={{ animationDelay: '1s' }}></div>
+          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl ${isDarkTheme ? 'bg-red-500/5' : 'bg-red-500/5'}`}></div>
           {/* Grid pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+          <div className={`absolute inset-0 ${isDarkTheme ? 'bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)]' : 'bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)]'} bg-[size:50px_50px]`}></div>
         </div>
 
         {/* Nav */}
-        <nav className="relative z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
+        <nav className={`relative z-50 border-b backdrop-blur-xl ${isDarkTheme ? 'border-white/10 bg-slate-950/80' : 'border-slate-200 bg-white/80'}`}>
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <a href="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="Internship.sg" className="h-10 sm:h-12 w-auto brightness-0 invert" />
+              <img src="/logo.png" alt="Internship.sg" className={`h-10 sm:h-12 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
             </a>
-            {status === "authenticated" ? (
-              <a href="/dashboard" className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-all">
-                Dashboard
-              </a>
-            ) : (
+            <div className="flex items-center gap-3">
+              {/* Theme Toggle */}
               <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-all border border-white/10"
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg transition-all ${isDarkTheme ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                aria-label="Toggle theme"
               >
-                Sign In
+                {isDarkTheme ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
               </button>
-            )}
+              {status === "authenticated" ? (
+                <a href="/dashboard" className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-all text-white">
+                  Dashboard
+                </a>
+              ) : (
+                <button
+                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${isDarkTheme ? 'bg-white/10 hover:bg-white/20 border-white/10 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'}`}
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
           </div>
         </nav>
 
         {/* Hero Section */}
         <section className="relative z-10 max-w-6xl mx-auto px-4 pt-16 sm:pt-24 pb-16 text-center">
-          <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-400 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-red-500/30">
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8 border ${isDarkTheme ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-red-50 text-red-600 border-red-200'}`}>
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
             Free AI-Powered Interview Prep
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
             Ace Your Internship
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-400 block">Interview with AI</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-500 block">Interview with AI</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+          <p className={`text-lg sm:text-xl mb-10 max-w-2xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
             Practice with our AI interviewer, get instant feedback, and land your dream internship.
             Used by 1000+ students across Singapore.
           </p>
 
-          {/* Super Easy Sign Up - One Click */}
+          {/* Super Easy Sign Up */}
           <div className="max-w-md mx-auto">
             {status === "authenticated" ? (
               <div className="space-y-4">
                 <button
                   onClick={() => setCurrentStep("choose-mode")}
-                  className="w-full group px-8 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3"
+                  className="w-full group px-8 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 text-white"
                 >
                   Start Interview Practice
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </button>
-                <p className="text-slate-500 text-sm">Welcome back, {session?.user?.name?.split(' ')[0]}!</p>
+                <p className={`text-sm ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>Welcome back, {session?.user?.name?.split(' ')[0]}!</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
+                {/* Google Sign In - Primary */}
                 <button
                   onClick={() => signIn("google", { callbackUrl: "/?start=interview" })}
-                  className="w-full group px-8 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3"
+                  className="w-full group px-8 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 text-white"
                 >
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="white" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="white" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="white" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
                   Start Free with Google
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
                 </button>
-                <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
+
+                {/* Email Sign In - Secondary */}
+                <a
+                  href="/auth/signin"
+                  className={`w-full block px-8 py-4 rounded-2xl font-semibold text-base transition-all text-center border-2 ${isDarkTheme ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-700 hover:border-red-300 hover:bg-red-50'}`}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Sign in with Email
+                  </span>
+                </a>
+
+                <p className={`text-sm flex items-center justify-center gap-2 ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
                   <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  No credit card required • Takes 5 seconds
+                  No credit card • No password needed
                 </p>
               </div>
             )}
@@ -1222,23 +1256,23 @@ export default function Home() {
           {/* Stats */}
           <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
             {[
-              { value: "1,000+", label: "Students" },
-              { value: "5,000+", label: "Mock Interviews" },
-              { value: "4.8/5", label: "Rating" },
+              { value: "30 sec", label: "To Get Started" },
+              { value: "Real-Time", label: "AI Feedback" },
+              { value: "Unlimited", label: "Practice Sessions" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-slate-500 text-sm">{stat.label}</div>
+                <div className={`text-3xl sm:text-4xl font-bold mb-1 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{stat.value}</div>
+                <div className={`text-sm ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>{stat.label}</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* How It Works */}
-        <section className="relative z-10 py-20 border-t border-white/5">
+        <section className={`relative z-10 py-20 border-t ${isDarkTheme ? 'border-white/5' : 'border-slate-100'}`}>
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">How It Works</h2>
-            <p className="text-slate-400 text-center mb-12 max-w-xl mx-auto">Get interview-ready in minutes with our simple 4-step process</p>
+            <p className={`text-center mb-12 max-w-xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Get interview-ready in minutes with our simple 4-step process</p>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
@@ -1247,13 +1281,13 @@ export default function Home() {
                 { num: 3, icon: "🎤", title: "Practice Interview", desc: "Have a real conversation with our AI interviewer" },
                 { num: 4, icon: "📊", title: "Get Feedback", desc: "Receive detailed scores and improvement tips" },
               ].map((step) => (
-                <div key={step.num} className="group relative bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-6 transition-all hover:scale-105 hover:border-red-500/50">
-                  <div className="absolute -top-3 -left-3 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                <div key={step.num} className={`group relative rounded-2xl p-6 transition-all hover:scale-105 border ${isDarkTheme ? 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-red-500/50' : 'bg-white hover:bg-red-50 border-slate-200 hover:border-red-300 shadow-sm hover:shadow-md'}`}>
+                  <div className="absolute -top-3 -left-3 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-sm font-bold shadow-lg text-white">
                     {step.num}
                   </div>
                   <div className="text-4xl mb-4">{step.icon}</div>
                   <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-                  <p className="text-slate-400 text-sm">{step.desc}</p>
+                  <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -1261,10 +1295,10 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section className="relative z-10 py-20 bg-gradient-to-b from-transparent to-red-950/20">
+        <section className={`relative z-10 py-20 ${isDarkTheme ? 'bg-gradient-to-b from-transparent to-red-950/20' : 'bg-gradient-to-b from-transparent to-red-50/50'}`}>
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">Why Students Love Us</h2>
-            <p className="text-slate-400 text-center mb-12 max-w-xl mx-auto">Everything you need to nail your internship interview</p>
+            <p className={`text-center mb-12 max-w-xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Everything you need to nail your internship interview</p>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
@@ -1275,10 +1309,10 @@ export default function Home() {
                 { icon: "🎯", title: "Job-Specific Prep", desc: "Prepare for specific job postings with custom questions" },
                 { icon: "💼", title: "Employer Visibility", desc: "Top performers may be noticed by partner employers" },
               ].map((feature) => (
-                <div key={feature.title} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-red-500/30 transition-all">
+                <div key={feature.title} className={`rounded-2xl p-6 transition-all border ${isDarkTheme ? 'bg-white/5 border-white/10 hover:border-red-500/30' : 'bg-white border-slate-200 hover:border-red-300 shadow-sm hover:shadow-md'}`}>
                   <div className="text-3xl mb-4">{feature.icon}</div>
                   <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
-                  <p className="text-slate-400 text-sm">{feature.desc}</p>
+                  <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>{feature.desc}</p>
                 </div>
               ))}
             </div>
@@ -1286,7 +1320,7 @@ export default function Home() {
         </section>
 
         {/* Testimonials */}
-        <section className="relative z-10 py-20 border-t border-white/5">
+        <section className={`relative z-10 py-20 border-t ${isDarkTheme ? 'border-white/5' : 'border-slate-100'}`}>
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">What Students Say</h2>
 
@@ -1296,7 +1330,7 @@ export default function Home() {
                 { name: "Marcus T.", role: "NTU Engineering", text: "Practiced 5 times before my interview and got an offer. The video practice really helped my confidence." },
                 { name: "Priya K.", role: "SMU Computing", text: "Way better than practicing with friends. The AI asks tough questions I wouldn't have thought of." },
               ].map((testimonial) => (
-                <div key={testimonial.name} className="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-2xl p-6">
+                <div key={testimonial.name} className={`rounded-2xl p-6 border ${isDarkTheme ? 'bg-gradient-to-br from-white/10 to-white/5 border-white/10' : 'bg-gradient-to-br from-slate-50 to-white border-slate-200 shadow-sm'}`}>
                   <div className="flex items-center gap-1 text-yellow-400 mb-4">
                     {[...Array(5)].map((_, i) => (
                       <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
@@ -1304,10 +1338,10 @@ export default function Home() {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-slate-300 mb-4 italic">"{testimonial.text}"</p>
+                  <p className={`mb-4 italic ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>"{testimonial.text}"</p>
                   <div>
                     <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-slate-500 text-sm">{testimonial.role}</p>
+                    <p className={`text-sm ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>{testimonial.role}</p>
                   </div>
                 </div>
               ))}
@@ -1319,19 +1353,19 @@ export default function Home() {
         <section className="relative z-10 py-20">
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Ace Your Interview?</h2>
-            <p className="text-slate-400 mb-8">Join 1000+ students who've improved their interview skills</p>
+            <p className={`mb-8 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Start practicing in 30 seconds - completely free, no credit card required</p>
 
             {status === "authenticated" ? (
               <button
                 onClick={() => setCurrentStep("choose-mode")}
-                className="px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-red-500/25"
+                className="px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-red-500/25 text-white"
               >
                 Start Practicing Now
               </button>
             ) : (
               <button
                 onClick={() => signIn("google", { callbackUrl: "/?start=interview" })}
-                className="px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 mx-auto"
+                className="px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 mx-auto text-white"
               >
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
                   <path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1346,14 +1380,14 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="relative z-10 border-t border-white/10 py-8">
-          <div className="max-w-6xl mx-auto px-4 text-center text-sm text-slate-500">
+        <footer className={`relative z-10 border-t py-8 ${isDarkTheme ? 'border-white/10' : 'border-slate-200'}`}>
+          <div className={`max-w-6xl mx-auto px-4 text-center text-sm ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
             <div className="flex flex-wrap justify-center gap-6 mb-4">
-              <a href="/roadmap" className="hover:text-red-400 transition-colors">Roadmap</a>
-              <a href="/about" className="hover:text-red-400 transition-colors">About</a>
-              <a href="/sitemap.xml" className="hover:text-red-400 transition-colors">Sitemap</a>
+              <a href="/roadmap" className="hover:text-red-500 transition-colors">Roadmap</a>
+              <a href="/about" className="hover:text-red-500 transition-colors">About</a>
+              <a href="/sitemap.xml" className="hover:text-red-500 transition-colors">Sitemap</a>
             </div>
-            <p>Made by <a href="https://shaminder.sg" className="text-red-400 hover:underline">shaminder.sg</a></p>
+            <p>Made by <a href="https://shaminder.sg" className="text-red-500 hover:underline">shaminder.sg</a></p>
             <p className="mt-1">Shaminder Technologies | UEN 53517136J</p>
           </div>
         </footer>

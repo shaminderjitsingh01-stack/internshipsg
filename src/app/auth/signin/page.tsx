@@ -2,57 +2,44 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 function SignInContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const error = searchParams.get("error");
+  const { isDarkTheme } = useTheme();
 
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
     setLoading(true);
 
-    if (isSignUp && formData.password !== formData.confirmPassword) {
-      setFormError("Passwords do not match");
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setFormError("Password must be at least 6 characters");
+    if (!email || !email.includes("@")) {
+      setFormError("Please enter a valid email address");
       setLoading(false);
       return;
     }
 
     try {
-      const result = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-        action: isSignUp ? "signup" : "login",
+      const result = await signIn("email", {
+        email,
+        callbackUrl,
         redirect: false,
       });
 
       if (result?.error) {
-        setFormError(result.error);
+        setFormError("Failed to send magic link. Please try again.");
       } else {
-        router.push(callbackUrl);
+        setEmailSent(true);
       }
     } catch (err) {
       setFormError("An error occurred. Please try again.");
@@ -65,26 +52,53 @@ function SignInContent() {
     signIn("google", { callbackUrl });
   };
 
+  // Show success message after email is sent
+  if (emailSent) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 transition-colors ${isDarkTheme ? 'bg-slate-950' : 'bg-gradient-to-br from-red-50 to-white'}`}>
+        <div className="w-full max-w-md text-center">
+          <div className={`rounded-2xl shadow-lg p-8 ${isDarkTheme ? 'bg-slate-900 border border-white/10' : 'bg-white'}`}>
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className={`text-2xl font-bold mb-2 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Check your email</h2>
+            <p className={`mb-6 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
+              We sent a magic link to <strong>{email}</strong>. Click the link in the email to sign in.
+            </p>
+            <p className={`text-sm mb-6 ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
+              The link will expire in 24 hours. Check your spam folder if you don't see it.
+            </p>
+            <button
+              onClick={() => {
+                setEmailSent(false);
+                setEmail("");
+              }}
+              className="text-red-500 font-medium hover:underline"
+            >
+              Use a different email
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-white flex items-center justify-center p-4">
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors ${isDarkTheme ? 'bg-slate-950' : 'bg-gradient-to-br from-red-50 to-white'}`}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/">
-            <img src="/logo.png" alt="Internship.sg" className="h-12 w-auto mx-auto mb-4" />
+            <img src="/logo.png" alt="Internship.sg" className={`h-12 w-auto mx-auto mb-4 ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">
-            {isSignUp ? "Create your account" : "Welcome back"}
-          </h1>
-          <p className="text-slate-600 mt-2">
-            {isSignUp
-              ? "Start your interview prep journey"
-              : "Sign in to continue your practice"}
-          </p>
+          <h1 className={`text-2xl font-bold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Welcome to Internship.sg</h1>
+          <p className={`mt-2 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Sign in to start your interview prep</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className={`rounded-2xl shadow-lg p-8 ${isDarkTheme ? 'bg-slate-900 border border-white/10' : 'bg-white'}`}>
           {/* Error Message */}
           {(error || formError) && (
             <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
@@ -92,10 +106,10 @@ function SignInContent() {
             </div>
           )}
 
-          {/* Google Sign In */}
+          {/* Google Sign In - Primary */}
           <button
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border-2 border-slate-200 rounded-xl font-semibold text-slate-700 hover:border-red-300 hover:bg-red-50 transition-all mb-6"
+            className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all mb-4 border-2 ${isDarkTheme ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-700 hover:border-red-300 hover:bg-red-50'}`}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -107,125 +121,60 @@ function SignInContent() {
           </button>
 
           {/* Divider */}
-          <div className="relative mb-6">
+          <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
+              <div className={`w-full border-t ${isDarkTheme ? 'border-white/10' : 'border-slate-200'}`}></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-white text-slate-500">or continue with email</span>
+              <span className={`px-3 ${isDarkTheme ? 'bg-slate-900 text-slate-500' : 'bg-white text-slate-500'}`}>or</span>
             </div>
           </div>
 
-          {/* Email/Password Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
-                  placeholder="John Doe"
-                  required={isSignUp}
-                />
-              </div>
-            )}
-
+          {/* Magic Link Form */}
+          <form onSubmit={handleEmailSignIn} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="email" className={`block text-sm font-medium mb-1 ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>
                 Email Address
               </label>
               <input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${isDarkTheme ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'border border-slate-200'}`}
                 placeholder="you@example.com"
                 required
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
-                placeholder="At least 6 characters"
-                required
-              />
-            </div>
-
-            {isSignUp && (
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">
-                  Confirm Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Confirm your password"
-                  required={isSignUp}
-                />
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
+                <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  {isSignUp ? "Creating account..." : "Signing in..."}
-                </span>
+                  Sending link...
+                </>
               ) : (
-                isSignUp ? "Create Account" : "Sign In"
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Send Magic Link
+                </>
               )}
             </button>
           </form>
 
-          {/* Toggle Sign Up / Sign In */}
-          <div className="mt-6 text-center text-sm text-slate-600">
-            {isSignUp ? (
-              <>
-                Already have an account?{" "}
-                <button
-                  onClick={() => setIsSignUp(false)}
-                  className="text-red-600 font-semibold hover:underline"
-                >
-                  Sign in
-                </button>
-              </>
-            ) : (
-              <>
-                Don&apos;t have an account?{" "}
-                <button
-                  onClick={() => setIsSignUp(true)}
-                  className="text-red-600 font-semibold hover:underline"
-                >
-                  Create one
-                </button>
-              </>
-            )}
-          </div>
+          <p className={`text-xs text-center mt-4 ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
+            We'll email you a magic link for password-free sign in
+          </p>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-slate-500 mt-8">
+        <p className={`text-center text-sm mt-8 ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
           By continuing, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>

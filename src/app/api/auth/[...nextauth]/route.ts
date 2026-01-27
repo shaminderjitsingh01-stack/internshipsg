@@ -1,9 +1,45 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
+import EmailProvider from "next-auth/providers/email";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { Resend } from "resend";
+
+// Custom adapter for storing verification tokens in Supabase
+const customAdapter = {
+  async createVerificationToken({ identifier, expires, token }: { identifier: string; expires: Date; token: string }) {
+    if (!isSupabaseConfigured()) return { identifier, expires, token };
+
+    await supabase.from("verification_tokens").insert({
+      identifier,
+      token,
+      expires: expires.toISOString(),
+    });
+    return { identifier, expires, token };
+  },
+  async useVerificationToken({ identifier, token }: { identifier: string; token: string }) {
+    if (!isSupabaseConfigured()) return null;
+
+    const { data } = await supabase
+      .from("verification_tokens")
+      .select("*")
+      .eq("identifier", identifier)
+      .eq("token", token)
+      .single();
+
+    if (data) {
+      await supabase
+        .from("verification_tokens")
+        .delete()
+        .eq("identifier", identifier)
+        .eq("token", token);
+      return { identifier: data.identifier, expires: new Date(data.expires), token: data.token };
+    }
+    return null;
+  },
+};
 
 export const authOptions: NextAuthOptions = {
+  adapter: isSupabaseConfigured() ? customAdapter as any : undefined,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -16,32 +52,45 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    CredentialsProvider({
-      name: "Email",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        name: { label: "Name", type: "text" },
-        action: { label: "Action", type: "text" },
+    EmailProvider({
+      server: {
+        host: "smtp.resend.com",
+        port: 465,
+        auth: {
+          user: "resend",
+          pass: process.env.RESEND_API_KEY,
+        },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password required");
+      from: process.env.EMAIL_FROM || "Internship.sg <noreply@internship.sg>",
+      async sendVerificationRequest({ identifier: email, url, provider }) {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+
+        try {
+          await resend.emails.send({
+            from: provider.from || "Internship.sg <noreply@internship.sg>",
+            to: email,
+            subject: "Sign in to Internship.sg",
+            html: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 40px 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                  <h1 style="color: #dc2626; margin: 0; font-size: 24px;">Internship.sg</h1>
+                  <p style="color: #64748b; margin-top: 8px;">AI-Powered Interview Prep</p>
+                </div>
+                <div style="background: #f8fafc; border-radius: 12px; padding: 30px; text-align: center;">
+                  <h2 style="color: #1e293b; margin: 0 0 16px 0; font-size: 20px;">Sign in to your account</h2>
+                  <p style="color: #64748b; margin: 0 0 24px 0;">Click the button below to securely sign in. This link expires in 24 hours.</p>
+                  <a href="${url}" style="display: inline-block; background: linear-gradient(to right, #dc2626, #ef4444); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Sign In</a>
+                </div>
+                <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 24px;">
+                  If you didn't request this email, you can safely ignore it.
+                </p>
+              </div>
+            `,
+          });
+        } catch (error) {
+          console.error("Error sending magic link email:", error);
+          throw new Error("Failed to send verification email");
         }
-
-        const email = credentials.email;
-        const password = credentials.password;
-        const name = credentials.name || email.split("@")[0];
-
-        if (password.length < 6) {
-          throw new Error("Password must be at least 6 characters");
-        }
-
-        return {
-          id: email,
-          email: email,
-          name: name,
-        };
       },
     }),
   ],
