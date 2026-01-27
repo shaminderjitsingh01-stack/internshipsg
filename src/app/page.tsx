@@ -116,6 +116,8 @@ export default function Home() {
   const transcriptRef = useRef<string>("");
   const interimTranscriptRef = useRef<string>("");
   const interviewPhaseRef = useRef<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "complete">("setup");
+  const questionNumberRef = useRef<number>(0);
+  const interviewMessagesRef = useRef<InterviewMessage[]>([]);
 
   // Results
   const [results, setResults] = useState<ResultsData | null>(null);
@@ -442,7 +444,9 @@ export default function Home() {
       }
 
       // Save answer and get next question
-      setInterviewMessages(prev => [...prev, { role: "user", content: currentTranscript }]);
+      const userMessage: InterviewMessage = { role: "user", content: currentTranscript };
+      interviewMessagesRef.current = [...interviewMessagesRef.current, userMessage];
+      setInterviewMessages(prev => [...prev, userMessage]);
       transcriptRef.current = "";
       interimTranscriptRef.current = "";
       setTranscript("");
@@ -471,7 +475,9 @@ export default function Home() {
 
     // Include any pending interim transcript
     const answer = (transcriptRef.current + interimTranscriptRef.current).trim() || "(No response provided)";
-    setInterviewMessages(prev => [...prev, { role: "user", content: answer }]);
+    const userMessage: InterviewMessage = { role: "user", content: answer };
+    interviewMessagesRef.current = [...interviewMessagesRef.current, userMessage];
+    setInterviewMessages(prev => [...prev, userMessage]);
     transcriptRef.current = "";
     interimTranscriptRef.current = "";
     setTranscript("");
@@ -544,12 +550,16 @@ export default function Home() {
     setAnswerTimer(120);
 
     try {
+      // Use refs to get current values (avoids stale closures in async callbacks)
+      const currentQuestionNum = questionNumberRef.current;
+      const currentMessages = interviewMessagesRef.current;
+
       const res = await fetch("/api/interview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: questionNumber === 0 ? "start" : "respond",
-          messages: interviewMessages,
+          action: currentQuestionNum === 0 ? "start" : "respond",
+          messages: currentMessages,
           userProfile: {
             name: profile.name,
             targetRole: profile.targetRole,
@@ -569,7 +579,10 @@ export default function Home() {
 
       setCurrentQuestion(data.message);
       setQuestionNumber(data.questionNumber);
-      setInterviewMessages(prev => [...prev, { role: "assistant", content: data.message }]);
+      questionNumberRef.current = data.questionNumber;
+      const assistantMessage: InterviewMessage = { role: "assistant", content: data.message };
+      interviewMessagesRef.current = [...interviewMessagesRef.current, assistantMessage];
+      setInterviewMessages(prev => [...prev, assistantMessage]);
 
       // Speak the question
       await speakText(data.message);
@@ -618,10 +631,18 @@ export default function Home() {
     };
   }, []);
 
-  // Keep interviewPhaseRef in sync for closure-safe access
+  // Keep refs in sync for closure-safe access
   useEffect(() => {
     interviewPhaseRef.current = interviewPhase;
   }, [interviewPhase]);
+
+  useEffect(() => {
+    questionNumberRef.current = questionNumber;
+  }, [questionNumber]);
+
+  useEffect(() => {
+    interviewMessagesRef.current = interviewMessages;
+  }, [interviewMessages]);
 
   // Auto-scroll chat
   useEffect(() => {
