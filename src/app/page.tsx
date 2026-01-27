@@ -103,7 +103,7 @@ export default function Home() {
   const elapsedTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Video interview states
-  const [interviewPhase, setInterviewPhase] = useState<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "complete">("setup");
+  const [interviewPhase, setInterviewPhase] = useState<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "paused" | "complete">("setup");
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [answerTimer, setAnswerTimer] = useState(120); // 2 minutes per answer
   const [isListening, setIsListening] = useState(false);
@@ -115,7 +115,7 @@ export default function Home() {
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<string>("");
   const interimTranscriptRef = useRef<string>("");
-  const interviewPhaseRef = useRef<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "complete">("setup");
+  const interviewPhaseRef = useRef<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "paused" | "complete">("setup");
   const questionNumberRef = useRef<number>(0);
   const interviewMessagesRef = useRef<InterviewMessage[]>([]);
   const silencePromptCountRef = useRef<number>(0);
@@ -397,6 +397,123 @@ export default function Home() {
     }, 10000); // 10 seconds
   };
 
+  // Voice command handlers
+  const handleVoiceCommand = async (text: string): Promise<boolean> => {
+    const lowerText = text.toLowerCase().trim();
+
+    // Check for stop command
+    if (lowerText.includes("stop interview") || lowerText.includes("stop the interview") ||
+        lowerText.includes("end interview") || lowerText.includes("end the interview") ||
+        (lowerText.includes("stop") && lowerText.length < 20)) {
+      await handleStopInterview();
+      return true;
+    }
+
+    // Check for pause command
+    if (lowerText.includes("pause interview") || lowerText.includes("pause the interview") ||
+        (lowerText.includes("pause") && lowerText.length < 20)) {
+      await handlePauseInterview();
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleStopInterview = async () => {
+    stopListening();
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (elapsedTimerRef.current) {
+      clearInterval(elapsedTimerRef.current);
+    }
+
+    await speakText("It's alright, we'll continue another time. Great effort today!");
+    setInterviewPhase("complete");
+    setInterviewComplete(true);
+  };
+
+  const handlePauseInterview = async () => {
+    stopListening();
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (elapsedTimerRef.current) {
+      clearInterval(elapsedTimerRef.current);
+    }
+
+    await speakText("Interview paused. Say 'resume' when you're ready to continue.");
+    setInterviewPhase("paused");
+
+    // Start listening for resume command
+    startListeningForResume();
+  };
+
+  const handleResumeInterview = async () => {
+    stopListening();
+    await speakText("Welcome back! Let's continue where we left off.");
+
+    // Resume the elapsed timer
+    const startTime = interviewStartTime;
+    elapsedTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setElapsedTime(elapsed);
+    }, 1000);
+
+    setInterviewPhase("answering");
+    startListening();
+
+    // Restart answer timer
+    timerRef.current = setInterval(() => {
+      setAnswerTimer(prev => {
+        if (prev <= 1) {
+          handleAutoSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const startListeningForResume = () => {
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = event.results[i][0].transcript.toLowerCase();
+        if (text.includes("resume") || text.includes("continue") || text.includes("start")) {
+          recognition.stop();
+          handleResumeInterview();
+          return;
+        }
+      }
+    };
+
+    recognition.onend = () => {
+      // Keep listening for resume if still paused
+      if (interviewPhaseRef.current === "paused") {
+        try {
+          recognition.start();
+        } catch (e) {
+          console.error("Failed to restart recognition for resume:", e);
+        }
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
   // Speech recognition for candidate answers with auto-detection
   const startListening = () => {
     if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
@@ -443,6 +560,11 @@ export default function Home() {
 
       // Update transcript with final results
       if (finalTranscript) {
+        // Check for voice commands first
+        handleVoiceCommand(finalTranscript).then(isCommand => {
+          if (isCommand) return; // Command was handled, don't process as answer
+        });
+
         const newTranscript = transcriptRef.current + finalTranscript;
         transcriptRef.current = newTranscript;
         interimTranscriptRef.current = ""; // Clear interim when we get final
@@ -1770,7 +1892,7 @@ export default function Home() {
           )}
 
           {/* Interview Active Phases - Premium Layout */}
-          {(interviewPhase === "question" || interviewPhase === "answering" || interviewPhase === "processing") && (
+          {(interviewPhase === "question" || interviewPhase === "answering" || interviewPhase === "processing" || interviewPhase === "paused") && (
             <div className="w-full max-w-6xl flex flex-col gap-6">
               {/* Header Bar */}
               <div className="flex items-center justify-between px-2">
@@ -1903,10 +2025,32 @@ export default function Home() {
 
               {/* Status Bar */}
               {interviewPhase === "answering" && (
-                <div className="text-center">
+                <div className="text-center space-y-2">
                   <p className="text-white/40 text-sm">
                     Pause for 4 seconds when done speaking to continue
                   </p>
+                  <p className="text-white/30 text-xs">
+                    Voice commands: Say &quot;pause&quot; to pause • &quot;stop&quot; to end interview
+                  </p>
+                </div>
+              )}
+
+              {/* Paused State */}
+              {interviewPhase === "paused" && (
+                <div className="text-center py-8">
+                  <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-10 h-10 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Interview Paused</h3>
+                  <p className="text-white/60 mb-4">Take your time. Say &quot;resume&quot; when you&apos;re ready to continue.</p>
+                  <button
+                    onClick={handleResumeInterview}
+                    className="px-6 py-3 bg-red-500 hover:bg-red-600 rounded-xl font-medium transition-colors"
+                  >
+                    Resume Interview
+                  </button>
                 </div>
               )}
 
