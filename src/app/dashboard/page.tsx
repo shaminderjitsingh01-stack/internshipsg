@@ -273,7 +273,7 @@ export default function DashboardPage() {
         {showShareCard && session?.user && (
           <StreakCard
             streak={streakForShare || 1}
-            title="Career Streak"
+            title="Interview Streak"
             userName={session.user.name || undefined}
             onClose={() => setShowShareCard(false)}
           />

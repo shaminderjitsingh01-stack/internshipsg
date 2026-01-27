@@ -12,9 +12,9 @@ interface Props {
 export default function StreakCard({ streak, title, userName, onClose }: Props) {
   const [copied, setCopied] = useState(false);
 
-  const shareText = `🔥 ${streak}-Day Career Streak!\n\nI've been preparing for my future ${streak} days straight on Internship.sg.\n\nConsistency beats talent when talent doesn't show up.\n\nStart your streak: https://internship.sg`;
+  const shareText = `🔥 ${streak}-Day Interview Streak!\n\nI've been preparing for my future ${streak} days straight on Internship.sg.\n\nConsistency beats talent when talent doesn't show up.\n\nStart your streak: https://internship.sg`;
 
-  const linkedInShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://internship.sg")}&title=${encodeURIComponent(`🔥 ${streak}-Day Career Streak on Internship.sg`)}`;
+  const linkedInShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://internship.sg")}&title=${encodeURIComponent(`🔥 ${streak}-Day Interview Streak on Internship.sg`)}`;
 
   const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
 

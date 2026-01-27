@@ -96,7 +96,7 @@ export default function StreakWidget({ userEmail, onShare }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <span className="text-2xl">🔥</span> Career Streak
+            <span className="text-2xl">🔥</span> Interview Streak
           </h2>
           <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
             {title}
