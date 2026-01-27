@@ -167,7 +167,7 @@ export default function StreakWidget({ userEmail, onShare }: Props) {
         )}
 
         {/* Share button */}
-        {currentStreak >= 3 && onShare && (
+        {currentStreak >= 1 && onShare && (
           <button
             onClick={() => onShare(currentStreak)}
             className="mt-4 w-full py-2 bg-white text-red-600 rounded-xl font-semibold text-sm hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
