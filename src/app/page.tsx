@@ -114,6 +114,8 @@ export default function Home() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<string>("");
+  const interimTranscriptRef = useRef<string>("");
+  const interviewPhaseRef = useRef<"setup" | "countdown" | "question" | "answering" | "confirming" | "processing" | "complete">("setup");
 
   // Results
   const [results, setResults] = useState<ResultsData | null>(null);
@@ -350,7 +352,7 @@ export default function Home() {
     recognition.lang = "en-US";
 
     recognition.onresult = (event) => {
-      // Reset silence timer on any speech
+      // Reset silence timer on any speech activity
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
       }
@@ -367,20 +369,36 @@ export default function Home() {
         }
       }
 
+      // Update transcript with final results
       if (finalTranscript) {
         const newTranscript = transcriptRef.current + finalTranscript;
         transcriptRef.current = newTranscript;
+        interimTranscriptRef.current = ""; // Clear interim when we get final
         setTranscript(newTranscript);
-        setLastSpeechTime(Date.now());
-
-        // Start 4-second silence timer after final speech
-        silenceTimerRef.current = setTimeout(() => {
-          // Auto-submit after 4 seconds of silence using ref for current value
-          if (transcriptRef.current.trim().length > 10) {
-            handleAutoSubmit();
-          }
-        }, 4000);
       }
+
+      // Track interim results for fallback
+      if (interimTranscript) {
+        interimTranscriptRef.current = interimTranscript;
+        setTranscript(transcriptRef.current + interimTranscript);
+      }
+
+      setLastSpeechTime(Date.now());
+
+      // Start silence timer after ANY speech activity (interim or final)
+      // This ensures we advance even if the API is slow to finalize
+      silenceTimerRef.current = setTimeout(() => {
+        // Get the best available transcript (final + any pending interim)
+        const fullTranscript = (transcriptRef.current + interimTranscriptRef.current).trim();
+        if (fullTranscript.length > 10) {
+          // If we have pending interim results, add them to the final transcript
+          if (interimTranscriptRef.current) {
+            transcriptRef.current = transcriptRef.current + interimTranscriptRef.current;
+            interimTranscriptRef.current = "";
+          }
+          handleAutoSubmit();
+        }
+      }, 4000);
     };
 
     recognition.onerror = (event) => {
@@ -405,7 +423,8 @@ export default function Home() {
 
   // Auto-submit when silence detected
   const handleAutoSubmit = async () => {
-    if (interviewPhase !== "answering") return;
+    // Use ref to get current phase (avoids stale closure in setTimeout)
+    if (interviewPhaseRef.current !== "answering") return;
 
     // Use ref for current transcript value (avoids stale closure)
     const currentTranscript = transcriptRef.current.trim();
@@ -425,6 +444,7 @@ export default function Home() {
       // Save answer and get next question
       setInterviewMessages(prev => [...prev, { role: "user", content: currentTranscript }]);
       transcriptRef.current = "";
+      interimTranscriptRef.current = "";
       setTranscript("");
       setAnswerTimer(120);
 
@@ -449,9 +469,11 @@ export default function Home() {
       silenceTimerRef.current = null;
     }
 
-    const answer = transcriptRef.current.trim() || "(No response provided)";
+    // Include any pending interim transcript
+    const answer = (transcriptRef.current + interimTranscriptRef.current).trim() || "(No response provided)";
     setInterviewMessages(prev => [...prev, { role: "user", content: answer }]);
     transcriptRef.current = "";
+    interimTranscriptRef.current = "";
     setTranscript("");
     setAnswerTimer(120);
 
@@ -517,6 +539,7 @@ export default function Home() {
     setInterviewPhase("question");
     setInterviewLoading(true);
     transcriptRef.current = "";
+    interimTranscriptRef.current = "";
     setTranscript("");
     setAnswerTimer(120);
 
@@ -594,6 +617,11 @@ export default function Home() {
       }
     };
   }, []);
+
+  // Keep interviewPhaseRef in sync for closure-safe access
+  useEffect(() => {
+    interviewPhaseRef.current = interviewPhase;
+  }, [interviewPhase]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -1470,16 +1498,6 @@ export default function Home() {
                   <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
                   REC
                 </span>
-              )}
-              {questionNumber > 0 && !interviewComplete && (
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-white/70 bg-white/10 px-3 py-1 rounded-full">
-                    Q{questionNumber}
-                  </span>
-                  <span className="text-sm font-mono text-white/70 bg-white/10 px-3 py-1 rounded-full">
-                    {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')} / {interviewDuration}:00
-                  </span>
-                </div>
               )}
             </div>
           </div>
