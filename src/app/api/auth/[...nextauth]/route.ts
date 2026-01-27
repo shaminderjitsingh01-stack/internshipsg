@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
 
         // Find user by email
         const { data: user, error } = await supabase
-          .from("users")
+          .from("user accounts")
           .select("*")
           .eq("email", credentials.email)
           .single();
@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
       if (user?.email && isSupabaseConfigured()) {
         try {
           const { data: existingUser } = await supabase
-            .from("users")
+            .from("user accounts")
             .select("id")
             .eq("email", user.email)
             .single();
@@ -81,12 +81,12 @@ export const authOptions: NextAuthOptions = {
           if (existingUser) {
             // Update last login
             await supabase
-              .from("users")
+              .from("user accounts")
               .update({ last_login_at: new Date().toISOString() })
               .eq("email", user.email);
           } else {
             // Create new user
-            await supabase.from("users").insert({
+            await supabase.from("user accounts").insert({
               email: user.email,
               name: user.name || null,
               image_url: user.image || null,

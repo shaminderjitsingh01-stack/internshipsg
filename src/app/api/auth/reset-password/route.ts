@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     // Update user password
     const { error: updateError } = await supabase
-      .from("users")
+      .from("user accounts")
       .update({ password_hash: hashedPassword })
       .eq("email", email);
 

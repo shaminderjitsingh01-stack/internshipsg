@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user already exists
     const { data: existingUser } = await supabase
-      .from("users")
+      .from("user accounts")
       .select("id, password_hash")
       .eq("email", email)
       .single();
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       if (!existingUser.password_hash) {
         const hashedPassword = await bcrypt.hash(password, 10);
         await supabase
-          .from("users")
+          .from("user accounts")
           .update({
             password_hash: hashedPassword,
             name: name || undefined,
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    const { error } = await supabase.from("users").insert({
+    const { error } = await supabase.from("user accounts").insert({
       email,
       name: name || email.split("@")[0],
       password_hash: hashedPassword,
