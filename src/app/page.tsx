@@ -96,6 +96,7 @@ export default function Home() {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const transcriptRef = useRef<string>("");
 
   // Results
   const [results, setResults] = useState<ResultsData | null>(null);
@@ -152,10 +153,18 @@ export default function Home() {
       }
       setVideoEnabled(true);
 
-      // Start recording
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "video/webm;codecs=vp9,opus"
-      });
+      // Start recording with supported mimeType
+      let mimeType = "video/webm";
+      if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")) {
+        mimeType = "video/webm;codecs=vp9,opus";
+      } else if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
+        mimeType = "video/webm;codecs=vp8,opus";
+      } else if (MediaRecorder.isTypeSupported("video/webm")) {
+        mimeType = "video/webm";
+      } else if (MediaRecorder.isTypeSupported("video/mp4")) {
+        mimeType = "video/mp4";
+      }
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
 
       const chunks: Blob[] = [];
@@ -342,13 +351,17 @@ export default function Home() {
       }
 
       if (finalTranscript) {
-        setTranscript(prev => prev + finalTranscript);
+        const newTranscript = transcriptRef.current + finalTranscript;
+        transcriptRef.current = newTranscript;
+        setTranscript(newTranscript);
         setLastSpeechTime(Date.now());
 
         // Start 4-second silence timer after final speech
         silenceTimerRef.current = setTimeout(() => {
-          // Auto-submit after 4 seconds of silence
-          handleAutoSubmit();
+          // Auto-submit after 4 seconds of silence using ref for current value
+          if (transcriptRef.current.trim().length > 10) {
+            handleAutoSubmit();
+          }
         }, 4000);
       }
     };
@@ -377,8 +390,11 @@ export default function Home() {
   const handleAutoSubmit = async () => {
     if (interviewPhase !== "answering") return;
 
-    // Only auto-submit if user has said something
-    if (transcript.trim().length > 10) {
+    // Use ref for current transcript value (avoids stale closure)
+    const currentTranscript = transcriptRef.current.trim();
+
+    // Only auto-submit if user has said something meaningful
+    if (currentTranscript.length > 10) {
       // Notify user we're moving on
       setInterviewPhase("processing");
       stopListening();
@@ -390,8 +406,8 @@ export default function Home() {
       }
 
       // Save answer and get next question
-      const answer = transcript.trim();
-      setInterviewMessages(prev => [...prev, { role: "user", content: answer }]);
+      setInterviewMessages(prev => [...prev, { role: "user", content: currentTranscript }]);
+      transcriptRef.current = "";
       setTranscript("");
       setAnswerTimer(120);
 
@@ -416,8 +432,9 @@ export default function Home() {
       silenceTimerRef.current = null;
     }
 
-    const answer = transcript.trim() || "(No response provided)";
+    const answer = transcriptRef.current.trim() || "(No response provided)";
     setInterviewMessages(prev => [...prev, { role: "user", content: answer }]);
+    transcriptRef.current = "";
     setTranscript("");
     setAnswerTimer(120);
 
@@ -457,6 +474,7 @@ export default function Home() {
   const askNextQuestion = async () => {
     setInterviewPhase("question");
     setInterviewLoading(true);
+    transcriptRef.current = "";
     setTranscript("");
     setAnswerTimer(120);
 
@@ -1432,12 +1450,30 @@ export default function Home() {
             </div>
           )}
 
-          {/* Interview Active Phases */}
+          {/* Interview Active Phases - Premium Layout */}
           {(interviewPhase === "question" || interviewPhase === "answering" || interviewPhase === "processing") && (
-            <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-6">
-              {/* Video Feed */}
+            <div className="w-full max-w-6xl flex flex-col gap-6">
+              {/* Header Bar */}
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                  <span className="text-white/60 text-sm font-medium tracking-wide uppercase">Live Interview</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-white/40 text-sm">Question {questionNumber} of 7</span>
+                  {interviewPhase === "answering" && (
+                    <div className={`px-4 py-1.5 rounded-full font-mono text-sm font-bold ${
+                      answerTimer <= 30 ? "bg-red-600/80 text-white" : "bg-white/10 text-white/80"
+                    }`}>
+                      {formatTime(answerTimer)}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Main Video - Large & Centered */}
               <div className="relative">
-                <div className="bg-slate-800 rounded-2xl overflow-hidden aspect-video relative">
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl overflow-hidden aspect-video max-h-[50vh] shadow-2xl shadow-black/50 border border-white/5">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -1446,87 +1482,114 @@ export default function Home() {
                     className="w-full h-full object-cover"
                     style={{ transform: "scaleX(-1)" }}
                   />
-                  {/* Timer Overlay */}
-                  {interviewPhase === "answering" && (
-                    <div className="absolute top-4 right-4">
-                      <div className={`px-4 py-2 rounded-lg font-mono text-xl font-bold ${
-                        answerTimer <= 30 ? "bg-red-600" : "bg-slate-700/80"
-                      }`}>
-                        {formatTime(answerTimer)}
-                      </div>
+
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+
+                  {/* Status Badge */}
+                  <div className="absolute top-6 left-6">
+                    <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full px-4 py-2 border border-white/10">
+                      {isSpeaking ? (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                          <span className="text-sm font-medium text-white/90">AI Speaking</span>
+                        </>
+                      ) : isListening ? (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
+                          <span className="text-sm font-medium text-white/90">Listening</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                          <span className="text-sm font-medium text-white/90">Ready</span>
+                        </>
+                      )}
                     </div>
-                  )}
-                  {/* Listening Indicator */}
+                  </div>
+
+                  {/* Sound Visualizer - Bottom */}
                   {isListening && (
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="bg-red-600/90 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-3">
-                        <div className="flex gap-1">
-                          <div className="w-1 h-4 bg-white rounded animate-pulse"></div>
-                          <div className="w-1 h-6 bg-white rounded animate-pulse" style={{ animationDelay: "0.1s" }}></div>
-                          <div className="w-1 h-3 bg-white rounded animate-pulse" style={{ animationDelay: "0.2s" }}></div>
-                          <div className="w-1 h-5 bg-white rounded animate-pulse" style={{ animationDelay: "0.3s" }}></div>
-                        </div>
-                        <span className="text-sm font-medium">Listening... Speak your answer</span>
-                      </div>
-                    </div>
-                  )}
-                  {/* Speaking Indicator */}
-                  {isSpeaking && (
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="bg-blue-600/90 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-3">
-                        <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                        </svg>
-                        <span className="text-sm font-medium">AI Interviewer speaking...</span>
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
+                      <div className="flex items-end gap-1 h-8 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                        {[...Array(12)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="w-1 bg-red-400 rounded-full animate-pulse"
+                            style={{
+                              height: `${Math.random() * 16 + 8}px`,
+                              animationDelay: `${i * 0.05}s`,
+                              animationDuration: '0.5s'
+                            }}
+                          ></div>
+                        ))}
                       </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Question & Transcript Panel */}
-              <div className="flex flex-col gap-4">
-                {/* Current Question */}
-                <div className="bg-slate-800 rounded-2xl p-6">
-                  <div className="flex items-center gap-2 text-red-400 text-sm mb-3">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                    </svg>
-                    AI Interviewer
+              {/* Content Cards - Below Video */}
+              <div className="grid lg:grid-cols-2 gap-4">
+                {/* AI Question Card */}
+                <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-2xl p-6 border border-white/5 shadow-xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">AI Interviewer</p>
+                      <p className="text-white/40 text-xs">Personalized for your profile</p>
+                    </div>
                   </div>
-                  <p className="text-lg leading-relaxed">{currentQuestion || "Loading question..."}</p>
+                  <p className="text-white/90 text-lg leading-relaxed">{currentQuestion || "Loading question..."}</p>
                 </div>
 
-                {/* Live Transcript */}
-                <div className="bg-slate-800 rounded-2xl p-6 flex-1">
-                  <div className="flex items-center gap-2 text-green-400 text-sm mb-3">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Your Answer (Live Transcript)
+                {/* Your Answer Card */}
+                <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-2xl p-6 border border-white/5 shadow-xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">Your Response</p>
+                      <p className="text-white/40 text-xs">Live transcription</p>
+                    </div>
                   </div>
-                  <p className="text-white/80 min-h-[100px]">
-                    {transcript || (isListening ? "Start speaking..." : "Waiting...")}
+                  <p className="text-white/80 text-lg leading-relaxed min-h-[80px]">
+                    {transcript || (
+                      <span className="text-white/40 italic">
+                        {isListening ? "Listening... start speaking" : isSpeaking ? "Wait for the question..." : "Waiting..."}
+                      </span>
+                    )}
                   </p>
                 </div>
-
-                {/* Submit Button */}
-                {interviewPhase === "answering" && (
-                  <div className="bg-slate-800/50 rounded-xl p-4 text-center text-white/60 text-sm">
-                    <p>AI will automatically detect when you&apos;re done speaking and move to the next question.</p>
-                    <p className="mt-1 text-white/40">Pause for 4 seconds when finished.</p>
-                  </div>
-                )}
-
-                {/* Processing Indicator */}
-                {interviewPhase === "processing" && (
-                  <div className="bg-slate-800 rounded-xl p-4 flex items-center justify-center gap-3">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white"></div>
-                    <span>Processing your answer...</span>
-                  </div>
-                )}
               </div>
+
+              {/* Status Bar */}
+              {interviewPhase === "answering" && (
+                <div className="text-center">
+                  <p className="text-white/40 text-sm">
+                    Pause for 4 seconds when done speaking to continue
+                  </p>
+                </div>
+              )}
+
+              {/* Processing Indicator */}
+              {interviewPhase === "processing" && (
+                <div className="flex items-center justify-center gap-3 py-4">
+                  <div className="relative w-6 h-6">
+                    <div className="absolute inset-0 rounded-full border-2 border-white/20"></div>
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-red-500 animate-spin"></div>
+                  </div>
+                  <span className="text-white/60 font-medium">Processing your response...</span>
+                </div>
+              )}
             </div>
           )}
 
