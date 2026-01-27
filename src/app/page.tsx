@@ -58,6 +58,15 @@ interface ResultsData {
   softSkills: { skill: string; tip: string }[];
   interviewScore: number;
   interviewFeedback: string;
+  // Detailed scores
+  communicationScore?: number;
+  communicationFeedback?: string;
+  technicalScore?: number;
+  technicalFeedback?: string;
+  softSkillsScore?: number;
+  softSkillsFeedback?: string;
+  strengths?: string[];
+  areasToImprove?: string[];
 }
 
 type Step = "landing" | "career" | "resume" | "cover-letter" | "interview" | "results";
@@ -2141,13 +2150,97 @@ export default function Home() {
             <p className="text-slate-600">Here&apos;s your personalized feedback based on your profile, resume, cover letter, and interview performance.</p>
           </div>
 
-          {/* Interview Score */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-slate-800">Interview Score</h2>
-              <div className="text-3xl font-bold text-red-600">{results.interviewScore}/10</div>
+          {/* Score Cards Grid */}
+          <div className="grid md:grid-cols-4 gap-4 mb-6">
+            {/* Overall Score */}
+            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white text-center">
+              <div className="text-5xl font-bold mb-2">{results.interviewScore}</div>
+              <div className="text-red-100 text-sm font-medium">Overall Score</div>
+              <div className="text-red-200 text-xs mt-1">out of 10</div>
             </div>
-            <p className="text-slate-600">{results.interviewFeedback}</p>
+
+            {/* Communication Score */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <div className="text-3xl font-bold text-slate-800 mb-1">{results.communicationScore || Math.round(results.interviewScore * 0.9)}</div>
+              <div className="text-slate-500 text-sm">Communication</div>
+            </div>
+
+            {/* Technical Score */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div className="text-3xl font-bold text-slate-800 mb-1">{results.technicalScore || Math.round(results.interviewScore * 0.85)}</div>
+              <div className="text-slate-500 text-sm">Technical</div>
+            </div>
+
+            {/* Soft Skills Score */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div className="text-3xl font-bold text-slate-800 mb-1">{results.softSkillsScore || Math.round(results.interviewScore * 0.95)}</div>
+              <div className="text-slate-500 text-sm">Soft Skills</div>
+            </div>
+          </div>
+
+          {/* Overall Feedback Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+            <h2 className="text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <span className="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              Overall Feedback
+            </h2>
+            <p className="text-slate-600 leading-relaxed">{results.interviewFeedback}</p>
+          </div>
+
+          {/* Strengths & Areas to Improve */}
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-green-50 rounded-2xl border border-green-200 p-6">
+              <h3 className="text-lg font-bold text-green-800 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Your Strengths
+              </h3>
+              <ul className="space-y-2">
+                {(results.strengths || ["Clear communication", "Good enthusiasm", "Relevant experience"]).map((strength, i) => (
+                  <li key={i} className="text-sm text-green-700 flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    {strength}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-amber-50 rounded-2xl border border-amber-200 p-6">
+              <h3 className="text-lg font-bold text-amber-800 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                Areas to Improve
+              </h3>
+              <ul className="space-y-2">
+                {(results.areasToImprove || ["Use more specific examples", "Quantify achievements", "Practice concise answers"]).map((area, i) => (
+                  <li key={i} className="text-sm text-amber-700 flex items-start gap-2">
+                    <span className="text-amber-500 mt-0.5">→</span>
+                    {area}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Tips Grid */}

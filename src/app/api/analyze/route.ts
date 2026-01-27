@@ -49,7 +49,15 @@ Analyze all materials and provide feedback in this exact JSON format:
     {"skill": "skill name", "tip": "how to improve"}
   ],
   "interviewScore": 7,
-  "interviewFeedback": "2-3 sentence overall feedback on interview performance"
+  "interviewFeedback": "2-3 sentence overall feedback on interview performance",
+  "communicationScore": 7,
+  "communicationFeedback": "Brief feedback on clarity, confidence, and articulation",
+  "technicalScore": 6,
+  "technicalFeedback": "Brief feedback on industry knowledge and problem-solving",
+  "softSkillsScore": 8,
+  "softSkillsFeedback": "Brief feedback on teamwork, adaptability, leadership",
+  "strengths": ["strength1", "strength2", "strength3"],
+  "areasToImprove": ["area1", "area2", "area3"]
 }
 
 Guidelines:
@@ -58,7 +66,12 @@ Guidelines:
 - Prep tips: Actionable interview preparation advice based on their performance
 - Soft skills: Skills they should develop based on their interview answers
 - Interview score: 1-10 based on answer quality, structure, and confidence
-- Be specific and actionable, not generic
+- Communication score: 1-10 based on clarity, confidence, storytelling
+- Technical score: 1-10 based on industry knowledge, problem-solving approach
+- Soft skills score: 1-10 based on teamwork, leadership, adaptability shown
+- Strengths: 3 specific things they did well in the interview
+- Areas to improve: 3 specific things they can work on
+- Be specific and actionable, reference their actual answers
 - Singapore internship market context
 
 Return ONLY valid JSON, no markdown.`;
