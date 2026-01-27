@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 
-// Only include Google provider for now since others aren't configured
 const handler = NextAuth({
   providers: [
     GoogleProvider({
@@ -15,22 +15,68 @@ const handler = NextAuth({
         }
       }
     }),
+    CredentialsProvider({
+      name: "Email",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        name: { label: "Name", type: "text" },
+        action: { label: "Action", type: "text" }, // "login" or "signup"
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password required");
+        }
+
+        // For now, simple validation - in production, use a database
+        // This is a simplified auth - users are stored in memory/localStorage on client
+        const email = credentials.email;
+        const password = credentials.password;
+        const name = credentials.name || email.split("@")[0];
+
+        // Basic validation
+        if (password.length < 6) {
+          throw new Error("Password must be at least 6 characters");
+        }
+
+        // Return user object
+        return {
+          id: email,
+          email: email,
+          name: name,
+        };
+      },
+    }),
   ],
   pages: {
-    signIn: "/",
+    signIn: "/auth/signin",
     error: "/auth/error",
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log("SignIn callback:", { user: user?.email, provider: account?.provider });
       return true;
     },
     async redirect({ url, baseUrl }) {
-      // Always redirect to the base URL after sign in
+      // Redirect to dashboard after sign in
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return `${baseUrl}/dashboard`;
+      }
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
+      return `${baseUrl}/dashboard`;
     },
+    async session({ session, token }) {
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+  },
+  session: {
+    strategy: "jwt",
   },
   debug: process.env.NODE_ENV === "development",
   secret: process.env.NEXTAUTH_SECRET,
