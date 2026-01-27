@@ -48,6 +48,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Video interview
+  const [videoEnabled, setVideoEnabled] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll chat
@@ -412,38 +417,103 @@ export default function Home() {
 
   // ==================== STEP 2: RESUME ====================
   if (currentStep === "resume") {
+    const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/parse-resume", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        setResumeText(data.text);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to parse file");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     return (
-      <StepLayout title="Your Resume" subtitle="Paste your resume text for AI analysis">
+      <StepLayout title="Your Resume" subtitle="Upload or paste your resume for AI analysis">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-5">
+          {/* Upload Option */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Resume Content
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Option 1: Upload Resume
+            </label>
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-red-400 hover:bg-red-50/50 transition-all">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                {loading ? (
+                  <>
+                    <svg className="w-8 h-8 text-red-500 animate-spin mb-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <p className="text-sm text-slate-500">Processing...</p>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p className="text-sm text-slate-500"><span className="font-semibold text-red-600">Click to upload</span> or drag and drop</p>
+                    <p className="text-xs text-slate-400">PDF, DOCX, or TXT</p>
+                  </>
+                )}
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.docx,.txt"
+                onChange={handleResumeUpload}
+                disabled={loading}
+              />
+            </label>
+          </div>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-white text-slate-500">or</span>
+            </div>
+          </div>
+
+          {/* Paste Option */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Option 2: Paste Resume Text
             </label>
             <textarea
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              rows={12}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-              placeholder="Paste your resume text here...
-
-Example:
-EDUCATION
-National University of Singapore
-Bachelor of Business Administration, 2022-2026
-
-EXPERIENCE
-Marketing Intern, ABC Company (Jun-Aug 2024)
-- Managed social media accounts
-- Created content strategy
-
-SKILLS
-Microsoft Office, Canva, Google Analytics"
+              rows={10}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm"
+              placeholder="Paste your resume text here..."
             />
           </div>
 
-          <p className="text-sm text-slate-500">
-            💡 Tip: Copy and paste the text from your resume. Our AI will analyze it and provide improvement suggestions.
-          </p>
+          {resumeText && (
+            <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Resume loaded ({resumeText.length} characters)
+            </div>
+          )}
 
           <div className="flex gap-3">
             <button
@@ -467,34 +537,106 @@ Microsoft Office, Canva, Google Analytics"
 
   // ==================== STEP 3: COVER LETTER ====================
   if (currentStep === "cover-letter") {
+    const handleCoverLetterUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/parse-resume", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        setCoverLetterText(data.text);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to parse file");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     return (
-      <StepLayout title="Your Cover Letter" subtitle="Paste your cover letter for AI feedback">
+      <StepLayout title="Your Cover Letter" subtitle="Upload or paste your cover letter (optional)">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-5">
+          {/* Upload Option */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Cover Letter Content
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Option 1: Upload Cover Letter
+            </label>
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-red-400 hover:bg-red-50/50 transition-all">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                {loading ? (
+                  <>
+                    <svg className="w-8 h-8 text-red-500 animate-spin mb-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <p className="text-sm text-slate-500">Processing...</p>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p className="text-sm text-slate-500"><span className="font-semibold text-red-600">Click to upload</span> or drag and drop</p>
+                    <p className="text-xs text-slate-400">PDF, DOCX, or TXT</p>
+                  </>
+                )}
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.docx,.txt"
+                onChange={handleCoverLetterUpload}
+                disabled={loading}
+              />
+            </label>
+          </div>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-white text-slate-500">or</span>
+            </div>
+          </div>
+
+          {/* Paste Option */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Option 2: Paste Cover Letter Text
             </label>
             <textarea
               value={coverLetterText}
               onChange={(e) => setCoverLetterText(e.target.value)}
-              rows={12}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-              placeholder="Paste your cover letter here...
-
-Example:
-Dear Hiring Manager,
-
-I am writing to express my interest in the Marketing Intern position at your company...
-
-[Your cover letter content]
-
-Sincerely,
-Your Name"
+              rows={8}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm"
+              placeholder="Paste your cover letter here (optional)..."
             />
           </div>
 
-          <p className="text-sm text-slate-500">
-            💡 Tip: Include the cover letter you plan to use. The AI will suggest improvements based on your target role.
+          {coverLetterText && (
+            <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Cover letter loaded ({coverLetterText.length} characters)
+            </div>
+          )}
+
+          <p className="text-sm text-slate-500 bg-slate-50 px-3 py-2 rounded-lg">
+            💡 Cover letter is optional. Skip if you don&apos;t have one ready.
           </p>
 
           <div className="flex gap-3">
@@ -509,8 +651,7 @@ Your Name"
                 setCurrentStep("interview");
                 startInterview();
               }}
-              disabled={!coverLetterText.trim()}
-              className="flex-1 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all"
             >
               Next: Mock Interview →
             </button>
