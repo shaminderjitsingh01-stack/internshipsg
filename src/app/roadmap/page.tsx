@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTheme } from "@/context/ThemeContext";
 
 interface RoadmapItem {
   id: string;
@@ -244,6 +245,7 @@ const whyItMatters = [
 ];
 
 export default function RoadmapPage() {
+  const { isDarkTheme, toggleTheme } = useTheme();
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
 
@@ -293,15 +295,31 @@ export default function RoadmapPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className={`min-h-screen transition-colors ${isDarkTheme ? 'bg-slate-950' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
       {/* Navigation */}
-      <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <nav className={`border-b backdrop-blur-sm sticky top-0 z-50 ${isDarkTheme ? 'border-white/10 bg-slate-950/80' : 'border-slate-200 bg-white/80'}`}>
         <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Internship.sg" className="h-8 sm:h-10 w-auto" />
+            <img src="/logo.png" alt="Internship.sg" className={`h-8 sm:h-10 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/about" className="text-slate-600 hover:text-red-600 transition-colors text-sm sm:text-base">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-all ${isDarkTheme ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+              aria-label="Toggle theme"
+            >
+              {isDarkTheme ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+            <Link href="/about" className={`transition-colors text-sm sm:text-base ${isDarkTheme ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'}`}>
               About
             </Link>
             <Link
@@ -316,35 +334,35 @@ export default function RoadmapPage() {
 
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 py-10 sm:py-16 text-center">
-        <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+        <div className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6 ${isDarkTheme ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700'}`}>
           <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
           Public Roadmap
         </div>
 
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4 sm:mb-6">
+        <h1 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
           Building the Future of
           <span className="text-red-600 block">Interview Preparation</span>
         </h1>
 
-        <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
+        <p className={`text-base sm:text-lg md:text-xl max-w-3xl mx-auto mb-6 sm:mb-8 px-2 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
           We're on a mission to help every student in Singapore ace their internship interviews.
           Here's what we're building — and what's coming next.
         </p>
 
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className={`flex items-center gap-2 text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
             <span className="w-3 h-3 rounded-full bg-green-500"></span>
             Live
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className={`flex items-center gap-2 text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
             <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
             Building
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className={`flex items-center gap-2 text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
             <span className="w-3 h-3 rounded-full bg-blue-500"></span>
             Planned
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className={`flex items-center gap-2 text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
             <span className="w-3 h-3 rounded-full bg-slate-400"></span>
             Exploring
           </div>
@@ -352,28 +370,28 @@ export default function RoadmapPage() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
+          <div className={`rounded-xl p-3 sm:p-4 border shadow-sm ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
             <p className="text-2xl sm:text-3xl font-bold text-red-600">6</p>
-            <p className="text-xs sm:text-sm text-slate-600">Features Live</p>
+            <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Features Live</p>
           </div>
-          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
+          <div className={`rounded-xl p-3 sm:p-4 border shadow-sm ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
             <p className="text-2xl sm:text-3xl font-bold text-blue-600">12</p>
-            <p className="text-xs sm:text-sm text-slate-600">In Development</p>
+            <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>In Development</p>
           </div>
-          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
-            <p className="text-2xl sm:text-3xl font-bold text-slate-700">4</p>
-            <p className="text-xs sm:text-sm text-slate-600">Quarters Planned</p>
+          <div className={`rounded-xl p-3 sm:p-4 border shadow-sm ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <p className={`text-2xl sm:text-3xl font-bold ${isDarkTheme ? 'text-white' : 'text-slate-700'}`}>4</p>
+            <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Quarters Planned</p>
           </div>
-          <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
+          <div className={`rounded-xl p-3 sm:p-4 border shadow-sm ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
             <p className="text-2xl sm:text-3xl font-bold text-green-600">100%</p>
-            <p className="text-xs sm:text-sm text-slate-600">Student-Focused</p>
+            <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Student-Focused</p>
           </div>
         </div>
       </section>
 
       {/* Timeline Section */}
       <section className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-8 sm:mb-12">
+        <h2 className={`text-xl sm:text-2xl font-bold text-center mb-8 sm:mb-12 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
           2026 Roadmap
         </h2>
 
@@ -389,8 +407,8 @@ export default function RoadmapPage() {
                   selectedQuarter === quarter.id
                     ? "bg-red-600 text-white"
                     : quarter.status === "current"
-                    ? "bg-red-100 text-red-700 hover:bg-red-200"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    ? isDarkTheme ? "bg-red-900/30 text-red-400 hover:bg-red-900/50" : "bg-red-100 text-red-700 hover:bg-red-200"
+                    : isDarkTheme ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
                 {quarter.name}
@@ -405,7 +423,7 @@ export default function RoadmapPage() {
         {/* Timeline */}
         <div className="relative">
           {/* Vertical line */}
-          <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-slate-200 -translate-x-1/2"></div>
+          <div className={`absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 ${isDarkTheme ? 'bg-slate-800' : 'bg-slate-200'}`}></div>
 
           {roadmapData
             .filter((q) => !selectedQuarter || q.id === selectedQuarter)
@@ -422,7 +440,7 @@ export default function RoadmapPage() {
                   </div>
 
                   {/* Quarter Tagline */}
-                  <p className="text-center text-slate-600 mb-8 font-medium">
+                  <p className={`text-center mb-8 font-medium ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
                     {quarter.tagline}
                   </p>
 
@@ -448,8 +466,10 @@ export default function RoadmapPage() {
 
                           {/* Card */}
                           <div
-                            className={`bg-white rounded-xl p-4 sm:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-red-200 cursor-pointer ${
-                              item.status === "completed" ? "border-l-4 border-l-green-500" : ""
+                            className={`rounded-xl p-4 sm:p-6 border shadow-sm hover:shadow-md transition-all cursor-pointer ${
+                              isDarkTheme
+                                ? `bg-slate-900 border-slate-800 hover:border-red-900 ${item.status === "completed" ? "border-l-4 border-l-green-500" : ""}`
+                                : `bg-white border-slate-200 hover:border-red-200 ${item.status === "completed" ? "border-l-4 border-l-green-500" : ""}`
                             }`}
                           >
                             <div className="flex items-start justify-between mb-2 sm:mb-3">
@@ -459,13 +479,13 @@ export default function RoadmapPage() {
                               </span>
                             </div>
 
-                            <h3 className="font-semibold text-slate-900 mb-2">{item.title}</h3>
-                            <p className="text-sm text-slate-600">{item.description}</p>
+                            <h3 className={`font-semibold mb-2 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{item.title}</h3>
+                            <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>{item.description}</p>
 
                             {/* Tooltip */}
                             {activeTooltip === item.id && (
-                              <div className="mt-3 pt-3 border-t border-slate-100">
-                                <p className="text-xs text-slate-500 italic">💡 {item.tooltip}</p>
+                              <div className={`mt-3 pt-3 border-t ${isDarkTheme ? 'border-slate-800' : 'border-slate-100'}`}>
+                                <p className={`text-xs italic ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>💡 {item.tooltip}</p>
                               </div>
                             )}
                           </div>
@@ -578,10 +598,10 @@ export default function RoadmapPage() {
       </section>
 
       {/* Feedback Section */}
-      <section className="bg-slate-50 py-8 sm:py-12 border-t border-slate-200">
+      <section className={`py-8 sm:py-12 border-t ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <h3 className="font-semibold text-slate-900 mb-2 text-sm sm:text-base">Have a Feature Request?</h3>
-          <p className="text-slate-600 mb-4 text-sm sm:text-base">
+          <h3 className={`font-semibold mb-2 text-sm sm:text-base ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Have a Feature Request?</h3>
+          <p className={`mb-4 text-sm sm:text-base ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
             We're building this for you. Tell us what features would help you most.
           </p>
           <a
@@ -594,8 +614,8 @@ export default function RoadmapPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-6 sm:py-8">
-        <div className="max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm text-slate-500">
+      <footer className={`border-t py-6 sm:py-8 ${isDarkTheme ? 'border-slate-800 bg-slate-950' : 'border-slate-200'}`}>
+        <div className={`max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
             <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
             <Link href="/about" className="hover:text-red-600 transition-colors">About</Link>

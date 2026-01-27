@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
+import { useTheme } from "@/context/ThemeContext";
 import JobDescriptionInput from "@/components/JobDescriptionInput";
 import JobInterviewAnalysis from "@/components/JobInterviewAnalysis";
 
@@ -77,6 +78,7 @@ type Step = "job-input" | "resume" | "cover-letter" | "setup" | "interview" | "a
 
 export default function JobInterviewPage() {
   const { data: session, status } = useSession();
+  const { isDarkTheme, toggleTheme } = useTheme();
 
   // Flow state
   const [currentStep, setCurrentStep] = useState<Step>("job-input");
@@ -567,23 +569,39 @@ export default function JobInterviewPage() {
   // Render based on current step
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDarkTheme ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
+    <div className={`min-h-screen transition-colors ${isDarkTheme ? 'bg-slate-950' : 'bg-gradient-to-br from-blue-50 to-slate-50'}`}>
       {/* Header */}
-      <header className="bg-white border-b border-slate-200">
+      <header className={`border-b backdrop-blur-xl ${isDarkTheme ? 'bg-slate-950/80 border-white/10' : 'bg-white/80 border-slate-200'}`}>
         <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Internship.sg" className="h-8 sm:h-10 w-auto" />
+            <img src="/logo.png" alt="Internship.sg" className={`h-8 sm:h-10 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
           </Link>
           <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-all ${isDarkTheme ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+              aria-label="Toggle theme"
+            >
+              {isDarkTheme ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
             {session ? (
-              <Link href="/dashboard" className="px-4 py-2 text-slate-600 hover:text-blue-600 font-medium text-sm">
+              <Link href="/dashboard" className={`px-4 py-2 font-medium text-sm ${isDarkTheme ? 'text-slate-300 hover:text-blue-400' : 'text-slate-600 hover:text-blue-600'}`}>
                 Dashboard
               </Link>
             ) : (
@@ -1188,8 +1206,8 @@ export default function JobInterviewPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-6 mt-12 bg-white">
-        <div className="max-w-6xl mx-auto px-4 text-center text-xs text-slate-500">
+      <footer className={`border-t py-6 mt-12 ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={`max-w-6xl mx-auto px-4 text-center text-xs ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
           <p>Made by <a href="https://shaminder.sg" className="text-blue-600 hover:underline">shaminder.sg</a></p>
         </div>
       </footer>
