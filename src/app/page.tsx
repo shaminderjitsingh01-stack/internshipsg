@@ -1462,27 +1462,45 @@ export default function Home() {
   // ==================== STEP 0: CHOOSE MODE ====================
   if (currentStep === "choose-mode") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
+      <div className={`min-h-screen transition-colors ${isDarkTheme ? 'bg-slate-950' : 'bg-gradient-to-br from-slate-50 to-white'}`}>
         {/* Header */}
-        <header className="bg-white border-b border-slate-200">
+        <header className={`border-b backdrop-blur-xl ${isDarkTheme ? 'bg-slate-950/80 border-white/10' : 'bg-white/80 border-slate-200'}`}>
           <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
             <a href="/">
-              <img src="/logo.png" alt="Internship.sg" className="h-8 sm:h-10 w-auto" />
+              <img src="/logo.png" alt="Internship.sg" className={`h-8 sm:h-10 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
             </a>
-            {session && (
-              <a href="/dashboard" className="text-sm text-slate-600 hover:text-red-600">
-                Dashboard
-              </a>
-            )}
+            <div className="flex items-center gap-3">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg transition-all ${isDarkTheme ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                aria-label="Toggle theme"
+              >
+                {isDarkTheme ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+              {session && (
+                <a href="/dashboard" className={`text-sm ${isDarkTheme ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'}`}>
+                  Dashboard
+                </a>
+              )}
+            </div>
           </div>
         </header>
 
         <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
           <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+            <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
               Choose Your Prep Mode
             </h1>
-            <p className="text-slate-600">
+            <p className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>
               How would you like to practice today?
             </p>
           </div>
@@ -1491,18 +1509,18 @@ export default function Home() {
             {/* Option 1: General Interview */}
             <button
               onClick={() => setCurrentStep("career")}
-              className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 hover:border-red-400 hover:shadow-lg transition-all text-left group"
+              className={`rounded-2xl p-6 sm:p-8 border-2 hover:shadow-lg transition-all text-left group ${isDarkTheme ? 'bg-slate-900 border-slate-700 hover:border-red-500' : 'bg-white border-slate-200 hover:border-red-400'}`}
             >
-              <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-200 transition-colors">
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors ${isDarkTheme ? 'bg-red-900/50 group-hover:bg-red-900/70' : 'bg-red-100 group-hover:bg-red-200'}`}>
                 <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">General Interview Prep</h2>
-              <p className="text-slate-600 text-sm mb-4">
+              <h2 className={`text-xl font-bold mb-2 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>General Interview Prep</h2>
+              <p className={`text-sm mb-4 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
                 Choose your target career field and experience level. Get general interview questions to practice common scenarios.
               </p>
-              <ul className="text-sm text-slate-500 space-y-1">
+              <ul className={`text-sm space-y-1 ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
                 <li className="flex items-center gap-2">
                   <span className="text-green-500">✓</span> Choose from 10+ career fields
                 </li>
@@ -1524,18 +1542,18 @@ export default function Home() {
             {/* Option 2: Job-Specific Interview */}
             <a
               href="/job-interview"
-              className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all text-left group"
+              className={`rounded-2xl p-6 sm:p-8 border-2 hover:shadow-lg transition-all text-left group ${isDarkTheme ? 'bg-slate-900 border-slate-700 hover:border-blue-500' : 'bg-white border-slate-200 hover:border-blue-400'}`}
             >
-              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors ${isDarkTheme ? 'bg-blue-900/50 group-hover:bg-blue-900/70' : 'bg-blue-100 group-hover:bg-blue-200'}`}>
                 <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Job-Specific Interview</h2>
-              <p className="text-slate-600 text-sm mb-4">
+              <h2 className={`text-xl font-bold mb-2 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Job-Specific Interview</h2>
+              <p className={`text-sm mb-4 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
                 Paste a job URL or description. Get tailored questions based on specific job requirements.
               </p>
-              <ul className="text-sm text-slate-500 space-y-1">
+              <ul className={`text-sm space-y-1 ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
                 <li className="flex items-center gap-2">
                   <span className="text-green-500">✓</span> Supports LinkedIn, Indeed, etc.
                 </li>
