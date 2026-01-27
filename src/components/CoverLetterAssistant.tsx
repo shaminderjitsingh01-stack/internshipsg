@@ -438,6 +438,23 @@ export default function CoverLetterAssistant({ userEmail }: Props) {
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Your Cover Letter <span className="text-red-500">*</span>
             </label>
+            {/* File Upload */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-red-400 hover:bg-red-50 transition-colors mb-3"
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => handleFileUpload(e, "coverLetter")}
+                accept=".pdf,.docx,.txt"
+                className="hidden"
+              />
+              <div className="text-3xl mb-2">📄</div>
+              <p className="font-medium text-slate-700">Click to upload cover letter</p>
+              <p className="text-sm text-slate-500 mt-1">PDF, DOCX, or TXT</p>
+            </div>
+            <p className="text-center text-sm text-slate-500 mb-3">or paste below</p>
             <textarea
               value={coverLetterText}
               onChange={(e) => setCoverLetterText(e.target.value)}
