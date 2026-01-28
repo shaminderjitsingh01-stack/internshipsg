@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+
+// Bookmarklet code - sends job text to API and opens import page
+const BOOKMARKLET_CODE = `javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('Could not find job description on this page.');return;}fetch('https://internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed to import. Please copy manually.');}}).catch(()=>alert('Error importing. Please copy manually.'));})();`;
 
 interface JobDescription {
   title: string;
@@ -26,6 +29,14 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
   const [pastedText, setPastedText] = useState(initialPastedText || "");
   const [showBookmarklet, setShowBookmarklet] = useState(false);
   const [showImportBanner, setShowImportBanner] = useState(false);
+  const bookmarkletRef = useRef<HTMLAnchorElement>(null);
+
+  // Set bookmarklet href after render to bypass React's javascript: URL blocking
+  useEffect(() => {
+    if (bookmarkletRef.current && showBookmarklet) {
+      bookmarkletRef.current.setAttribute('href', BOOKMARKLET_CODE);
+    }
+  }, [showBookmarklet]);
 
   // Sync pasted text when initialPastedText changes (from bookmarklet)
   useEffect(() => {
@@ -404,19 +415,25 @@ Include: Job title, company name, responsibilities, requirements, qualifications
               </p>
 
               {/* Bookmarklet Button */}
-              <div className="flex items-center gap-3 mb-4">
-                <a
-                  href={`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('Could not find job description on this page.');return;}fetch('https://internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed to import. Please copy manually.');}}).catch(()=>alert('Error importing. Please copy manually.'));})();`}
-                  onClick={(e) => e.preventDefault()}
-                  draggable="true"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium text-sm shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all cursor-grab active:cursor-grabbing"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                  📋 Import to Internship.sg
-                </a>
-                <span className="text-xs text-blue-600">← Drag this to your bookmarks bar</span>
+              <div className="flex flex-col gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <a
+                    ref={bookmarkletRef}
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    draggable="true"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium text-sm shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all cursor-grab active:cursor-grabbing"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    📋 Import to Internship.sg
+                  </a>
+                  <span className="text-xs text-blue-600">← Drag this to your bookmarks bar</span>
+                </div>
+                <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded-lg">
+                  <strong>Tip:</strong> If dragging doesn&apos;t work, right-click the button → &quot;Copy link address&quot; → Create a new bookmark → Paste as the URL
+                </p>
               </div>
 
               {/* Instructions */}
@@ -433,12 +450,12 @@ Include: Job title, company name, responsibilities, requirements, qualifications
               <div className="mt-4 pt-3 border-t border-blue-200">
                 <p className="text-xs text-blue-700 mb-2">Or copy the bookmarklet code manually:</p>
                 <div className="relative">
-                  <code className="block p-2 bg-white/70 rounded text-[10px] text-blue-900 font-mono break-all border border-blue-200">
-                    {`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('No job description found');return;}fetch('https://internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed');}}).catch(()=>alert('Error'));})();`}
+                  <code className="block p-2 bg-white/70 rounded text-[10px] text-blue-900 font-mono break-all border border-blue-200 max-h-20 overflow-y-auto">
+                    {BOOKMARKLET_CODE}
                   </code>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('No job description found');return;}fetch('https://internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed');}}).catch(()=>alert('Error'));})();`);
+                      navigator.clipboard.writeText(BOOKMARKLET_CODE);
                       alert('Bookmarklet code copied! Create a new bookmark and paste this as the URL.');
                     }}
                     className="absolute top-1 right-1 p-1.5 bg-blue-100 hover:bg-blue-200 rounded text-blue-700 transition-colors"
