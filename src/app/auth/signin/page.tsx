@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -12,6 +12,7 @@ function SignInContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const error = searchParams.get("error");
+  const referralCode = searchParams.get("ref");
   const { isDarkTheme } = useTheme();
 
   const [isSignUp, setIsSignUp] = useState(false);
@@ -19,6 +20,16 @@ function SignInContent() {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [referrerName, setReferrerName] = useState<string | null>(null);
+
+  // If there's a referral code, show signup form and store it
+  useEffect(() => {
+    if (referralCode) {
+      setIsSignUp(true);
+      // Store referral code in sessionStorage for persistence through signup flow
+      sessionStorage.setItem("referralCode", referralCode);
+    }
+  }, [referralCode]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -52,6 +63,9 @@ function SignInContent() {
           return;
         }
 
+        // Get referral code from URL or sessionStorage
+        const refCode = referralCode || sessionStorage.getItem("referralCode");
+
         const res = await fetch("/api/auth/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -59,6 +73,7 @@ function SignInContent() {
             name: formData.name,
             email: formData.email,
             password: formData.password,
+            referralCode: refCode,
           }),
         });
 
@@ -81,6 +96,8 @@ function SignInContent() {
           setFormError("Account created. Please sign in.");
           setIsSignUp(false);
         } else {
+          // Clear referral code from storage after successful signup
+          sessionStorage.removeItem("referralCode");
           router.push(callbackUrl);
         }
       } else {
@@ -206,6 +223,14 @@ function SignInContent() {
           <p className={`mt-2 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
             {isSignUp ? "Start your interview prep journey" : "Sign in to continue your practice"}
           </p>
+          {/* Referral Banner */}
+          {referralCode && isSignUp && (
+            <div className={`mt-4 p-3 rounded-xl ${isDarkTheme ? 'bg-purple-900/30 border border-purple-500/30' : 'bg-purple-50 border border-purple-200'}`}>
+              <p className={`text-sm ${isDarkTheme ? 'text-purple-300' : 'text-purple-700'}`}>
+                You were invited by a friend! Sign up to start practicing.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Card */}

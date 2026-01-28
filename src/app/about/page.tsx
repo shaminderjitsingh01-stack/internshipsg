@@ -14,7 +14,25 @@ export default function AboutPage() {
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="Internship.sg" className={`h-7 sm:h-8 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center gap-1">
+              <Link href="/questions" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                Questions
+              </Link>
+              <Link href="/leaderboard" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                Leaderboard
+              </Link>
+              <Link href="/resources" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                Resources
+              </Link>
+              <Link href="/for-employers" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                For Employers
+              </Link>
+              <Link href="/roadmap" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                Roadmap
+              </Link>
+            </div>
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -184,6 +202,10 @@ export default function AboutPage() {
         <div className={`max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
             <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+            <Link href="/questions" className="hover:text-red-600 transition-colors">Questions</Link>
+            <Link href="/leaderboard" className="hover:text-red-600 transition-colors">Leaderboard</Link>
+            <Link href="/resources" className="hover:text-red-600 transition-colors">Resources</Link>
+            <Link href="/for-employers" className="hover:text-red-600 transition-colors">For Employers</Link>
             <Link href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</Link>
             <Link href="/about" className="hover:text-red-600 transition-colors">About</Link>
             <Link href="/dashboard" className="hover:text-red-600 transition-colors">Dashboard</Link>

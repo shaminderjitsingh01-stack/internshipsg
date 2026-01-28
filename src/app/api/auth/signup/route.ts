@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
+import { trackReferral, completeReferral } from "@/lib/referrals";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, referralCode } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -74,6 +75,20 @@ export async function POST(req: NextRequest) {
         { error: "Failed to create account" },
         { status: 500 }
       );
+    }
+
+    // Track referral if a referral code was provided
+    if (referralCode) {
+      const referralResult = await trackReferral(referralCode, email);
+      if (referralResult.success) {
+        // Mark referral as completed since user successfully signed up
+        await completeReferral(email);
+      }
+      // We don't fail the signup if referral tracking fails
+      // Just log any issues
+      if (!referralResult.success) {
+        console.log("Referral tracking note:", referralResult.error);
+      }
     }
 
     return NextResponse.json({ success: true });

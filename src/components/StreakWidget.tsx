@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BADGES } from "@/lib/streaks";
+import { BADGES, MAX_STREAK_FREEZES, DAYS_FOR_FREEZE } from "@/lib/streaks";
 
 interface StreakData {
   current_streak: number;
   longest_streak: number;
   total_activities: number;
   last_activity_date: string | null;
+  streak_freezes: number;
+  freeze_used_today: boolean;
+  last_freeze_used: string | null;
 }
 
 interface Badge {
@@ -41,6 +44,8 @@ export default function StreakWidget({ userEmail, onShare }: Props) {
   const [title, setTitle] = useState("Start Your Journey");
   const [loading, setLoading] = useState(true);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const [freezeUsed, setFreezeUsed] = useState(false);
+  const [showFreezeNotification, setShowFreezeNotification] = useState(false);
 
   useEffect(() => {
     const fetchStreak = async () => {
@@ -52,6 +57,14 @@ export default function StreakWidget({ userEmail, onShare }: Props) {
           setBadges(data.badges || []);
           setNextBadge(data.nextBadge);
           setTitle(data.title);
+
+          // Check if freeze was used
+          if (data.freezeUsed || data.streak?.freeze_used_today) {
+            setFreezeUsed(true);
+            setShowFreezeNotification(true);
+            // Auto-hide notification after 10 seconds
+            setTimeout(() => setShowFreezeNotification(false), 10000);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch streak:", err);
@@ -80,11 +93,35 @@ export default function StreakWidget({ userEmail, onShare }: Props) {
   const currentStreak = streak?.current_streak || 0;
   const longestStreak = streak?.longest_streak || 0;
   const totalActivities = streak?.total_activities || 0;
+  const freezeCount = streak?.streak_freezes || 0;
 
   // Calculate progress to next badge
   const progressPercent = nextBadge
     ? ((nextBadge.badge.requirement - nextBadge.daysRemaining) / nextBadge.badge.requirement) * 100
     : 100;
+
+  // Calculate days until next freeze
+  const nextMilestone = Math.ceil((currentStreak + 1) / DAYS_FOR_FREEZE) * DAYS_FOR_FREEZE;
+  const daysUntilNextFreeze = nextMilestone - currentStreak;
+
+  // Render freeze icons
+  const renderFreezeIcons = () => {
+    const icons = [];
+    for (let i = 0; i < MAX_STREAK_FREEZES; i++) {
+      icons.push(
+        <span
+          key={i}
+          className={`text-sm transition-all ${
+            i < freezeCount ? "opacity-100" : "opacity-40"
+          }`}
+          title={i < freezeCount ? "Streak Freeze Available" : "Streak Freeze Slot"}
+        >
+          ❄️
+        </span>
+      );
+    }
+    return icons;
+  };
 
   return (
     <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white relative overflow-hidden">
@@ -93,14 +130,42 @@ export default function StreakWidget({ userEmail, onShare }: Props) {
       <div className="absolute bottom-0 left-0 w-20 sm:w-24 h-20 sm:h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
       <div className="relative">
+        {/* Freeze Used Notification */}
+        {showFreezeNotification && (
+          <div className="mb-3 bg-sky-500/90 rounded-lg p-3 flex items-center gap-2 animate-pulse">
+            <span className="text-lg">❄️</span>
+            <div className="flex-1">
+              <p className="text-sm font-medium">Streak Freeze Auto-Used!</p>
+              <p className="text-xs opacity-90">Your streak was protected when you missed a day.</p>
+            </div>
+            <button
+              onClick={() => setShowFreezeNotification(false)}
+              className="text-white/80 hover:text-white"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <h2 className="text-base sm:text-lg font-semibold flex items-center gap-1.5 sm:gap-2">
             <span className="text-xl sm:text-2xl">🔥</span> Interview Streak
           </h2>
-          <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium max-w-[120px] sm:max-w-none truncate">
-            {title}
-          </span>
+          <div className="flex items-center gap-2">
+            {/* Freeze count indicator */}
+            <div
+              className="flex items-center gap-0.5 bg-white/20 px-2 py-1 rounded-full"
+              title={`${freezeCount} Streak Freeze${freezeCount !== 1 ? "s" : ""} Available`}
+            >
+              {renderFreezeIcons()}
+            </div>
+            <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium max-w-[100px] sm:max-w-none truncate">
+              {title}
+            </span>
+          </div>
         </div>
 
         {/* Main streak display */}
@@ -126,16 +191,46 @@ export default function StreakWidget({ userEmail, onShare }: Props) {
         )}
 
         {/* Stats row */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4 pt-3 sm:pt-4 border-t border-white/20">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-4 pt-3 sm:pt-4 border-t border-white/20">
           <div>
-            <p className="text-xs opacity-70">Longest Streak</p>
-            <p className="text-base sm:text-lg font-semibold">{longestStreak} days</p>
+            <p className="text-xs opacity-70">Longest</p>
+            <p className="text-sm sm:text-lg font-semibold">{longestStreak} days</p>
           </div>
           <div>
-            <p className="text-xs opacity-70">Total Sessions</p>
-            <p className="text-base sm:text-lg font-semibold">{totalActivities}</p>
+            <p className="text-xs opacity-70">Sessions</p>
+            <p className="text-sm sm:text-lg font-semibold">{totalActivities}</p>
+          </div>
+          <div>
+            <p className="text-xs opacity-70">Freezes</p>
+            <p className="text-sm sm:text-lg font-semibold">{freezeCount}/{MAX_STREAK_FREEZES}</p>
           </div>
         </div>
+
+        {/* Next freeze progress */}
+        {freezeCount < MAX_STREAK_FREEZES && currentStreak > 0 && (
+          <div className="mb-3 bg-sky-500/30 rounded-lg p-2.5">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="flex items-center gap-1 opacity-90">
+                <span>❄️</span> Next freeze in {daysUntilNextFreeze} day{daysUntilNextFreeze !== 1 ? "s" : ""}
+              </span>
+              <span className="opacity-70">{currentStreak % DAYS_FOR_FREEZE}/{DAYS_FOR_FREEZE}</span>
+            </div>
+            <div className="h-1 bg-white/20 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-sky-200 rounded-full transition-all"
+                style={{ width: `${((currentStreak % DAYS_FOR_FREEZE) / DAYS_FOR_FREEZE) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {/* Max freezes banner */}
+        {freezeCount >= MAX_STREAK_FREEZES && (
+          <div className="mb-3 bg-sky-500/30 rounded-lg p-2.5 flex items-center gap-2">
+            <span>❄️</span>
+            <span className="text-xs">Maximum freezes stored - fully protected!</span>
+          </div>
+        )}
 
         {/* Badges */}
         {badges.length > 0 && (

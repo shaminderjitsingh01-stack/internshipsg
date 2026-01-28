@@ -50,10 +50,28 @@ export default function AdminLayout({
               Dashboard
             </Link>
             <Link
+              href="/admin/analytics"
+              className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            >
+              Analytics
+            </Link>
+            <Link
               href="/admin/users"
               className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
             >
               Users
+            </Link>
+            <Link
+              href="/admin/employers"
+              className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            >
+              Employers
+            </Link>
+            <Link
+              href="/admin/content"
+              className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            >
+              Content
             </Link>
             <Link
               href="/dashboard"

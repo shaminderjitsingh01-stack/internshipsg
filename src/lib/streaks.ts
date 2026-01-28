@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { awardXP, XP_REWARDS } from "./xp";
 
 // Badge definitions
 export const BADGES = {
@@ -64,6 +65,10 @@ export interface Streak {
   streak_started_at: string | null;
   created_at: string;
   updated_at: string;
+  // Streak freeze fields
+  streak_freezes: number;
+  last_freeze_used: string | null;
+  freeze_used_today: boolean;
 }
 
 export interface UserBadge {
@@ -123,6 +128,10 @@ export function checkBadgeEligibility(
   return newBadges;
 }
 
+// Constants for streak freeze system
+export const MAX_STREAK_FREEZES = 2;
+export const DAYS_FOR_FREEZE = 7; // Earn 1 freeze per 7-day streak milestone
+
 // Get or create streak record for user
 export async function getOrCreateStreak(userEmail: string): Promise<Streak | null> {
   if (!isSupabaseConfigured()) return null;
@@ -144,6 +153,9 @@ export async function getOrCreateStreak(userEmail: string): Promise<Streak | nul
       current_streak: 0,
       longest_streak: 0,
       total_activities: 0,
+      streak_freezes: 0,
+      last_freeze_used: null,
+      freeze_used_today: false,
     })
     .select()
     .single();
@@ -156,14 +168,80 @@ export async function getOrCreateStreak(userEmail: string): Promise<Streak | nul
   return newStreak;
 }
 
+// Check if user should earn a streak freeze (every 7 days)
+export function shouldEarnStreakFreeze(oldStreak: number, newStreak: number): boolean {
+  // Earn a freeze when crossing a 7-day milestone
+  const oldMilestones = Math.floor(oldStreak / DAYS_FOR_FREEZE);
+  const newMilestones = Math.floor(newStreak / DAYS_FOR_FREEZE);
+  return newMilestones > oldMilestones;
+}
+
+// Check if streak needs freeze protection and apply if available
+export async function checkAndApplyStreakFreeze(userEmail: string): Promise<{
+  freezeUsed: boolean;
+  streak: Streak | null;
+}> {
+  if (!isSupabaseConfigured()) {
+    return { freezeUsed: false, streak: null };
+  }
+
+  const streak = await getOrCreateStreak(userEmail);
+  if (!streak || streak.current_streak === 0) {
+    return { freezeUsed: false, streak };
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  const lastActivityDate = streak.last_activity_date;
+
+  // Check if user missed yesterday (and hasn't done activity today)
+  if (lastActivityDate && lastActivityDate !== today && lastActivityDate !== yesterday) {
+    // User missed a day - check if we can use a freeze
+    if (streak.streak_freezes > 0) {
+      // Use a freeze to protect the streak
+      const { data: updatedStreak, error } = await supabase
+        .from("streaks")
+        .update({
+          streak_freezes: streak.streak_freezes - 1,
+          last_freeze_used: new Date().toISOString(),
+          freeze_used_today: true,
+          last_activity_date: yesterday, // Pretend we did activity yesterday
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_email", userEmail)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error applying streak freeze:", error);
+        return { freezeUsed: false, streak };
+      }
+
+      return { freezeUsed: true, streak: updatedStreak };
+    }
+  }
+
+  // Reset freeze_used_today if it's a new day
+  if (streak.freeze_used_today && streak.last_activity_date !== today) {
+    await supabase
+      .from("streaks")
+      .update({ freeze_used_today: false })
+      .eq("user_email", userEmail);
+  }
+
+  return { freezeUsed: false, streak };
+}
+
 // Update streak when activity is completed
 export async function recordActivity(userEmail: string): Promise<{
   streak: Streak | null;
   newBadges: BadgeId[];
   isNewDay: boolean;
+  freezeEarned: boolean;
+  xpAwarded: number;
 }> {
   if (!isSupabaseConfigured()) {
-    return { streak: null, newBadges: [], isNewDay: false };
+    return { streak: null, newBadges: [], isNewDay: false, freezeEarned: false, xpAwarded: 0 };
   }
 
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
@@ -172,10 +250,11 @@ export async function recordActivity(userEmail: string): Promise<{
   // Get current streak
   let streak = await getOrCreateStreak(userEmail);
   if (!streak) {
-    return { streak: null, newBadges: [], isNewDay: false };
+    return { streak: null, newBadges: [], isNewDay: false, freezeEarned: false, xpAwarded: 0 };
   }
 
   const lastActivityDate = streak.last_activity_date;
+  const oldStreak = streak.current_streak;
   let newStreak = streak.current_streak;
   let isNewDay = false;
 
@@ -197,6 +276,9 @@ export async function recordActivity(userEmail: string): Promise<{
     isNewDay = true;
   }
 
+  // Check if user earned a freeze
+  const freezeEarned = isNewDay && shouldEarnStreakFreeze(oldStreak, newStreak);
+
   // Update streak record
   const updateData: Partial<Streak> = {
     total_activities: streak.total_activities + 1,
@@ -207,9 +289,15 @@ export async function recordActivity(userEmail: string): Promise<{
     updateData.current_streak = newStreak;
     updateData.last_activity_date = today;
     updateData.longest_streak = Math.max(newStreak, streak.longest_streak);
+    updateData.freeze_used_today = false; // Reset since user is active today
 
     if (newStreak === 1) {
       updateData.streak_started_at = new Date().toISOString();
+    }
+
+    // Award freeze if earned (max 2)
+    if (freezeEarned && (streak.streak_freezes || 0) < MAX_STREAK_FREEZES) {
+      updateData.streak_freezes = Math.min((streak.streak_freezes || 0) + 1, MAX_STREAK_FREEZES);
     }
   }
 
@@ -222,7 +310,7 @@ export async function recordActivity(userEmail: string): Promise<{
 
   if (error) {
     console.error("Error updating streak:", error);
-    return { streak, newBadges: [], isNewDay };
+    return { streak, newBadges: [], isNewDay, freezeEarned: false, xpAwarded: 0 };
   }
 
   // Check for new badges
@@ -248,7 +336,20 @@ export async function recordActivity(userEmail: string): Promise<{
     await supabase.from("user_badges").insert(badgeInserts);
   }
 
-  return { streak: updatedStreak, newBadges, isNewDay };
+  // Award XP for streak milestones
+  let xpAwarded = 0;
+  if (isNewDay) {
+    // Award XP for 7-day streak milestone (every 7 days)
+    const oldMilestones = Math.floor(oldStreak / 7);
+    const newMilestones = Math.floor(newStreak / 7);
+    if (newMilestones > oldMilestones) {
+      // User just crossed a 7-day milestone
+      await awardXP(userEmail, XP_REWARDS.SEVEN_DAY_STREAK, "SEVEN_DAY_STREAK");
+      xpAwarded += XP_REWARDS.SEVEN_DAY_STREAK;
+    }
+  }
+
+  return { streak: updatedStreak, newBadges, isNewDay, freezeEarned, xpAwarded };
 }
 
 // Get user's badges
@@ -275,13 +376,23 @@ export async function getStreakWithBadges(userEmail: string): Promise<{
   badges: UserBadge[];
   nextBadge: { badge: typeof BADGES[BadgeId]; daysRemaining: number } | null;
   title: string;
+  freezeUsed: boolean;
 }> {
-  const streak = await getOrCreateStreak(userEmail);
+  // First check if freeze needs to be applied
+  const { freezeUsed, streak: checkedStreak } = await checkAndApplyStreakFreeze(userEmail);
+
+  const streak = checkedStreak || await getOrCreateStreak(userEmail);
   const badges = await getUserBadges(userEmail);
   const nextBadge = streak ? getNextBadge(streak.current_streak) : null;
   const title = streak ? getStreakTitle(streak.current_streak) : "Start Your Journey";
 
-  return { streak, badges, nextBadge, title };
+  return { streak, badges, nextBadge, title, freezeUsed };
+}
+
+// Get days until next freeze
+export function getDaysUntilNextFreeze(currentStreak: number): number {
+  const nextMilestone = Math.ceil((currentStreak + 1) / DAYS_FOR_FREEZE) * DAYS_FOR_FREEZE;
+  return nextMilestone - currentStreak;
 }
 
 // Motivational messages based on streak

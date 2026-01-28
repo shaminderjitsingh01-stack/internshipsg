@@ -1,176 +1,250 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useTheme } from "@/context/ThemeContext";
 
 interface Challenge {
   id: string;
   title: string;
   description: string;
+  type: string;
   target: number;
-  type: "interviews" | "questions" | "streak" | "resume" | "cover_letter";
-  reward: string;
+  difficulty: "easy" | "medium" | "hard";
+  reward: {
+    xp: number;
+    badge?: string;
+    streakFreeze?: boolean;
+  };
   icon: string;
+  progress: number;
+  completed: boolean;
+  xpReward: number;
+  pointsReward: number;
 }
 
-// Rotating weekly challenges
-const WEEKLY_CHALLENGES: Challenge[] = [
-  { id: "complete-3-interviews", title: "Interview Champion", description: "Complete 3 mock interviews this week", target: 3, type: "interviews", reward: "🏅 Champion Badge", icon: "🎙️" },
-  { id: "5-day-streak", title: "Consistency King", description: "Maintain a 5-day streak", target: 5, type: "streak", reward: "👑 Streak Master", icon: "🔥" },
-  { id: "answer-10-questions", title: "Quick Thinker", description: "Answer 10 daily questions", target: 10, type: "questions", reward: "💡 Quick Thinker Badge", icon: "💬" },
-  { id: "improve-resume", title: "Resume Revamp", description: "Analyze your resume and improve based on feedback", target: 1, type: "resume", reward: "📄 Resume Pro", icon: "📝" },
-  { id: "craft-cover-letter", title: "Cover Letter Craftsman", description: "Create or analyze a cover letter", target: 1, type: "cover_letter", reward: "✉️ Letter Master", icon: "✍️" },
-];
+interface UserStats {
+  completedCount: number;
+  totalChallenges: number;
+  totalXPEarned: number;
+  rank: number | null;
+}
 
 interface Props {
   userEmail: string;
-  totalInterviews: number;
-  currentStreak: number;
+  totalInterviews?: number;
+  currentStreak?: number;
 }
 
-export default function WeeklyChallenges({ userEmail, totalInterviews, currentStreak }: Props) {
-  const [weeklyProgress, setWeeklyProgress] = useState<Record<string, number>>({});
-  const [completedChallenges, setCompletedChallenges] = useState<Set<string>>(new Set());
+const DIFFICULTY_COLORS = {
+  easy: {
+    bg: "bg-green-100",
+    darkBg: "bg-green-900/30",
+    text: "text-green-700",
+    darkText: "text-green-400",
+  },
+  medium: {
+    bg: "bg-amber-100",
+    darkBg: "bg-amber-900/30",
+    text: "text-amber-700",
+    darkText: "text-amber-400",
+  },
+  hard: {
+    bg: "bg-red-100",
+    darkBg: "bg-red-900/30",
+    text: "text-red-700",
+    darkText: "text-red-400",
+  },
+};
 
-  // Get current week number
-  const getWeekNumber = () => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 1);
-    const diff = now.getTime() - start.getTime();
-    const oneWeek = 1000 * 60 * 60 * 24 * 7;
-    return Math.floor(diff / oneWeek);
-  };
+export default function WeeklyChallenges({ userEmail, totalInterviews = 0, currentStreak = 0 }: Props) {
+  const { isDarkTheme } = useTheme();
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [daysRemaining, setDaysRemaining] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [showRewardPopup, setShowRewardPopup] = useState<{ xp: number; badge?: string } | null>(null);
 
-  // Get 3 challenges for this week
-  const getCurrentChallenges = () => {
-    const weekNum = getWeekNumber();
-    const startIdx = (weekNum * 3) % WEEKLY_CHALLENGES.length;
-    const challenges: Challenge[] = [];
-    for (let i = 0; i < 3; i++) {
-      challenges.push(WEEKLY_CHALLENGES[(startIdx + i) % WEEKLY_CHALLENGES.length]);
-    }
-    return challenges;
-  };
-
-  const currentChallenges = getCurrentChallenges();
-
-  // Load saved progress
+  // Fetch challenges
   useEffect(() => {
-    const weekKey = `challenges_week_${getWeekNumber()}_${userEmail}`;
-    const saved = localStorage.getItem(weekKey);
-    if (saved) {
-      const data = JSON.parse(saved);
-      setWeeklyProgress(data.progress || {});
-      setCompletedChallenges(new Set(data.completed || []));
-    }
+    const fetchChallenges = async () => {
+      if (!userEmail) return;
+
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ email: userEmail });
+        const res = await fetch(`/api/challenges?${params}`);
+
+        if (res.ok) {
+          const data = await res.json();
+          setChallenges(data.challenges || []);
+          setUserStats(data.userStats);
+          setDaysRemaining(data.daysRemaining);
+        }
+      } catch (err) {
+        console.error("Failed to fetch challenges:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChallenges();
   }, [userEmail]);
 
-  // Calculate progress for each challenge type
+  // Sync challenges when props change
   useEffect(() => {
-    const newProgress: Record<string, number> = {};
+    const syncChallenges = async () => {
+      if (!userEmail || loading) return;
 
-    currentChallenges.forEach(challenge => {
-      switch (challenge.type) {
-        case "interviews":
-          // Check interviews done this week
-          const weekStart = new Date();
-          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-          newProgress[challenge.id] = Math.min(totalInterviews, challenge.target);
-          break;
-        case "streak":
-          newProgress[challenge.id] = Math.min(currentStreak, challenge.target);
-          break;
-        case "questions":
-          const qotdCount = parseInt(localStorage.getItem(`qotd_count_${userEmail}`) || "0");
-          newProgress[challenge.id] = Math.min(qotdCount, challenge.target);
-          break;
-        default:
-          newProgress[challenge.id] = weeklyProgress[challenge.id] || 0;
+      setSyncing(true);
+      try {
+        const res = await fetch("/api/challenges", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userEmail,
+            action: "sync",
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const oldChallenges = challenges;
+          const newChallenges = data.challenges || [];
+          setChallenges(newChallenges);
+
+          // Check for newly completed challenges
+          for (const newChallenge of newChallenges) {
+            const oldChallenge = oldChallenges.find(c => c.id === newChallenge.id);
+            if (newChallenge.completed && oldChallenge && !oldChallenge.completed) {
+              // Show reward popup
+              setShowRewardPopup({
+                xp: newChallenge.xpReward,
+                badge: newChallenge.reward?.badge,
+              });
+              setTimeout(() => setShowRewardPopup(null), 3000);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to sync challenges:", err);
+      } finally {
+        setSyncing(false);
       }
-    });
+    };
 
-    setWeeklyProgress(newProgress);
+    syncChallenges();
+  }, [totalInterviews, currentStreak]);
 
-    // Save progress
-    const weekKey = `challenges_week_${getWeekNumber()}_${userEmail}`;
-    localStorage.setItem(weekKey, JSON.stringify({
-      progress: newProgress,
-      completed: [...completedChallenges],
-    }));
-  }, [totalInterviews, currentStreak, userEmail]);
+  const completedCount = challenges.filter(c => c.completed).length;
+  const isDarkMode = isDarkTheme ?? false;
 
-  // Check for newly completed challenges
-  useEffect(() => {
-    const newCompleted = new Set(completedChallenges);
-    let hasNewCompletions = false;
-
-    currentChallenges.forEach(challenge => {
-      if (weeklyProgress[challenge.id] >= challenge.target && !completedChallenges.has(challenge.id)) {
-        newCompleted.add(challenge.id);
-        hasNewCompletions = true;
-      }
-    });
-
-    if (hasNewCompletions) {
-      setCompletedChallenges(newCompleted);
-    }
-  }, [weeklyProgress]);
-
-  // Days remaining in the week
-  const getDaysRemaining = () => {
-    const now = new Date();
-    const daysUntilSunday = 7 - now.getDay();
-    return daysUntilSunday === 7 ? 0 : daysUntilSunday;
-  };
-
-  const completedCount = currentChallenges.filter(c => completedChallenges.has(c.id)).length;
+  if (loading) {
+    return (
+      <div className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 border ${isDarkMode ? "bg-slate-900 border-slate-800" : "bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200"}`}>
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-200">
+    <div className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 border relative ${isDarkMode ? "bg-slate-900 border-slate-800" : "bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200"}`}>
+      {/* Reward Popup */}
+      {showRewardPopup && (
+        <div className="absolute top-4 right-4 z-50 animate-bounce">
+          <div className={`px-4 py-2 rounded-lg shadow-lg ${isDarkMode ? "bg-green-900 text-green-100" : "bg-green-500 text-white"}`}>
+            <p className="font-bold">Challenge Complete!</p>
+            <p className="text-sm">+{showRewardPopup.xp} XP earned</p>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-purple-900 text-sm sm:text-base flex items-center gap-2">
-          <span className="text-xl">🎯</span> Weekly Challenges
-        </h3>
+        <div className="flex items-center gap-2">
+          <span className="text-xl">&#127919;</span>
+          <h3 className={`font-semibold text-sm sm:text-base ${isDarkMode ? "text-white" : "text-purple-900"}`}>
+            Weekly Challenges
+          </h3>
+          {syncing && (
+            <span className="animate-pulse text-xs text-purple-500">syncing...</span>
+          )}
+        </div>
         <div className="text-right">
-          <span className="text-xs text-purple-600">{getDaysRemaining()} days left</span>
-          <p className="text-xs text-purple-500">{completedCount}/3 complete</p>
+          <span className={`text-xs ${isDarkMode ? "text-purple-400" : "text-purple-600"}`}>
+            {daysRemaining} days left
+          </span>
+          <p className={`text-xs ${isDarkMode ? "text-purple-500" : "text-purple-500"}`}>
+            {completedCount}/{challenges.length} complete
+          </p>
         </div>
       </div>
 
+      {/* Challenges List */}
       <div className="space-y-3">
-        {currentChallenges.map(challenge => {
-          const progress = weeklyProgress[challenge.id] || 0;
-          const isCompleted = completedChallenges.has(challenge.id);
-          const progressPercent = Math.min((progress / challenge.target) * 100, 100);
+        {challenges.map(challenge => {
+          const progressPercent = Math.min((challenge.progress / challenge.target) * 100, 100);
+          const diffColors = DIFFICULTY_COLORS[challenge.difficulty];
 
           return (
             <div
               key={challenge.id}
-              className={`bg-white rounded-xl p-3 sm:p-4 ${isCompleted ? "border-2 border-green-400" : "border border-slate-200"}`}
+              className={`rounded-xl p-3 sm:p-4 transition-all ${
+                challenge.completed
+                  ? isDarkMode
+                    ? "bg-green-900/30 border border-green-700"
+                    : "bg-green-50 border-2 border-green-400"
+                  : isDarkMode
+                    ? "bg-slate-800 border border-slate-700"
+                    : "bg-white border border-slate-200"
+              }`}
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{challenge.icon}</span>
                   <div>
-                    <p className={`font-medium text-sm ${isCompleted ? "text-green-700" : "text-slate-900"}`}>
-                      {challenge.title}
-                      {isCompleted && <span className="ml-2">✅</span>}
+                    <div className="flex items-center gap-2">
+                      <p className={`font-medium text-sm ${challenge.completed ? (isDarkMode ? "text-green-400" : "text-green-700") : (isDarkMode ? "text-white" : "text-slate-900")}`}>
+                        {challenge.title}
+                        {challenge.completed && <span className="ml-2">&#10003;</span>}
+                      </p>
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${isDarkMode ? diffColors.darkBg : diffColors.bg} ${isDarkMode ? diffColors.darkText : diffColors.text}`}>
+                        {challenge.difficulty}
+                      </span>
+                    </div>
+                    <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      {challenge.description}
                     </p>
-                    <p className="text-xs text-slate-500">{challenge.description}</p>
                   </div>
                 </div>
-                <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
-                  {challenge.reward}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? "bg-purple-900/50 text-purple-300" : "bg-purple-100 text-purple-700"}`}>
+                    +{challenge.xpReward} XP
+                  </span>
+                  {challenge.reward.streakFreeze && (
+                    <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? "bg-cyan-900/50 text-cyan-300" : "bg-cyan-100 text-cyan-700"}`}>
+                      &#10052;
+                    </span>
+                  )}
+                </div>
               </div>
 
+              {/* Progress Bar */}
               <div className="mt-3">
-                <div className="flex justify-between text-xs text-slate-500 mb-1">
-                  <span>Progress</span>
-                  <span>{progress}/{challenge.target}</span>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className={isDarkMode ? "text-slate-400" : "text-slate-500"}>Progress</span>
+                  <span className={isDarkMode ? "text-slate-300" : "text-slate-700"}>
+                    {challenge.progress}/{challenge.target}
+                  </span>
                 </div>
-                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className={`h-2 rounded-full overflow-hidden ${isDarkMode ? "bg-slate-700" : "bg-slate-100"}`}>
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${isCompleted ? "bg-green-500" : "bg-purple-500"}`}
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      challenge.completed ? "bg-green-500" : "bg-purple-500"
+                    }`}
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
@@ -180,12 +254,29 @@ export default function WeeklyChallenges({ userEmail, totalInterviews, currentSt
         })}
       </div>
 
-      {completedCount === 3 && (
-        <div className="mt-4 p-3 bg-green-100 rounded-xl text-center">
-          <p className="text-green-800 font-semibold text-sm">🎉 All challenges complete!</p>
-          <p className="text-green-600 text-xs mt-1">You're a true champion this week!</p>
+      {/* All Complete Banner */}
+      {completedCount === challenges.length && challenges.length > 0 && (
+        <div className={`mt-4 p-3 rounded-xl text-center ${isDarkMode ? "bg-green-900/30" : "bg-green-100"}`}>
+          <p className={`font-semibold text-sm ${isDarkMode ? "text-green-300" : "text-green-800"}`}>
+            &#127881; All challenges complete!
+          </p>
+          <p className={`text-xs mt-1 ${isDarkMode ? "text-green-400" : "text-green-600"}`}>
+            You're a true champion this week!
+          </p>
         </div>
       )}
+
+      {/* View All Link */}
+      <Link
+        href="/challenges"
+        className={`block mt-4 text-center py-2 rounded-lg text-sm font-medium transition-all ${
+          isDarkMode
+            ? "bg-purple-900/50 text-purple-300 hover:bg-purple-800/50"
+            : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+        }`}
+      >
+        View Full Challenges Page &rarr;
+      </Link>
     </div>
   );
 }

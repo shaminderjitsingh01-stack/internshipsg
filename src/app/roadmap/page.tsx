@@ -303,6 +303,24 @@ export default function RoadmapPage() {
             <img src="/logo.png" alt="Internship.sg" className={`h-8 sm:h-10 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center gap-1">
+              <Link href="/questions" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                Questions
+              </Link>
+              <Link href="/leaderboard" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                Leaderboard
+              </Link>
+              <Link href="/resources" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                Resources
+              </Link>
+              <Link href="/for-employers" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                For Employers
+              </Link>
+              <Link href="/about" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                About
+              </Link>
+            </div>
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -319,9 +337,6 @@ export default function RoadmapPage() {
                 </svg>
               )}
             </button>
-            <Link href="/about" className={`transition-colors text-sm sm:text-base ${isDarkTheme ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'}`}>
-              About
-            </Link>
             <Link
               href="/auth/signin"
               className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors text-sm sm:text-base"
@@ -618,6 +633,10 @@ export default function RoadmapPage() {
         <div className={`max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4">
             <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+            <Link href="/questions" className="hover:text-red-600 transition-colors">Questions</Link>
+            <Link href="/leaderboard" className="hover:text-red-600 transition-colors">Leaderboard</Link>
+            <Link href="/resources" className="hover:text-red-600 transition-colors">Resources</Link>
+            <Link href="/for-employers" className="hover:text-red-600 transition-colors">For Employers</Link>
             <Link href="/roadmap" className="hover:text-red-600 transition-colors">Roadmap</Link>
             <Link href="/about" className="hover:text-red-600 transition-colors">About</Link>
             <Link href="/dashboard" className="hover:text-red-600 transition-colors">Dashboard</Link>

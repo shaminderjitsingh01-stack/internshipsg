@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Get user's interviews
+// Get user's interviews with filtering, pagination, and search
 export async function GET(request: NextRequest) {
   try {
     if (!isSupabaseConfigured()) {
@@ -84,23 +84,142 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const userEmail = searchParams.get("email");
+    const interviewId = searchParams.get("id");
 
     if (!userEmail) {
       return NextResponse.json({ error: "Email required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    // If specific interview ID is requested, return single interview
+    if (interviewId) {
+      const { data, error } = await supabase
+        .from("interviews")
+        .select("*")
+        .eq("id", interviewId)
+        .eq("user_email", userEmail)
+        .single();
+
+      if (error) {
+        console.error("Supabase error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ interview: data });
+    }
+
+    // Parse filter parameters
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "10", 10), 100);
+    const sort = searchParams.get("sort") || "newest";
+    const search = searchParams.get("search") || "";
+    const dateFrom = searchParams.get("dateFrom") || "";
+    const dateTo = searchParams.get("dateTo") || "";
+    const scoreMin = searchParams.get("scoreMin") || "";
+    const scoreMax = searchParams.get("scoreMax") || "";
+    const company = searchParams.get("company") || "";
+    const targetRole = searchParams.get("role") || "";
+
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+
+    // Determine sort order
+    let sortColumn = "created_at";
+    let sortAscending = false;
+
+    switch (sort) {
+      case "oldest":
+        sortColumn = "created_at";
+        sortAscending = true;
+        break;
+      case "highest":
+        sortColumn = "score";
+        sortAscending = false;
+        break;
+      case "lowest":
+        sortColumn = "score";
+        sortAscending = true;
+        break;
+      case "newest":
+      default:
+        sortColumn = "created_at";
+        sortAscending = false;
+        break;
+    }
+
+    // Build query
+    let query = supabase
       .from("interviews")
-      .select("*")
-      .eq("user_email", userEmail)
-      .order("created_at", { ascending: false });
+      .select("*", { count: "exact" })
+      .eq("user_email", userEmail);
+
+    // Apply date filters
+    if (dateFrom) {
+      const fromDate = new Date(dateFrom);
+      fromDate.setHours(0, 0, 0, 0);
+      query = query.gte("created_at", fromDate.toISOString());
+    }
+
+    if (dateTo) {
+      const toDate = new Date(dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      query = query.lte("created_at", toDate.toISOString());
+    }
+
+    // Apply score filters
+    if (scoreMin) {
+      const minScore = parseFloat(scoreMin);
+      if (!isNaN(minScore)) {
+        query = query.gte("score", minScore);
+      }
+    }
+
+    if (scoreMax) {
+      const maxScore = parseFloat(scoreMax);
+      if (!isNaN(maxScore)) {
+        query = query.lte("score", maxScore);
+      }
+    }
+
+    // Apply company filter if column exists
+    if (company) {
+      query = query.ilike("company_name", `%${company}%`);
+    }
+
+    // Apply target role filter
+    if (targetRole) {
+      query = query.ilike("target_role", `%${targetRole}%`);
+    }
+
+    // Apply search filter (searches in feedback)
+    if (search) {
+      query = query.ilike("feedback", `%${search}%`);
+    }
+
+    // Apply sorting and pagination
+    query = query
+      .order(sortColumn, { ascending: sortAscending })
+      .range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Supabase error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ interviews: data });
+    // Calculate pagination info
+    const totalPages = Math.ceil((count || 0) / limit);
+
+    return NextResponse.json({
+      interviews: data,
+      pagination: {
+        total: count || 0,
+        page,
+        limit,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    });
   } catch (error) {
     console.error("Get interviews error:", error);
     return NextResponse.json(

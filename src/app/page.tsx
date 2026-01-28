@@ -1149,7 +1149,28 @@ export default function Home() {
             <a href="/" className="flex items-center gap-2">
               <img src="/logo.png" alt="Internship.sg" className={`h-10 sm:h-12 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
             </a>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Navigation Links */}
+              <nav className="hidden md:flex items-center gap-1">
+                <a href="/questions" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                  Questions
+                </a>
+                <a href="/leaderboard" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                  Leaderboard
+                </a>
+                <a href="/resources" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                  Resources
+                </a>
+                <a href="/employers" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                  For Employers
+                </a>
+                <a href="/roadmap" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                  Roadmap
+                </a>
+                <a href="/about" className={`px-3 py-2 text-sm font-medium transition-colors rounded-lg ${isDarkTheme ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                  About
+                </a>
+              </nav>
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
@@ -1194,10 +1215,21 @@ export default function Home() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-500 block">Interview with AI</span>
           </h1>
 
-          <p className={`text-lg sm:text-xl mb-10 max-w-2xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
+          <p className={`text-lg sm:text-xl mb-6 max-w-2xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
             Practice with our AI interviewer, get instant feedback, and land your dream internship.
-            Used by 1000+ students across Singapore.
           </p>
+
+          {/* Social Proof */}
+          <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-full mb-10 ${isDarkTheme ? 'bg-white/5 border border-white/10' : 'bg-slate-100 border border-slate-200'}`}>
+            <div className="flex -space-x-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className={`w-7 h-7 rounded-full border-2 ${isDarkTheme ? 'border-slate-950 bg-gradient-to-br from-red-400 to-red-600' : 'border-white bg-gradient-to-br from-red-400 to-red-600'}`} />
+              ))}
+            </div>
+            <span className={`text-sm font-medium ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>
+              Join <span className="text-red-500 font-bold">1,000+</span> students preparing for interviews
+            </span>
+          </div>
 
           {/* Super Easy Sign Up */}
           <div className="max-w-md mx-auto">
@@ -1383,6 +1415,10 @@ export default function Home() {
         <footer className={`relative z-10 border-t py-8 ${isDarkTheme ? 'border-white/10' : 'border-slate-200'}`}>
           <div className={`max-w-6xl mx-auto px-4 text-center text-sm ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
             <div className="flex flex-wrap justify-center gap-6 mb-4">
+              <a href="/questions" className="hover:text-red-500 transition-colors">Questions</a>
+              <a href="/leaderboard" className="hover:text-red-500 transition-colors">Leaderboard</a>
+              <a href="/resources" className="hover:text-red-500 transition-colors">Resources</a>
+              <a href="/employers" className="hover:text-red-500 transition-colors">For Employers</a>
               <a href="/roadmap" className="hover:text-red-500 transition-colors">Roadmap</a>
               <a href="/about" className="hover:text-red-500 transition-colors">About</a>
               <a href="/sitemap.xml" className="hover:text-red-500 transition-colors">Sitemap</a>
