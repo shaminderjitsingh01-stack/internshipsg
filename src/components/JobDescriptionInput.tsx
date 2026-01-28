@@ -406,7 +406,7 @@ Include: Job title, company name, responsibilities, requirements, qualifications
               {/* Bookmarklet Button */}
               <div className="flex items-center gap-3 mb-4">
                 <a
-                  href={`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('Could not find job description on this page.');return;}navigator.clipboard.writeText(t.substring(0,20000)).then(function(){window.open('https://internship.sg/job-interview?clipboard=1','_blank');}).catch(function(){alert('Could not copy to clipboard. Please copy manually.');});})();`}
+                  href={`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('Could not find job description on this page.');return;}fetch('https://internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed to import. Please copy manually.');}}).catch(()=>alert('Error importing. Please copy manually.'));})();`}
                   onClick={(e) => e.preventDefault()}
                   draggable="true"
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium text-sm shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all cursor-grab active:cursor-grabbing"
@@ -434,11 +434,11 @@ Include: Job title, company name, responsibilities, requirements, qualifications
                 <p className="text-xs text-blue-700 mb-2">Or copy the bookmarklet code manually:</p>
                 <div className="relative">
                   <code className="block p-2 bg-white/70 rounded text-[10px] text-blue-900 font-mono break-all border border-blue-200">
-                    {`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('Could not find job description');return;}navigator.clipboard.writeText(t.substring(0,20000)).then(function(){window.open('https://internship.sg/job-interview?clipboard=1','_blank');}).catch(function(){alert('Could not copy to clipboard');});})();`}
+                    {`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('No job description found');return;}fetch('https://internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed');}}).catch(()=>alert('Error'));})();`}
                   </code>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('Could not find job description');return;}navigator.clipboard.writeText(t.substring(0,20000)).then(function(){window.open('https://internship.sg/job-interview?clipboard=1','_blank');}).catch(function(){alert('Could not copy to clipboard');});})();`);
+                      navigator.clipboard.writeText(`javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('No job description found');return;}fetch('https://internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed');}}).catch(()=>alert('Error'));})();`);
                       alert('Bookmarklet code copied! Create a new bookmark and paste this as the URL.');
                     }}
                     className="absolute top-1 right-1 p-1.5 bg-blue-100 hover:bg-blue-200 rounded text-blue-700 transition-colors"

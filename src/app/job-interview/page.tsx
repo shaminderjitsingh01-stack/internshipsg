@@ -82,33 +82,31 @@ export default function JobInterviewPage() {
   const { isDarkTheme, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
 
-  // Get job description from clipboard (from bookmarklet)
+  // Get job description from server (from bookmarklet)
   const [importedJobText, setImportedJobText] = useState<string>("");
-  const [showClipboardPrompt, setShowClipboardPrompt] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
 
-  // Check if coming from bookmarklet (clipboard=1 param)
+  // Check if coming from bookmarklet (import=ID param)
   useEffect(() => {
-    const clipboardParam = searchParams.get('clipboard');
-    if (clipboardParam === '1') {
-      setShowClipboardPrompt(true);
+    const importId = searchParams.get('import');
+    if (importId && importId.length > 5) {
+      setImportLoading(true);
+      // Fetch the imported text from server
+      fetch(`/api/import-job?id=${importId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.text) {
+            setImportedJobText(data.text);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch imported job:', err);
+        })
+        .finally(() => {
+          setImportLoading(false);
+        });
     }
   }, [searchParams]);
-
-  // Function to paste from clipboard
-  const handlePasteFromClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text && text.length > 50) {
-        setImportedJobText(text);
-        setShowClipboardPrompt(false);
-      } else {
-        alert('Clipboard is empty or contains too little text. Please try copying the job description again.');
-      }
-    } catch (err) {
-      alert('Could not access clipboard. Please paste the job description manually (Ctrl+V).');
-      setShowClipboardPrompt(false);
-    }
-  };
 
   // Flow state
   const [currentStep, setCurrentStep] = useState<Step>("job-input");
@@ -659,28 +657,14 @@ export default function JobInterviewPage() {
               </p>
             </div>
 
-            {/* Clipboard Import Prompt */}
-            {showClipboardPrompt && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6 text-center animate-pulse">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
+            {/* Import Loading State */}
+            {importLoading && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-2xl p-6 text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
-                <h3 className="text-xl font-bold text-green-800 mb-2">Job Description Ready to Import!</h3>
-                <p className="text-green-700 mb-4">The job description has been copied to your clipboard. Click below to paste it.</p>
-                <button
-                  onClick={handlePasteFromClipboard}
-                  className="px-8 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg shadow-green-500/25"
-                >
-                  📋 Click to Paste Job Description
-                </button>
-                <button
-                  onClick={() => setShowClipboardPrompt(false)}
-                  className="block mx-auto mt-3 text-sm text-green-600 hover:text-green-800"
-                >
-                  Or paste manually below
-                </button>
+                <h3 className="text-xl font-bold text-blue-800 mb-2">Importing Job Description...</h3>
+                <p className="text-blue-700">Please wait while we load your job posting.</p>
               </div>
             )}
 
