@@ -717,12 +717,6 @@ export default function LeaderboardPage() {
               About
             </Link>
           </div>
-          <p>
-            Made by{" "}
-            <a href="https://shaminder.sg" className="text-red-600 hover:underline">
-              shaminder.sg
-            </a>
-          </p>
           <p className="mt-1">Shaminder Technologies | UEN 53517136J</p>
         </div>
       </footer>

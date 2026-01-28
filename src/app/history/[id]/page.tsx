@@ -678,7 +678,6 @@ export default function InterviewDetailPage() {
             <Link href="/history" className="hover:text-red-600 transition-colors">History</Link>
             <Link href="/about" className="hover:text-red-600 transition-colors">About</Link>
           </div>
-          <p>Made by <a href="https://shaminder.sg" className="text-red-600 hover:underline">shaminder.sg</a></p>
         </div>
       </footer>
     </div>

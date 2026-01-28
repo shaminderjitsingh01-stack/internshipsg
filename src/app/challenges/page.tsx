@@ -596,7 +596,6 @@ export default function ChallengesPage() {
             <Link href="/leaderboard" className="hover:text-red-600 transition-colors">Leaderboard</Link>
             <Link href="/questions" className="hover:text-red-600 transition-colors">Questions</Link>
           </div>
-          <p>Made by <a href="https://shaminder.sg" className="text-red-600 hover:underline">shaminder.sg</a></p>
         </div>
       </footer>
     </div>

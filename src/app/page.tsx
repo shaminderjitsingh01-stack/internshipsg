@@ -1423,7 +1423,6 @@ export default function Home() {
               <a href="/about" className="hover:text-red-500 transition-colors">About</a>
               <a href="/sitemap.xml" className="hover:text-red-500 transition-colors">Sitemap</a>
             </div>
-            <p>Made by <a href="https://shaminder.sg" className="text-red-500 hover:underline">shaminder.sg</a></p>
             <p className="mt-1">Shaminder Technologies | UEN 53517136J</p>
           </div>
         </footer>
@@ -2930,7 +2929,6 @@ export default function Home() {
               <a href="/about" className="hover:text-red-600 transition-colors">About</a>
               <a href="/sitemap.xml" className="hover:text-red-600 transition-colors">Sitemap</a>
             </div>
-            <p>Made by <a href="https://shaminder.sg" className="text-red-600 hover:underline">shaminder.sg</a></p>
             <p className="mt-1">Shaminder Technologies | UEN 53517136J</p>
           </div>
         </footer>

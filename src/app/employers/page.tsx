@@ -625,7 +625,6 @@ export default function EmployersPage() {
             <Link href="/about" className="hover:text-indigo-600 transition-colors">About</Link>
             <Link href="/roadmap" className="hover:text-indigo-600 transition-colors">Roadmap</Link>
           </div>
-          <p>Made by <a href="https://shaminder.sg" className="text-indigo-600 hover:underline">shaminder.sg</a></p>
           <p className="mt-1">Shaminder Technologies | UEN 53517136J</p>
         </div>
       </footer>
