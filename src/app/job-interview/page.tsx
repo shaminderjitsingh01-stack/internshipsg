@@ -82,21 +82,33 @@ export default function JobInterviewPage() {
   const { isDarkTheme, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
 
-  // Get job description from URL params (from bookmarklet)
+  // Get job description from clipboard (from bookmarklet)
   const [importedJobText, setImportedJobText] = useState<string>("");
+  const [showClipboardPrompt, setShowClipboardPrompt] = useState(false);
 
-  // Check for bookmarklet import on mount
+  // Check if coming from bookmarklet (clipboard=1 param)
   useEffect(() => {
-    const jdParam = searchParams.get('jd');
-    if (jdParam) {
-      try {
-        const decodedText = decodeURIComponent(jdParam);
-        setImportedJobText(decodedText);
-      } catch (e) {
-        console.error('Failed to decode job description:', e);
-      }
+    const clipboardParam = searchParams.get('clipboard');
+    if (clipboardParam === '1') {
+      setShowClipboardPrompt(true);
     }
   }, [searchParams]);
+
+  // Function to paste from clipboard
+  const handlePasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.length > 50) {
+        setImportedJobText(text);
+        setShowClipboardPrompt(false);
+      } else {
+        alert('Clipboard is empty or contains too little text. Please try copying the job description again.');
+      }
+    } catch (err) {
+      alert('Could not access clipboard. Please paste the job description manually (Ctrl+V).');
+      setShowClipboardPrompt(false);
+    }
+  };
 
   // Flow state
   const [currentStep, setCurrentStep] = useState<Step>("job-input");
@@ -639,13 +651,39 @@ export default function JobInterviewPage() {
         {currentStep === "job-input" && (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+              <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
                 Job-Specific Interview Prep
               </h1>
-              <p className="text-slate-600">
+              <p className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>
                 Practice for a specific role with tailored questions based on the job description
               </p>
             </div>
+
+            {/* Clipboard Import Prompt */}
+            {showClipboardPrompt && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6 text-center animate-pulse">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-green-800 mb-2">Job Description Ready to Import!</h3>
+                <p className="text-green-700 mb-4">The job description has been copied to your clipboard. Click below to paste it.</p>
+                <button
+                  onClick={handlePasteFromClipboard}
+                  className="px-8 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg shadow-green-500/25"
+                >
+                  📋 Click to Paste Job Description
+                </button>
+                <button
+                  onClick={() => setShowClipboardPrompt(false)}
+                  className="block mx-auto mt-3 text-sm text-green-600 hover:text-green-800"
+                >
+                  Or paste manually below
+                </button>
+              </div>
+            )}
+
             <JobDescriptionInput onJobDescriptionReady={handleJobDescriptionReady} initialPastedText={importedJobText} />
           </div>
         )}
