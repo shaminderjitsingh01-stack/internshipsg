@@ -1218,7 +1218,7 @@ export default function Home() {
               <div className="space-y-3">
                 {/* Google Sign In - Primary */}
                 <button
-                  onClick={() => signIn("google", { callbackUrl: "/?start=interview" })}
+                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                   className="w-full group px-8 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 text-white"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -1364,7 +1364,7 @@ export default function Home() {
               </button>
             ) : (
               <button
-                onClick={() => signIn("google", { callbackUrl: "/?start=interview" })}
+                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                 className="px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 mx-auto text-white"
               >
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
