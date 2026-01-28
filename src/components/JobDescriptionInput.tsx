@@ -174,7 +174,7 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
             </svg>
             <span className="hidden sm:inline">One-Click </span>Import
           </span>
-          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] px-1 rounded">Best</span>
+          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[8px] px-1 rounded">Desktop</span>
         </button>
         <button
           onClick={() => { setInputMode("paste"); setError(""); }}
