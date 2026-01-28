@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
 // Bookmarklet code - sends job text to API and opens import page
-const BOOKMARKLET_CODE = `javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('Could not find job description on this page.');return;}fetch('https://internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed to import. Please copy manually.');}}).catch(()=>alert('Error importing. Please copy manually.'));})();`;
+// Uses www.internship.sg to avoid redirect issues with CORS
+const BOOKMARKLET_CODE = `javascript:(function(){var t=document.body.innerText||document.body.textContent;if(!t||t.length<100){alert('Could not find job description on this page.');return;}fetch('https://www.internship.sg/api/import-job',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t.substring(0,25000)})}).then(r=>r.json()).then(d=>{if(d.id){window.open('https://www.internship.sg/job-interview?import='+d.id,'_blank');}else{alert('Failed to import. Please copy manually.');}}).catch(()=>alert('Error importing. Please copy manually.'));})();`;
 
 interface JobDescription {
   title: string;
