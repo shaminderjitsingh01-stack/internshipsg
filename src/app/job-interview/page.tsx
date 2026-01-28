@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession, signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
 import JobDescriptionInput from "@/components/JobDescriptionInput";
@@ -79,6 +80,23 @@ type Step = "job-input" | "resume" | "cover-letter" | "setup" | "interview" | "a
 export default function JobInterviewPage() {
   const { data: session, status } = useSession();
   const { isDarkTheme, toggleTheme } = useTheme();
+  const searchParams = useSearchParams();
+
+  // Get job description from URL params (from bookmarklet)
+  const [importedJobText, setImportedJobText] = useState<string>("");
+
+  // Check for bookmarklet import on mount
+  useEffect(() => {
+    const jdParam = searchParams.get('jd');
+    if (jdParam) {
+      try {
+        const decodedText = decodeURIComponent(jdParam);
+        setImportedJobText(decodedText);
+      } catch (e) {
+        console.error('Failed to decode job description:', e);
+      }
+    }
+  }, [searchParams]);
 
   // Flow state
   const [currentStep, setCurrentStep] = useState<Step>("job-input");
@@ -628,7 +646,7 @@ export default function JobInterviewPage() {
                 Practice for a specific role with tailored questions based on the job description
               </p>
             </div>
-            <JobDescriptionInput onJobDescriptionReady={handleJobDescriptionReady} />
+            <JobDescriptionInput onJobDescriptionReady={handleJobDescriptionReady} initialPastedText={importedJobText} />
           </div>
         )}
 
