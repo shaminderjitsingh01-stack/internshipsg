@@ -129,7 +129,7 @@ export default function QuestionsPage() {
             </button>
             <Link
               href="/dashboard"
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`hidden sm:block px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                 isDarkTheme ? "text-slate-300 hover:text-red-400" : "text-slate-600 hover:text-red-600"
               }`}
             >
@@ -137,7 +137,7 @@ export default function QuestionsPage() {
             </Link>
             <Link
               href="/leaderboard"
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`hidden sm:block px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                 isDarkTheme ? "text-slate-300 hover:text-red-400" : "text-slate-600 hover:text-red-600"
               }`}
             >
@@ -145,7 +145,7 @@ export default function QuestionsPage() {
             </Link>
             <Link
               href="/resources"
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`hidden md:block px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                 isDarkTheme ? "text-slate-300 hover:text-red-400" : "text-slate-600 hover:text-red-600"
               }`}
             >
@@ -172,7 +172,7 @@ export default function QuestionsPage() {
             ) : (
               <Link
                 href="/auth/signin"
-                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-red-700 transition-colors"
               >
                 Sign In
               </Link>
@@ -193,12 +193,12 @@ export default function QuestionsPage() {
         </div>
 
         {/* Category Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
           {(["Behavioral", "Technical", "Case Study", "Situational"] as const).map((cat) => (
             <button
               key={cat}
               onClick={() => setCategoryFilter(categoryFilter === cat ? "All" : cat)}
-              className={`p-4 rounded-xl border transition-all ${
+              className={`p-3 sm:p-4 rounded-xl border transition-all min-h-[72px] sm:min-h-0 ${
                 categoryFilter === cat
                   ? isDarkTheme
                     ? "bg-red-900/30 border-red-700 ring-2 ring-red-600"
@@ -208,28 +208,28 @@ export default function QuestionsPage() {
                     : "bg-white border-slate-200 hover:border-slate-300"
               }`}
             >
-              <div className={`text-2xl font-bold mb-1 ${
+              <div className={`text-xl sm:text-2xl font-bold mb-0.5 sm:mb-1 ${
                 categoryFilter === cat
                   ? "text-red-500"
                   : isDarkTheme ? "text-white" : "text-slate-900"
               }`}>
                 {cat === "Behavioral" ? "20" : cat === "Technical" ? "10" : cat === "Case Study" ? "10" : "15"}
               </div>
-              <div className={`text-sm ${isDarkTheme ? "text-slate-400" : "text-slate-600"}`}>
-                {cat}
+              <div className={`text-xs sm:text-sm ${isDarkTheme ? "text-slate-400" : "text-slate-600"}`}>
+                {cat === "Case Study" ? "Case" : cat}
               </div>
             </button>
           ))}
         </div>
 
         {/* Search and Filters */}
-        <div className={`rounded-xl border p-4 sm:p-6 mb-6 ${
+        <div className={`rounded-xl border p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 ${
           isDarkTheme ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
         }`}>
           {/* Search */}
-          <div className="relative mb-4">
+          <div className="relative mb-3 sm:mb-4">
             <svg
-              className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${
+              className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 ${
                 isDarkTheme ? "text-slate-500" : "text-slate-400"
               }`}
               fill="none"
@@ -240,10 +240,10 @@ export default function QuestionsPage() {
             </svg>
             <input
               type="text"
-              placeholder="Search questions by keyword..."
+              placeholder="Search questions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-12 pr-4 py-3 rounded-lg border text-base ${
+              className={`w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 rounded-lg border text-sm sm:text-base min-h-[44px] ${
                 isDarkTheme
                   ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-red-500"
                   : "bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-red-500"
@@ -251,122 +251,128 @@ export default function QuestionsPage() {
             />
           </div>
 
-          {/* Filter Row */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Category Filter */}
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium ${
-                isDarkTheme
-                  ? "bg-slate-800 border-slate-700 text-white"
-                  : "bg-slate-50 border-slate-200 text-slate-700"
-              } focus:ring-2 focus:ring-red-500/20 outline-none`}
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat === "All" ? "All Categories" : cat}</option>
-              ))}
-            </select>
-
-            {/* Difficulty Filter */}
-            <select
-              value={difficultyFilter}
-              onChange={(e) => setDifficultyFilter(e.target.value as DifficultyFilter)}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium ${
-                isDarkTheme
-                  ? "bg-slate-800 border-slate-700 text-white"
-                  : "bg-slate-50 border-slate-200 text-slate-700"
-              } focus:ring-2 focus:ring-red-500/20 outline-none`}
-            >
-              {DIFFICULTIES.map((diff) => (
-                <option key={diff} value={diff}>{diff === "All" ? "All Difficulties" : diff}</option>
-              ))}
-            </select>
-
-            {/* Industry Filter */}
-            <select
-              value={industryFilter}
-              onChange={(e) => setIndustryFilter(e.target.value as IndustryFilter)}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium ${
-                isDarkTheme
-                  ? "bg-slate-800 border-slate-700 text-white"
-                  : "bg-slate-50 border-slate-200 text-slate-700"
-              } focus:ring-2 focus:ring-red-500/20 outline-none`}
-            >
-              {INDUSTRIES.map((ind) => (
-                <option key={ind} value={ind}>{ind === "All" ? "All Industries" : ind}</option>
-              ))}
-            </select>
-
-            {/* Bookmarked Toggle */}
-            <button
-              onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                showBookmarkedOnly
-                  ? "bg-yellow-500 text-white border-yellow-500"
-                  : isDarkTheme
-                    ? "bg-slate-800 border-slate-700 text-slate-400 hover:text-yellow-500"
-                    : "bg-slate-50 border-slate-200 text-slate-600 hover:text-yellow-500"
-              }`}
-            >
-              <svg className="w-4 h-4" fill={showBookmarkedOnly ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-              Saved ({bookmarkedIds.length})
-            </button>
-
-            {/* Clear Filters */}
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          {/* Filter Row - Scrollable on mobile */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {/* Filter dropdowns row */}
+            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-3 px-3 sm:mx-0 sm:px-0">
+              {/* Category Filter */}
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
+                className={`px-3 py-2.5 rounded-lg border text-xs sm:text-sm font-medium min-h-[44px] min-w-[100px] sm:min-w-0 flex-shrink-0 ${
                   isDarkTheme
-                    ? "text-slate-400 hover:text-red-400"
-                    : "text-slate-500 hover:text-red-600"
+                    ? "bg-slate-800 border-slate-700 text-white"
+                    : "bg-slate-50 border-slate-200 text-slate-700"
+                } focus:ring-2 focus:ring-red-500/20 outline-none`}
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat === "All" ? "Category" : cat}</option>
+                ))}
+              </select>
+
+              {/* Difficulty Filter */}
+              <select
+                value={difficultyFilter}
+                onChange={(e) => setDifficultyFilter(e.target.value as DifficultyFilter)}
+                className={`px-3 py-2.5 rounded-lg border text-xs sm:text-sm font-medium min-h-[44px] min-w-[90px] sm:min-w-0 flex-shrink-0 ${
+                  isDarkTheme
+                    ? "bg-slate-800 border-slate-700 text-white"
+                    : "bg-slate-50 border-slate-200 text-slate-700"
+                } focus:ring-2 focus:ring-red-500/20 outline-none`}
+              >
+                {DIFFICULTIES.map((diff) => (
+                  <option key={diff} value={diff}>{diff === "All" ? "Difficulty" : diff}</option>
+                ))}
+              </select>
+
+              {/* Industry Filter */}
+              <select
+                value={industryFilter}
+                onChange={(e) => setIndustryFilter(e.target.value as IndustryFilter)}
+                className={`px-3 py-2.5 rounded-lg border text-xs sm:text-sm font-medium min-h-[44px] min-w-[90px] sm:min-w-0 flex-shrink-0 ${
+                  isDarkTheme
+                    ? "bg-slate-800 border-slate-700 text-white"
+                    : "bg-slate-50 border-slate-200 text-slate-700"
+                } focus:ring-2 focus:ring-red-500/20 outline-none`}
+              >
+                {INDUSTRIES.map((ind) => (
+                  <option key={ind} value={ind}>{ind === "All" ? "Industry" : ind}</option>
+                ))}
+              </select>
+
+              {/* Bookmarked Toggle */}
+              <button
+                onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 rounded-lg border text-xs sm:text-sm font-medium transition-all min-h-[44px] flex-shrink-0 whitespace-nowrap ${
+                  showBookmarkedOnly
+                    ? "bg-yellow-500 text-white border-yellow-500"
+                    : isDarkTheme
+                      ? "bg-slate-800 border-slate-700 text-slate-400 hover:text-yellow-500"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:text-yellow-500"
                 }`}
               >
-                Clear All
+                <svg className="w-4 h-4" fill={showBookmarkedOnly ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                <span className="hidden sm:inline">Saved</span> ({bookmarkedIds.length})
               </button>
-            )}
+            </div>
 
-            {/* Results Count */}
-            <div className={`ml-auto text-sm ${isDarkTheme ? "text-slate-500" : "text-slate-400"}`}>
-              {displayedQuestions.length} question{displayedQuestions.length !== 1 ? "s" : ""}
+            {/* Actions row */}
+            <div className="flex items-center justify-between sm:justify-end gap-2 sm:ml-auto">
+              {/* Clear Filters */}
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all min-h-[44px] ${
+                    isDarkTheme
+                      ? "text-slate-400 hover:text-red-400"
+                      : "text-slate-500 hover:text-red-600"
+                  }`}
+                >
+                  Clear
+                </button>
+              )}
+
+              {/* Results Count */}
+              <div className={`text-xs sm:text-sm ${isDarkTheme ? "text-slate-500" : "text-slate-400"}`}>
+                {displayedQuestions.length} result{displayedQuestions.length !== 1 ? "s" : ""}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Questions Grid */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+          <div className="flex justify-center py-8 sm:py-12">
+            <div className="animate-spin rounded-full h-8 sm:h-10 w-8 sm:w-10 border-b-2 border-red-600"></div>
           </div>
         ) : displayedQuestions.length === 0 ? (
-          <div className={`text-center py-16 rounded-xl border ${
+          <div className={`text-center py-10 sm:py-16 rounded-xl border ${
             isDarkTheme ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
           }`}>
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+            <div className={`w-12 sm:w-16 h-12 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 ${
               isDarkTheme ? "bg-slate-800" : "bg-slate-100"
             }`}>
-              <svg className={`w-8 h-8 ${isDarkTheme ? "text-slate-600" : "text-slate-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-6 sm:w-8 h-6 sm:h-8 ${isDarkTheme ? "text-slate-600" : "text-slate-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
+            <h3 className={`text-base sm:text-lg font-semibold mb-2 ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
               No questions found
             </h3>
-            <p className={`mb-4 ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>
+            <p className={`text-sm sm:text-base mb-4 ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>
               Try adjusting your filters or search query.
             </p>
             <button
               onClick={clearFilters}
-              className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+              className="px-5 sm:px-6 py-2.5 sm:py-2 bg-red-600 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-red-700 transition-colors min-h-[44px]"
             >
               Clear Filters
             </button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {displayedQuestions.map((question) => (
               <QuestionCard
                 key={question.id}
@@ -381,14 +387,14 @@ export default function QuestionsPage() {
 
         {/* CTA Section */}
         {!session && (
-          <div className="mt-12 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl p-8 text-center text-white">
-            <h2 className="text-2xl font-bold mb-3">Ready to Practice?</h2>
-            <p className="text-white/80 mb-6 max-w-xl mx-auto">
-              Sign in to track your progress, save your favorite questions, and get personalized AI feedback on your answers.
+          <div className="mt-8 sm:mt-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl sm:rounded-2xl p-5 sm:p-8 text-center text-white">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">Ready to Practice?</h2>
+            <p className="text-sm sm:text-base text-white/80 mb-4 sm:mb-6 max-w-xl mx-auto">
+              Sign in to track your progress, save your favorite questions, and get personalized AI feedback.
             </p>
             <Link
               href="/auth/signin"
-              className="inline-block px-8 py-3 bg-white text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-colors"
+              className="inline-block px-6 sm:px-8 py-3 bg-white text-red-600 rounded-xl text-sm sm:text-base font-semibold hover:bg-red-50 transition-colors min-h-[48px]"
             >
               Get Started Free
             </Link>

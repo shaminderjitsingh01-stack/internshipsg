@@ -2,62 +2,98 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.internship.sg/</loc>
-    <lastmod>2025-01-27</lastmod>
+    <lastmod>2026-01-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.internship.sg/about</loc>
-    <lastmod>2025-01-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.internship.sg/dashboard</loc>
-    <lastmod>2025-01-27</lastmod>
+    <lastmod>2026-01-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.internship.sg/auth/signin</loc>
-    <lastmod>2025-01-27</lastmod>
-    <changefreq>monthly</changefreq>
+    <loc>https://www.internship.sg/leaderboard</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/questions</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/companies</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/tracks</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/resources</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/achievements</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/challenges</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/history</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.internship.sg/#career</loc>
-    <lastmod>2025-01-27</lastmod>
+    <loc>https://www.internship.sg/comparison</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/settings</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/employers</loc>
+    <lastmod>2026-01-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.internship.sg/#resume</loc>
-    <lastmod>2025-01-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.internship.sg/#cover-letter</loc>
-    <lastmod>2025-01-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.internship.sg/#interview</loc>
-    <lastmod>2025-01-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.internship.sg/#results</loc>
-    <lastmod>2025-01-27</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://www.internship.sg/about</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.internship.sg/roadmap</loc>
-    <lastmod>2026-01-27</lastmod>
+    <lastmod>2026-01-29</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.internship.sg/auth/signin</loc>
+    <lastmod>2026-01-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>

@@ -126,17 +126,28 @@ export default function DashboardPage() {
       <header className={`sticky top-0 z-50 border-b backdrop-blur-xl ${isDarkTheme ? 'bg-slate-950/80 border-white/10' : 'bg-white/80 border-slate-200'}`}>
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Internship.sg" className={`h-8 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
+            <img src="/logo.png" alt="Internship.sg" className={`h-7 sm:h-8 w-auto ${isDarkTheme ? 'brightness-0 invert' : ''}`} />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6">
             <Link href="/questions" className={`text-sm font-medium ${isDarkTheme ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>Questions</Link>
             <Link href="/companies" className={`text-sm font-medium ${isDarkTheme ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>Companies</Link>
             <Link href="/leaderboard" className={`text-sm font-medium ${isDarkTheme ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>Leaderboard</Link>
             <Link href="/resources" className={`text-sm font-medium ${isDarkTheme ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>Resources</Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+              className={`md:hidden p-2 rounded-lg ${isDarkTheme ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
+              aria-label="Menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-lg ${isDarkTheme ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
@@ -144,7 +155,7 @@ export default function DashboardPage() {
               {isDarkTheme ? '☀️' : '🌙'}
             </button>
 
-            <div className="relative">
+            <div className="relative hidden md:block">
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                 className="flex items-center gap-2"
@@ -157,33 +168,48 @@ export default function DashboardPage() {
                   </div>
                 )}
               </button>
-
-              {showProfileDropdown && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowProfileDropdown(false)} />
-                  <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg border z-50 ${isDarkTheme ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                    <div className="py-1">
-                      {userProfile?.username && (
-                        <Link href={`/u/${userProfile.username}`} className={`block px-4 py-2 text-sm ${isDarkTheme ? 'text-slate-300 hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
-                          View Profile
-                        </Link>
-                      )}
-                      <Link href="/settings" className={`block px-4 py-2 text-sm ${isDarkTheme ? 'text-slate-300 hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
-                        Settings
-                      </Link>
-                      <button onClick={() => signOut({ callbackUrl: "/" })} className={`block w-full text-left px-4 py-2 text-sm text-red-500 ${isDarkTheme ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
             </div>
+
+            {showProfileDropdown && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowProfileDropdown(false)} />
+                <div className={`fixed md:absolute right-4 md:right-0 top-16 md:top-auto md:mt-2 w-[calc(100%-2rem)] md:w-48 rounded-xl shadow-lg border z-50 ${isDarkTheme ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                  <div className="py-2">
+                    {/* Mobile nav links */}
+                    <div className="md:hidden border-b pb-2 mb-2 ${isDarkTheme ? 'border-slate-700' : 'border-slate-100'}">
+                      <Link href="/questions" className={`block px-4 py-3 text-sm font-medium ${isDarkTheme ? 'text-slate-300 hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
+                        Questions
+                      </Link>
+                      <Link href="/companies" className={`block px-4 py-3 text-sm font-medium ${isDarkTheme ? 'text-slate-300 hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
+                        Companies
+                      </Link>
+                      <Link href="/leaderboard" className={`block px-4 py-3 text-sm font-medium ${isDarkTheme ? 'text-slate-300 hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
+                        Leaderboard
+                      </Link>
+                      <Link href="/resources" className={`block px-4 py-3 text-sm font-medium ${isDarkTheme ? 'text-slate-300 hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
+                        Resources
+                      </Link>
+                    </div>
+                    {userProfile?.username && (
+                      <Link href={`/u/${userProfile.username}`} className={`block px-4 py-3 text-sm ${isDarkTheme ? 'text-slate-300 hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
+                        View Profile
+                      </Link>
+                    )}
+                    <Link href="/settings" className={`block px-4 py-3 text-sm ${isDarkTheme ? 'text-slate-300 hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
+                      Settings
+                    </Link>
+                    <button onClick={() => signOut({ callbackUrl: "/" })} className={`block w-full text-left px-4 py-3 text-sm text-red-500 ${isDarkTheme ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}>
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Welcome + CTA */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
@@ -203,86 +229,88 @@ export default function DashboardPage() {
         </div>
 
         {/* Employers Watching Banner */}
-        <div className={`mb-8 rounded-xl p-4 border ${isDarkTheme ? 'bg-amber-900/20 border-amber-700/50' : 'bg-amber-50 border-amber-200'}`}>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">👀</span>
-            <div className="flex-1">
-              <p className={`font-medium ${isDarkTheme ? 'text-amber-300' : 'text-amber-900'}`}>
-                Employers are watching the leaderboard
-              </p>
-              <p className={`text-sm ${isDarkTheme ? 'text-amber-400/70' : 'text-amber-700'}`}>
-                Top performers get noticed by partner companies
-              </p>
+        <div className={`mb-6 sm:mb-8 rounded-xl p-3 sm:p-4 border ${isDarkTheme ? 'bg-amber-900/20 border-amber-700/50' : 'bg-amber-50 border-amber-200'}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1">
+              <span className="text-xl sm:text-2xl">👀</span>
+              <div className="flex-1">
+                <p className={`text-sm sm:text-base font-medium ${isDarkTheme ? 'text-amber-300' : 'text-amber-900'}`}>
+                  Employers are watching the leaderboard
+                </p>
+                <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-amber-400/70' : 'text-amber-700'}`}>
+                  Top performers get noticed by partner companies
+                </p>
+              </div>
             </div>
-            <Link href="/employers" className={`text-sm font-medium ${isDarkTheme ? 'text-amber-400' : 'text-amber-700'}`}>
+            <Link href="/employers" className={`text-xs sm:text-sm font-medium whitespace-nowrap ${isDarkTheme ? 'text-amber-400' : 'text-amber-700'}`}>
               Learn more →
             </Link>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {/* Streak */}
-          <div className={`rounded-xl p-4 border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🔥</span>
-              <span className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Streak</span>
+          <div className={`rounded-xl p-3 sm:p-4 border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+              <span className="text-lg sm:text-2xl">🔥</span>
+              <span className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Streak</span>
             </div>
-            <p className={`text-3xl font-bold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
+            <p className={`text-2xl sm:text-3xl font-bold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
               {streakData.currentStreak}
             </p>
-            <p className={`text-xs ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
+            <p className={`text-[10px] sm:text-xs ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
               Best: {streakData.longestStreak} days
             </p>
           </div>
 
           {/* XP */}
-          <div className={`rounded-xl p-4 border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">⭐</span>
-              <span className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>XP</span>
+          <div className={`rounded-xl p-3 sm:p-4 border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+              <span className="text-lg sm:text-2xl">⭐</span>
+              <span className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>XP</span>
             </div>
-            <p className={`text-3xl font-bold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
+            <p className={`text-2xl sm:text-3xl font-bold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
               {userProfile?.xp || 0}
             </p>
-            <p className={`text-xs ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
+            <p className={`text-[10px] sm:text-xs ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
               Level {userProfile?.level || 1}
             </p>
           </div>
 
           {/* Rank */}
-          <div className={`rounded-xl p-4 border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🏆</span>
-              <span className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Rank</span>
+          <div className={`rounded-xl p-3 sm:p-4 border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+              <span className="text-lg sm:text-2xl">🏆</span>
+              <span className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Rank</span>
             </div>
-            <p className={`text-3xl font-bold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
+            <p className={`text-2xl sm:text-3xl font-bold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
               #{leaderboardData?.rank || '-'}
             </p>
-            <p className={`text-xs ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
+            <p className={`text-[10px] sm:text-xs ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
               Top {leaderboardData?.percentile || 0}%
             </p>
           </div>
 
           {/* Tier */}
-          <div className={`rounded-xl p-4 border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🎖️</span>
-              <span className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Tier</span>
+          <div className={`rounded-xl p-3 sm:p-4 border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+              <span className="text-lg sm:text-2xl">🎖️</span>
+              <span className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Tier</span>
             </div>
-            <p className={`text-xl font-bold bg-gradient-to-r ${getTierColor(userProfile?.tier)} bg-clip-text text-transparent capitalize`}>
+            <p className={`text-lg sm:text-xl font-bold bg-gradient-to-r ${getTierColor(userProfile?.tier)} bg-clip-text text-transparent capitalize`}>
               {userProfile?.tier || 'Bronze'}
             </p>
-            <p className={`text-xs ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
+            <p className={`text-[10px] sm:text-xs ${isDarkTheme ? 'text-slate-500' : 'text-slate-500'}`}>
               {avgScore > 0 ? `Avg: ${avgScore}/100` : 'Start practicing'}
             </p>
           </div>
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Column - Recent & Quick Links */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Recent Interviews */}
             <div className={`rounded-xl border ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
               <div className="p-4 border-b flex items-center justify-between ${isDarkTheme ? 'border-slate-800' : 'border-slate-100'}">
@@ -328,56 +356,131 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions Grid */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Link href="/questions" className={`p-4 rounded-xl border flex items-center gap-4 transition-all hover:scale-[1.02] ${isDarkTheme ? 'bg-slate-900 border-slate-800 hover:border-red-500/50' : 'bg-white border-slate-200 hover:border-red-300'}`}>
-                <div className="text-3xl">📚</div>
-                <div>
-                  <p className={`font-semibold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Question Bank</p>
-                  <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>65+ practice questions</p>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <Link href="/questions" className={`p-3 sm:p-4 rounded-xl border flex items-center gap-2 sm:gap-4 transition-all hover:scale-[1.02] ${isDarkTheme ? 'bg-slate-900 border-slate-800 hover:border-red-500/50' : 'bg-white border-slate-200 hover:border-red-300'}`}>
+                <div className="text-2xl sm:text-3xl">📚</div>
+                <div className="min-w-0">
+                  <p className={`text-sm sm:text-base font-semibold truncate ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Questions</p>
+                  <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>65+ questions</p>
                 </div>
               </Link>
 
-              <Link href="/companies" className={`p-4 rounded-xl border flex items-center gap-4 transition-all hover:scale-[1.02] ${isDarkTheme ? 'bg-slate-900 border-slate-800 hover:border-red-500/50' : 'bg-white border-slate-200 hover:border-red-300'}`}>
-                <div className="text-3xl">🏢</div>
-                <div>
-                  <p className={`font-semibold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Company Prep</p>
-                  <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>12 top companies</p>
+              <Link href="/companies" className={`p-3 sm:p-4 rounded-xl border flex items-center gap-2 sm:gap-4 transition-all hover:scale-[1.02] ${isDarkTheme ? 'bg-slate-900 border-slate-800 hover:border-red-500/50' : 'bg-white border-slate-200 hover:border-red-300'}`}>
+                <div className="text-2xl sm:text-3xl">🏢</div>
+                <div className="min-w-0">
+                  <p className={`text-sm sm:text-base font-semibold truncate ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Companies</p>
+                  <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Company guides</p>
                 </div>
               </Link>
 
-              <Link href="/tracks" className={`p-4 rounded-xl border flex items-center gap-4 transition-all hover:scale-[1.02] ${isDarkTheme ? 'bg-slate-900 border-slate-800 hover:border-red-500/50' : 'bg-white border-slate-200 hover:border-red-300'}`}>
-                <div className="text-3xl">🎯</div>
-                <div>
-                  <p className={`font-semibold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Industry Tracks</p>
-                  <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>7 learning paths</p>
+              <Link href="/tracks" className={`p-3 sm:p-4 rounded-xl border flex items-center gap-2 sm:gap-4 transition-all hover:scale-[1.02] ${isDarkTheme ? 'bg-slate-900 border-slate-800 hover:border-red-500/50' : 'bg-white border-slate-200 hover:border-red-300'}`}>
+                <div className="text-2xl sm:text-3xl">🎯</div>
+                <div className="min-w-0">
+                  <p className={`text-sm sm:text-base font-semibold truncate ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Tracks</p>
+                  <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>7 paths</p>
                 </div>
               </Link>
 
-              <Link href="/achievements" className={`p-4 rounded-xl border flex items-center gap-4 transition-all hover:scale-[1.02] ${isDarkTheme ? 'bg-slate-900 border-slate-800 hover:border-red-500/50' : 'bg-white border-slate-200 hover:border-red-300'}`}>
-                <div className="text-3xl">🏅</div>
-                <div>
-                  <p className={`font-semibold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Achievements</p>
-                  <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>25 badges to earn</p>
+              <Link href="/achievements" className={`p-3 sm:p-4 rounded-xl border flex items-center gap-2 sm:gap-4 transition-all hover:scale-[1.02] ${isDarkTheme ? 'bg-slate-900 border-slate-800 hover:border-red-500/50' : 'bg-white border-slate-200 hover:border-red-300'}`}>
+                <div className="text-2xl sm:text-3xl">🏅</div>
+                <div className="min-w-0">
+                  <p className={`text-sm sm:text-base font-semibold truncate ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Badges</p>
+                  <p className={`text-xs sm:text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>25 to earn</p>
                 </div>
               </Link>
+            </div>
+
+            {/* How to Earn XP & Climb */}
+            <div className={`rounded-xl border p-4 sm:p-6 ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+              <h2 className={`text-lg font-semibold mb-4 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
+                How to Earn XP & Climb the Leaderboard
+              </h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className={`p-4 rounded-xl border ${isDarkTheme ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">🎤</span>
+                    <span className={`text-xl font-bold text-green-500`}>+50 XP</span>
+                  </div>
+                  <h3 className={`font-medium mb-1 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Complete Interview</h3>
+                  <p className={`text-xs ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Finish an AI mock interview session</p>
+                </div>
+
+                <div className={`p-4 rounded-xl border ${isDarkTheme ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">🔥</span>
+                    <span className={`text-xl font-bold text-orange-500`}>+10 XP</span>
+                  </div>
+                  <h3 className={`font-medium mb-1 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Daily Streak</h3>
+                  <p className={`text-xs ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Log in and practice daily</p>
+                </div>
+
+                <div className={`p-4 rounded-xl border ${isDarkTheme ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">🎯</span>
+                    <span className={`text-xl font-bold text-blue-500`}>+25 XP</span>
+                  </div>
+                  <h3 className={`font-medium mb-1 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Weekly Challenge</h3>
+                  <p className={`text-xs ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Complete weekly challenge tasks</p>
+                </div>
+
+                <div className={`p-4 rounded-xl border ${isDarkTheme ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">👥</span>
+                    <span className={`text-xl font-bold text-purple-500`}>+100 XP</span>
+                  </div>
+                  <h3 className={`font-medium mb-1 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Refer a Friend</h3>
+                  <p className={`text-xs ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>When your referral signs up</p>
+                </div>
+              </div>
+
+              {/* Tier Progress */}
+              <div className={`mt-4 pt-4 border-t ${isDarkTheme ? 'border-slate-700' : 'border-slate-200'}`}>
+                <h3 className={`text-sm font-medium mb-3 ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>Talent Tiers</h3>
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <div className="text-center">
+                    <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold mb-1">B</div>
+                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Bronze</span>
+                  </div>
+                  <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
+                  <div className="text-center">
+                    <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold mb-1">S</div>
+                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Silver</span>
+                  </div>
+                  <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
+                  <div className="text-center">
+                    <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold mb-1">G</div>
+                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Gold</span>
+                  </div>
+                  <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
+                  <div className="text-center">
+                    <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold mb-1">D</div>
+                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Diamond</span>
+                  </div>
+                  <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
+                  <div className="text-center">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold mb-1">E</div>
+                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Elite</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Right Column - Profile & Links */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Profile Card */}
-            <div className={`rounded-xl border p-4 ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-              <div className="flex items-center gap-3 mb-4">
+            <div className={`rounded-xl border p-3 sm:p-4 ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center gap-3 mb-3 sm:mb-4">
                 {session.user?.image ? (
-                  <img src={session.user.image} alt="" className="w-12 h-12 rounded-full" />
+                  <img src={session.user.image} alt="" className="w-10 sm:w-12 h-10 sm:h-12 rounded-full" />
                 ) : (
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDarkTheme ? 'bg-red-900/50' : 'bg-red-100'}`}>
-                    <span className="text-red-600 font-bold text-lg">{session.user?.name?.charAt(0)}</span>
+                  <div className={`w-10 sm:w-12 h-10 sm:h-12 rounded-full flex items-center justify-center ${isDarkTheme ? 'bg-red-900/50' : 'bg-red-100'}`}>
+                    <span className="text-red-600 font-bold text-base sm:text-lg">{session.user?.name?.charAt(0)}</span>
                   </div>
                 )}
-                <div>
-                  <p className={`font-semibold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{session.user?.name}</p>
-                  <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm sm:text-base font-semibold truncate ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{session.user?.name}</p>
+                  <p className={`text-xs sm:text-sm truncate ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
                     @{userProfile?.username || 'set username'}
                   </p>
                 </div>
@@ -385,15 +488,15 @@ export default function DashboardPage() {
 
               {userProfile?.username ? (
                 <div className="space-y-2">
-                  <Link href={`/u/${userProfile.username}`} className={`block w-full py-2 text-center rounded-lg text-sm font-medium ${isDarkTheme ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}>
+                  <Link href={`/u/${userProfile.username}`} className={`block w-full py-2.5 sm:py-2 text-center rounded-lg text-sm font-medium ${isDarkTheme ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}>
                     View Public Profile
                   </Link>
-                  <Link href="/settings" className={`block w-full py-2 text-center rounded-lg text-sm font-medium border ${isDarkTheme ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-50'}`}>
+                  <Link href="/settings" className={`block w-full py-2.5 sm:py-2 text-center rounded-lg text-sm font-medium border ${isDarkTheme ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-50'}`}>
                     Edit Profile
                   </Link>
                 </div>
               ) : (
-                <Link href="/settings" className="block w-full py-2 text-center rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600">
+                <Link href="/settings" className="block w-full py-2.5 sm:py-2 text-center rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600">
                   Complete Your Profile
                 </Link>
               )}
@@ -423,10 +526,10 @@ export default function DashboardPage() {
             </div>
 
             {/* Referral CTA */}
-            <div className="rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 p-4 text-white">
-              <h3 className="font-semibold mb-2">Invite Friends</h3>
-              <p className="text-sm text-white/80 mb-3">Earn XP for each friend who joins</p>
-              <Link href="/settings#referrals" className="block w-full py-2 text-center rounded-lg text-sm font-medium bg-white text-purple-600 hover:bg-purple-50">
+            <div className="rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 p-3 sm:p-4 text-white">
+              <h3 className="text-sm sm:text-base font-semibold mb-1 sm:mb-2">Invite Friends</h3>
+              <p className="text-xs sm:text-sm text-white/80 mb-2 sm:mb-3">Earn XP for each friend who joins</p>
+              <Link href="/settings#referrals" className="block w-full py-2.5 sm:py-2 text-center rounded-lg text-sm font-medium bg-white text-purple-600 hover:bg-purple-50">
                 Get Referral Link
               </Link>
             </div>

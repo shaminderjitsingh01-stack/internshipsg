@@ -259,7 +259,7 @@ export default function AboutPage() {
             Ready to Prove Yourself?
           </h2>
           <p className={`mb-8 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
-            Join 1,000+ students building their talent profile and climbing the leaderboard.
+            Join hundreds of students building their talent profile and climbing the leaderboard.
           </p>
           <Link
             href="/dashboard"

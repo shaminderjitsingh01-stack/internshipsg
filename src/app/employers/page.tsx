@@ -261,26 +261,26 @@ export default function EmployersPage() {
       </section>
 
       {/* Social Proof Stats */}
-      <section className="py-12 px-4 border-y border-slate-200 bg-white/50">
+      <section className="py-8 sm:py-12 px-4 border-y border-slate-200 bg-white/50">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-3 gap-8">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8">
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-1">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-indigo-600 mb-1">
                 {stats.studentsCount.toLocaleString()}+
               </div>
-              <div className="text-slate-600 text-sm sm:text-base">Students Practicing</div>
+              <div className="text-slate-600 text-xs sm:text-sm md:text-base">Students Practicing</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-1">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-indigo-600 mb-1">
                 {stats.interviewsCount.toLocaleString()}+
               </div>
-              <div className="text-slate-600 text-sm sm:text-base">Interviews Completed</div>
+              <div className="text-slate-600 text-xs sm:text-sm md:text-base">Interviews Completed</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-1">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-indigo-600 mb-1">
                 {stats.avgStreakDays}
               </div>
-              <div className="text-slate-600 text-sm sm:text-base">Avg Streak Days</div>
+              <div className="text-slate-600 text-xs sm:text-sm md:text-base">Avg Streak Days</div>
             </div>
           </div>
         </div>
@@ -314,48 +314,48 @@ export default function EmployersPage() {
       </section>
 
       {/* Talent Preview Section */}
-      <section className="py-16 sm:py-20 px-4 bg-gradient-to-br from-slate-900 to-indigo-950">
+      <section className="py-12 sm:py-16 md:py-20 px-4 bg-gradient-to-br from-slate-900 to-indigo-950">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-4">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white text-center mb-3 sm:mb-4">
             Preview Our Talent Pool
           </h2>
-          <p className="text-slate-400 text-center max-w-2xl mx-auto mb-12">
+          <p className="text-sm sm:text-base text-slate-400 text-center max-w-2xl mx-auto mb-8 sm:mb-12">
             Get a glimpse of the verified talent available. Full profiles unlocked for waitlist members.
           </p>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 relative">
             {SAMPLE_TALENT.map((talent, idx) => (
               <div
                 key={idx}
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 relative overflow-hidden"
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-5 border border-white/20 relative overflow-hidden"
               >
                 {/* Blur overlay */}
                 <div className="absolute inset-0 backdrop-blur-[2px] bg-gradient-to-t from-slate-900/80 via-transparent to-transparent z-10" />
 
                 {/* Avatar */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${talent.tierColor} flex items-center justify-center text-white font-bold`}>
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${talent.tierColor} flex items-center justify-center text-white font-bold text-sm sm:text-base`}>
                     {talent.avatar}
                   </div>
-                  <div>
-                    <div className="font-semibold text-white">{talent.name}</div>
-                    <div className="text-sm text-slate-400">{talent.school}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-white text-sm sm:text-base truncate">{talent.name}</div>
+                    <div className="text-xs sm:text-sm text-slate-400 truncate">{talent.school}</div>
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 text-sm">Interview Score</span>
-                    <span className="text-white font-semibold">{talent.score}/100</span>
+                    <span className="text-slate-400 text-xs sm:text-sm">Score</span>
+                    <span className="text-white font-semibold text-xs sm:text-sm">{talent.score}/100</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 text-sm">Practice Streak</span>
-                    <span className="text-white font-semibold">{talent.streak} days</span>
+                    <span className="text-slate-400 text-xs sm:text-sm">Streak</span>
+                    <span className="text-white font-semibold text-xs sm:text-sm">{talent.streak} days</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 text-sm">Tier</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${talent.tierColor} text-white`}>
+                    <span className="text-slate-400 text-xs sm:text-sm">Tier</span>
+                    <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-gradient-to-r ${talent.tierColor} text-white`}>
                       {talent.tier}
                     </span>
                   </div>
@@ -364,12 +364,13 @@ export default function EmployersPage() {
             ))}
 
             {/* Overlay CTA */}
-            <div className="absolute inset-0 flex items-center justify-center z-20">
+            <div className="absolute inset-0 flex items-center justify-center z-20 p-4">
               <a
                 href="#waitlist"
-                className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+                className="px-4 sm:px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-sm sm:text-base text-center min-h-[44px] flex items-center"
               >
-                Join Waitlist to Access Full Profiles
+                <span className="hidden sm:inline">Join Waitlist to Access Full Profiles</span>
+                <span className="sm:hidden">Join Waitlist for Full Access</span>
               </a>
             </div>
           </div>
@@ -436,10 +437,10 @@ export default function EmployersPage() {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl">
-              <div className="grid sm:grid-cols-2 gap-4 mb-4">
+            <form onSubmit={handleSubmit} className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl">
+              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
                     Work Email <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -448,11 +449,11 @@ export default function EmployersPage() {
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="you@company.com"
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-sm sm:text-base min-h-[44px]"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
                     Company Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -461,7 +462,7 @@ export default function EmployersPage() {
                     value={form.companyName}
                     onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                     placeholder="Acme Pte Ltd"
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-sm sm:text-base min-h-[44px]"
                   />
                 </div>
               </div>
@@ -531,7 +532,7 @@ export default function EmployersPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 sm:py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
               >
                 {isSubmitting ? (
                   <>
@@ -555,16 +556,16 @@ export default function EmployersPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 sm:py-20 px-4">
+      <section className="py-12 sm:py-16 md:py-20 px-4">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-4">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 text-center mb-3 sm:mb-4">
             Frequently Asked Questions
           </h2>
-          <p className="text-slate-600 text-center mb-12">
+          <p className="text-sm sm:text-base text-slate-600 text-center mb-8 sm:mb-12">
             Have questions? We've got answers.
           </p>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {FAQS.map((faq, idx) => (
               <div
                 key={idx}
@@ -572,11 +573,11 @@ export default function EmployersPage() {
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+                  className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors min-h-[56px]"
                 >
-                  <span className="font-semibold text-slate-900">{faq.question}</span>
+                  <span className="font-semibold text-slate-900 text-sm sm:text-base pr-2">{faq.question}</span>
                   <svg
-                    className={`w-5 h-5 text-slate-500 transition-transform ${openFaq === idx ? "rotate-180" : ""}`}
+                    className={`w-5 h-5 text-slate-500 transition-transform flex-shrink-0 ${openFaq === idx ? "rotate-180" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -585,7 +586,7 @@ export default function EmployersPage() {
                   </svg>
                 </button>
                 {openFaq === idx && (
-                  <div className="px-6 pb-4 text-slate-600">
+                  <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-sm sm:text-base text-slate-600">
                     {faq.answer}
                   </div>
                 )}

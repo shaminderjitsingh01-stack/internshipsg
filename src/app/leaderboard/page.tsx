@@ -259,7 +259,7 @@ export default function LeaderboardPage() {
             </button>
             <Link
               href="/questions"
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`hidden sm:block px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                 isDarkTheme ? "text-slate-300 hover:text-red-400" : "text-slate-600 hover:text-red-600"
               }`}
             >
@@ -267,7 +267,7 @@ export default function LeaderboardPage() {
             </Link>
             <Link
               href="/dashboard"
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`hidden sm:block px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                 isDarkTheme ? "text-slate-300 hover:text-red-400" : "text-slate-600 hover:text-red-600"
               }`}
             >
@@ -294,7 +294,7 @@ export default function LeaderboardPage() {
             ) : (
               <Link
                 href="/auth/signin"
-                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-red-700 transition-colors"
               >
                 Sign In
               </Link>
@@ -326,60 +326,65 @@ export default function LeaderboardPage() {
         {/* Your Rank Card (if logged in) */}
         {userRank && (
           <div
-            className={`mb-8 rounded-2xl p-6 border ${
+            className={`mb-6 sm:mb-8 rounded-xl sm:rounded-2xl p-4 sm:p-6 border ${
               isDarkTheme
                 ? "bg-gradient-to-r from-red-900/30 to-orange-900/30 border-red-800/50"
                 : "bg-gradient-to-r from-red-50 to-orange-50 border-red-200"
             }`}
           >
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4">
+              {/* User info row */}
+              <div className="flex items-center gap-3 sm:gap-4">
                 {userRank.user.image_url ? (
                   <img
                     src={userRank.user.image_url}
                     alt={userRank.user.name}
-                    className="w-16 h-16 rounded-full border-4 border-red-500"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 sm:border-4 border-red-500"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center border-4 border-red-500">
-                    <span className="text-white font-bold text-xl">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-red-600 flex items-center justify-center border-2 sm:border-4 border-red-500">
+                    <span className="text-white font-bold text-base sm:text-xl">
                       {userRank.user.name?.charAt(0) || "U"}
                     </span>
                   </div>
                 )}
-                <div>
-                  <p className={`text-sm ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>Your Rank</p>
-                  <p className={`text-3xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-xs sm:text-sm ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>Your Rank</p>
+                  <p className={`text-2xl sm:text-3xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
                     #{userRank.rank}
                   </p>
-                  <p className={`text-sm ${isDarkTheme ? "text-green-400" : "text-green-600"}`}>
+                  <p className={`text-xs sm:text-sm ${isDarkTheme ? "text-green-400" : "text-green-600"}`}>
                     Top {userRank.percentile}% of users
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-6 text-center">
-                <div>
-                  <p className={`text-2xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
+
+              {/* Stats row */}
+              <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 py-2 border-t border-b ${isDarkTheme ? 'border-red-800/30' : 'border-red-200/50'}">
+                <div className="text-center flex-1 sm:flex-none">
+                  <p className={`text-lg sm:text-2xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
                     {userRank.user.score}
                   </p>
-                  <p className={`text-xs ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>Score</p>
+                  <p className={`text-[10px] sm:text-xs ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>Score</p>
                 </div>
-                <div>
-                  <p className={`text-2xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
+                <div className="text-center flex-1 sm:flex-none">
+                  <p className={`text-lg sm:text-2xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
                     {userRank.user.longest_streak}
                   </p>
-                  <p className={`text-xs ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>Streak</p>
+                  <p className={`text-[10px] sm:text-xs ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>Streak</p>
                 </div>
-                <div>
-                  <p className={`text-2xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
+                <div className="text-center flex-1 sm:flex-none">
+                  <p className={`text-lg sm:text-2xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
                     {userRank.user.xp_points.toLocaleString()}
                   </p>
-                  <p className={`text-xs ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>XP</p>
+                  <p className={`text-[10px] sm:text-xs ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>XP</p>
                 </div>
               </div>
+
+              {/* Action button */}
               <Link
                 href={`/u/${userRank.user.username}`}
-                className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors text-center min-h-[44px] flex items-center justify-center"
               >
                 View Profile
               </Link>
@@ -389,44 +394,47 @@ export default function LeaderboardPage() {
 
         {/* Filter Bar */}
         <div
-          className={`mb-6 rounded-xl p-4 border ${
+          className={`mb-4 sm:mb-6 rounded-xl p-3 sm:p-4 border ${
             isDarkTheme ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
           }`}
         >
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            {/* Sort Tabs */}
-            <div
-              className={`flex gap-1 p-1 rounded-lg ${isDarkTheme ? "bg-slate-800" : "bg-slate-100"}`}
-            >
-              {[
-                { value: "score", label: "Overall Score" },
-                { value: "streak", label: "Longest Streak" },
-                { value: "xp", label: "XP Points" },
-              ].map((tab) => (
-                <button
-                  key={tab.value}
-                  onClick={() => setSortBy(tab.value as "score" | "streak" | "xp")}
-                  className={`px-4 py-2 rounded-md font-medium text-sm transition-all ${
-                    sortBy === tab.value
-                      ? isDarkTheme
-                        ? "bg-slate-700 text-white"
-                        : "bg-white text-slate-900 shadow-sm"
-                      : isDarkTheme
-                      ? "text-slate-400 hover:text-white"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {/* Sort Tabs - Scrollable on mobile */}
+            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+              <div
+                className={`flex gap-1 p-1 rounded-lg w-fit min-w-full sm:min-w-0 ${isDarkTheme ? "bg-slate-800" : "bg-slate-100"}`}
+              >
+                {[
+                  { value: "score", label: "Score", fullLabel: "Overall Score" },
+                  { value: "streak", label: "Streak", fullLabel: "Longest Streak" },
+                  { value: "xp", label: "XP", fullLabel: "XP Points" },
+                ].map((tab) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => setSortBy(tab.value as "score" | "streak" | "xp")}
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium text-xs sm:text-sm transition-all whitespace-nowrap flex-1 sm:flex-none min-h-[44px] sm:min-h-0 ${
+                      sortBy === tab.value
+                        ? isDarkTheme
+                          ? "bg-slate-700 text-white"
+                          : "bg-white text-slate-900 shadow-sm"
+                        : isDarkTheme
+                        ? "text-slate-400 hover:text-white"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className="sm:hidden">{tab.label}</span>
+                    <span className="hidden sm:inline">{tab.fullLabel}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex gap-3">
+            {/* Filters - Stack on mobile */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <select
                 value={selectedSchool}
                 onChange={(e) => setSelectedSchool(e.target.value)}
-                className={`px-4 py-2 rounded-lg border text-sm font-medium ${
+                className={`px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg border text-sm font-medium min-h-[44px] sm:min-h-0 ${
                   isDarkTheme
                     ? "bg-slate-800 border-slate-700 text-white"
                     : "bg-white border-slate-200 text-slate-700"
@@ -442,7 +450,7 @@ export default function LeaderboardPage() {
               <select
                 value={timePeriod}
                 onChange={(e) => setTimePeriod(e.target.value)}
-                className={`px-4 py-2 rounded-lg border text-sm font-medium ${
+                className={`px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg border text-sm font-medium min-h-[44px] sm:min-h-0 ${
                   isDarkTheme
                     ? "bg-slate-800 border-slate-700 text-white"
                     : "bg-white border-slate-200 text-slate-700"
@@ -459,7 +467,7 @@ export default function LeaderboardPage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Leaderboard Table */}
           <div className="lg:col-span-2">
             <div
@@ -477,7 +485,7 @@ export default function LeaderboardPage() {
               </div>
 
               {loading ? (
-                <div className="p-12 text-center">
+                <div className="p-8 sm:p-12 text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
                 </div>
               ) : users.length === 0 ? (
@@ -513,7 +521,7 @@ export default function LeaderboardPage() {
                   {users.map((user) => (
                     <div
                       key={user.id}
-                      className={`p-4 transition-colors ${
+                      className={`p-3 sm:p-4 transition-colors ${
                         user.is_current_user
                           ? isDarkTheme
                             ? "bg-red-900/20"
@@ -523,9 +531,9 @@ export default function LeaderboardPage() {
                           : "hover:bg-slate-50"
                       }`}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 sm:gap-4">
                         {/* Rank */}
-                        <div className="w-12 text-center">
+                        <div className="w-8 sm:w-12 text-center flex-shrink-0">
                           <RankMedal rank={user.rank} />
                         </div>
 
@@ -534,18 +542,18 @@ export default function LeaderboardPage() {
                           <img
                             src={user.image_url}
                             alt={user.name}
-                            className={`w-10 h-10 rounded-full border-2 ${
+                            className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex-shrink-0 ${
                               isDarkTheme ? "border-slate-700" : "border-slate-200"
                             }`}
                           />
                         ) : (
                           <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                               isDarkTheme ? "bg-slate-800" : "bg-slate-100"
                             }`}
                           >
                             <span
-                              className={`font-semibold ${isDarkTheme ? "text-slate-400" : "text-slate-600"}`}
+                              className={`font-semibold text-sm ${isDarkTheme ? "text-slate-400" : "text-slate-600"}`}
                             >
                               {user.name?.charAt(0) || "?"}
                             </span>
@@ -556,27 +564,27 @@ export default function LeaderboardPage() {
                         <div className="flex-1 min-w-0">
                           <Link
                             href={`/u/${user.username}`}
-                            className={`font-semibold hover:underline ${
+                            className={`text-sm sm:text-base font-semibold hover:underline truncate block ${
                               isDarkTheme ? "text-white" : "text-slate-900"
                             }`}
                           >
                             {user.name}
                             {user.is_current_user && (
-                              <span className="ml-2 text-red-500 text-sm">(You)</span>
+                              <span className="ml-1 sm:ml-2 text-red-500 text-xs sm:text-sm">(You)</span>
                             )}
                           </Link>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1 flex-wrap">
                             <SchoolBadge school={user.school} isDark={isDarkTheme} />
                             <TierBadge tier={user.tier} isDark={isDarkTheme} />
                           </div>
                         </div>
 
                         {/* Score */}
-                        <div className="text-right">
-                          <p className={`text-xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
+                        <div className="text-right flex-shrink-0">
+                          <p className={`text-base sm:text-xl font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
                             {getSortValue(user)}
                           </p>
-                          <p className={`text-xs ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>
+                          <p className={`text-[10px] sm:text-xs ${isDarkTheme ? "text-slate-400" : "text-slate-500"}`}>
                             {getSortLabel()}
                           </p>
                         </div>

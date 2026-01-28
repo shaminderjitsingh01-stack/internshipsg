@@ -1227,7 +1227,7 @@ export default function Home() {
               ))}
             </div>
             <span className={`text-sm font-medium ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>
-              Join <span className="text-red-500 font-bold">1,000+</span> students competing on the leaderboard
+              Join <span className="text-red-500 font-bold">hundreds of</span> students competing on the leaderboard
             </span>
           </div>
 
@@ -1290,7 +1290,7 @@ export default function Home() {
             {[
               { value: "25+", label: "Badges to Earn" },
               { value: "5", label: "Talent Tiers" },
-              { value: "12", label: "Top Companies" },
+              { value: "12", label: "Company Guides" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className={`text-3xl sm:text-4xl font-bold mb-1 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{stat.value}</div>
@@ -1385,7 +1385,7 @@ export default function Home() {
         <section className="relative z-10 py-20">
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Prove Yourself?</h2>
-            <p className={`mb-8 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Join 1,000+ students building their talent profile - completely free</p>
+            <p className={`mb-8 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Join hundreds of students building their talent profile - completely free</p>
 
             {status === "authenticated" ? (
               <a

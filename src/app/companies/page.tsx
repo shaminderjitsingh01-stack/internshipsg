@@ -48,19 +48,19 @@ export default function CompaniesPage() {
       {/* Navigation */}
       <nav className={`sticky top-0 z-50 ${isDarkTheme ? "glass-dark" : "glass"} border-b ${isDarkTheme ? "border-red-800/30" : "border-gray-200/50"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <span className="text-white font-bold text-lg">i</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl gradient-primary flex items-center justify-center">
+                <span className="text-white font-bold text-base sm:text-lg">i</span>
               </div>
-              <span className={`font-bold text-xl ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
+              <span className={`font-bold text-lg sm:text-xl ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
                 internship.sg
               </span>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/job-interview"
-                className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                className={`hidden sm:block px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition-all ${
                   isDarkTheme
                     ? "text-gray-300 hover:bg-white/10"
                     : "text-gray-600 hover:bg-gray-100"
@@ -70,7 +70,7 @@ export default function CompaniesPage() {
               </Link>
               <Link
                 href="/dashboard"
-                className="btn-premium px-5 py-2.5 text-sm"
+                className="btn-premium px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm min-h-[40px] sm:min-h-0 flex items-center"
               >
                 Dashboard
               </Link>
