@@ -7,38 +7,38 @@
 -- =====================================================
 
 -- Profile fields
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS school VARCHAR(100);
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS year_of_study VARCHAR(20);
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS target_role VARCHAR(100);
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS bio VARCHAR(200);
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS linkedin_url VARCHAR(255);
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS portfolio_url VARCHAR(255);
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}';
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS preferred_industries TEXT[] DEFAULT '{}';
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS school VARCHAR(100);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS year_of_study VARCHAR(20);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS target_role VARCHAR(100);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS bio VARCHAR(200);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS linkedin_url VARCHAR(255);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS portfolio_url VARCHAR(255);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}';
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS preferred_industries TEXT[] DEFAULT '{}';
 
 -- Visibility & status
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT false;
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS is_looking BOOLEAN DEFAULT false;
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS profile_views INTEGER DEFAULT 0;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS is_looking BOOLEAN DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS profile_views INTEGER DEFAULT 0;
 
 -- Gamification
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS xp INTEGER DEFAULT 0;
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1;
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'bronze';
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS xp INTEGER DEFAULT 0;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'bronze';
 
 -- Referrals
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) UNIQUE;
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS referred_by VARCHAR(50);
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS referral_count INTEGER DEFAULT 0;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) UNIQUE;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS referred_by VARCHAR(50);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS referral_count INTEGER DEFAULT 0;
 
 -- Streak enhancements
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS streak_freezes INTEGER DEFAULT 0;
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS last_freeze_used TIMESTAMP;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS streak_freezes INTEGER DEFAULT 0;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS last_freeze_used TIMESTAMP;
 
 -- Profile completion
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS profile_completed_at TIMESTAMP;
-ALTER TABLE "user accounts" ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS profile_completed_at TIMESTAMP;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false;
 
 -- =====================================================
 -- 2. CREATE REFERRALS TABLE
@@ -141,11 +141,11 @@ CREATE INDEX IF NOT EXISTS idx_profile_views_date ON profile_views(created_at DE
 -- 7. INDEXES FOR LEADERBOARD QUERIES
 -- =====================================================
 
-CREATE INDEX IF NOT EXISTS idx_users_public ON "user accounts"(is_public) WHERE is_public = true;
-CREATE INDEX IF NOT EXISTS idx_users_school ON "user accounts"(school);
-CREATE INDEX IF NOT EXISTS idx_users_tier ON "user accounts"(tier);
-CREATE INDEX IF NOT EXISTS idx_users_xp ON "user accounts"(xp DESC);
-CREATE INDEX IF NOT EXISTS idx_users_username ON "user accounts"(username);
+CREATE INDEX IF NOT EXISTS idx_users_public ON "users"(is_public) WHERE is_public = true;
+CREATE INDEX IF NOT EXISTS idx_users_school ON "users"(school);
+CREATE INDEX IF NOT EXISTS idx_users_tier ON "users"(tier);
+CREATE INDEX IF NOT EXISTS idx_users_xp ON "users"(xp DESC);
+CREATE INDEX IF NOT EXISTS idx_users_username ON "users"(username);
 
 -- =====================================================
 -- 8. HELPER FUNCTIONS
@@ -175,7 +175,7 @@ DECLARE
   percentile FLOAT;
 BEGIN
   -- Get total active users
-  SELECT COUNT(*) INTO total_users FROM "user accounts" WHERE xp > 0;
+  SELECT COUNT(*) INTO total_users FROM "users" WHERE xp > 0;
 
   IF total_users = 0 THEN
     RETURN 'bronze';
@@ -183,7 +183,7 @@ BEGIN
 
   -- Get user's rank
   SELECT COUNT(*) + 1 INTO user_rank
-  FROM "user accounts"
+  FROM "users"
   WHERE xp > user_xp;
 
   percentile := (user_rank::float / total_users::float) * 100;
@@ -208,7 +208,7 @@ $$ LANGUAGE plpgsql;
 -- =====================================================
 
 -- Generate referral codes for users who don't have one
-UPDATE "user accounts"
+UPDATE "users"
 SET referral_code = generate_referral_code()
 WHERE referral_code IS NULL;
 
