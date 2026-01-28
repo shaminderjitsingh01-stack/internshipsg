@@ -178,13 +178,14 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
         </button>
         <button
           onClick={() => { setInputMode("paste"); setError(""); }}
-          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors relative ${
             inputMode === "paste"
               ? "bg-white text-slate-900 shadow-sm"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
           Paste
+          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[8px] px-1 rounded">Overall</span>
         </button>
         <button
           onClick={() => { setInputMode("upload"); setError(""); }}
