@@ -270,6 +270,13 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
               </span>
             ))}
           </div>
+
+          {/* Mobile Note */}
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-xs text-amber-800">
+              <strong>📱 On mobile?</strong> Bookmarklets don&apos;t work on mobile browsers. Use the <button onClick={() => setInputMode("paste")} className="underline font-semibold hover:text-amber-900">Paste tab</button> instead — copy the job description from the job posting and paste it here.
+            </p>
+          </div>
         </div>
       )}
 
