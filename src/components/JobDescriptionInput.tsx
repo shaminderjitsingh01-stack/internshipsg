@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // Bookmarklet code - sends job text to API and opens import page
 // Uses www.internship.sg to avoid redirect issues with CORS
@@ -25,21 +25,23 @@ interface Props {
 }
 
 export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, initialPastedText }: Props) {
-  const [inputMode, setInputMode] = useState<"url" | "upload" | "paste">("paste"); // Default to paste since it's most reliable
-  const [url, setUrl] = useState("");
+  const [inputMode, setInputMode] = useState<"bookmarklet" | "paste" | "upload">("bookmarklet");
   const [pastedText, setPastedText] = useState(initialPastedText || "");
-  const [showBookmarklet, setShowBookmarklet] = useState(false);
   const [showImportBanner, setShowImportBanner] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [fileName, setFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const bookmarkletRef = useRef<HTMLAnchorElement>(null);
 
   // Set bookmarklet href after render to bypass React's javascript: URL blocking
   useEffect(() => {
-    if (bookmarkletRef.current && showBookmarklet) {
+    if (bookmarkletRef.current && inputMode === "bookmarklet") {
       bookmarkletRef.current.setAttribute('href', BOOKMARKLET_CODE);
     }
-  }, [showBookmarklet]);
+  }, [inputMode]);
 
-  // Sync pasted text when initialPastedText changes (from bookmarklet)
+  // Sync pasted text when initialPastedText changes (from bookmarklet import)
   useEffect(() => {
     if (initialPastedText && initialPastedText.length > 0) {
       setPastedText(initialPastedText);
@@ -50,70 +52,6 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
       return () => clearTimeout(timer);
     }
   }, [initialPastedText]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [errorType, setErrorType] = useState<"blocked" | "generic" | "">("");
-  const [fileName, setFileName] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleUrlSubmit = async () => {
-    if (!url.trim()) {
-      setError("Please enter a job posting URL");
-      setErrorType("generic");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setErrorType("");
-
-    // Check if URL is from a blocked domain
-    const blockedDomains = ["linkedin.com", "indeed.com", "glassdoor.com"];
-    const urlLower = url.toLowerCase();
-    const isBlockedDomain = blockedDomains.some(domain => urlLower.includes(domain));
-
-    if (isBlockedDomain) {
-      const platform = urlLower.includes("linkedin") ? "LinkedIn" :
-                       urlLower.includes("indeed") ? "Indeed" : "Glassdoor";
-      setError(`${platform} requires login to view job postings. Please copy the job description from the page and paste it below.`);
-      setErrorType("blocked");
-      setLoading(false);
-      setInputMode("paste"); // Auto-switch to paste mode
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/parse-job-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        const errorMsg = data.error || "Failed to fetch job description";
-        // Check if error mentions login/blocked
-        if (errorMsg.toLowerCase().includes("login") || errorMsg.toLowerCase().includes("paste")) {
-          setErrorType("blocked");
-          setInputMode("paste"); // Auto-switch to paste mode
-        } else {
-          setErrorType("generic");
-        }
-        throw new Error(errorMsg);
-      }
-
-      const data = await res.json();
-      onJobDescriptionReady({
-        ...data.jobDescription,
-        source: "url",
-        sourceUrl: url.trim(),
-      });
-    } catch (err: any) {
-      setError(err.message || "Failed to parse job URL");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -122,7 +60,6 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
     setFileName(file.name);
     setLoading(true);
     setError("");
-    setErrorType("");
 
     try {
       const formData = new FormData();
@@ -145,7 +82,6 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
       });
     } catch (err: any) {
       setError(err.message || "Failed to parse document");
-      setErrorType("generic");
     } finally {
       setLoading(false);
     }
@@ -154,13 +90,11 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
   const handlePasteSubmit = async () => {
     if (!pastedText.trim() || pastedText.trim().length < 100) {
       setError("Please paste a complete job description (minimum 100 characters)");
-      setErrorType("generic");
       return;
     }
 
     setLoading(true);
     setError("");
-    setErrorType("");
 
     try {
       const res = await fetch("/api/parse-job-text", {
@@ -181,7 +115,6 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
       });
     } catch (err: any) {
       setError(err.message || "Failed to parse job description");
-      setErrorType("generic");
     } finally {
       setLoading(false);
     }
@@ -227,28 +160,33 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
       {/* Input Mode Tabs */}
       <div className="flex gap-1 bg-slate-100 p-1 rounded-lg mb-4">
         <button
-          onClick={() => { setInputMode("paste"); setError(""); setErrorType(""); }}
+          onClick={() => { setInputMode("bookmarklet"); setError(""); }}
           className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors relative ${
+            inputMode === "bookmarklet"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <span className="flex items-center justify-center gap-1">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+            <span className="hidden sm:inline">One-Click </span>Import
+          </span>
+          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] px-1 rounded">Best</span>
+        </button>
+        <button
+          onClick={() => { setInputMode("paste"); setError(""); }}
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
             inputMode === "paste"
               ? "bg-white text-slate-900 shadow-sm"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
           Paste
-          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] px-1 rounded">Best</span>
         </button>
         <button
-          onClick={() => { setInputMode("url"); setError(""); setErrorType(""); }}
-          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-            inputMode === "url"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <span className="hidden sm:inline">Job </span>URL
-        </button>
-        <button
-          onClick={() => { setInputMode("upload"); setError(""); setErrorType(""); }}
+          onClick={() => { setInputMode("upload"); setError(""); }}
           className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
             inputMode === "upload"
               ? "bg-white text-slate-900 shadow-sm"
@@ -259,36 +197,106 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
         </button>
       </div>
 
-      {/* URL Input */}
-      {inputMode === "url" && (
-        <div className="space-y-3">
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-3">
-            <p className="text-xs text-amber-700">
-              <strong>Note:</strong> LinkedIn, Indeed & Glassdoor require login and block direct access.
-              For these sites, use the <strong>Paste</strong> tab instead.
+      {/* One-Click Import / Bookmarklet */}
+      {inputMode === "bookmarklet" && (
+        <div className="space-y-4">
+          <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+            <h4 className="font-semibold text-blue-900 mb-2">
+              Import from Any Job Board
+            </h4>
+            <p className="text-sm text-blue-800 mb-4">
+              Use this bookmarklet to instantly import job descriptions from LinkedIn, Workable, Indeed, or any job board - no copy-paste needed!
             </p>
+
+            {/* Bookmarklet Button */}
+            <div className="flex flex-col gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <a
+                  ref={bookmarkletRef}
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                  draggable="true"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium text-sm shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all cursor-grab active:cursor-grabbing"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  Import to Internship.sg
+                </a>
+                <span className="text-xs text-blue-600">← Drag to bookmarks bar</span>
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="space-y-2 mb-4">
+              <p className="text-xs font-medium text-blue-900">How to set up (one-time):</p>
+              <ol className="text-xs text-blue-800 space-y-1.5 list-decimal list-inside">
+                <li>Show your bookmarks bar (Ctrl+Shift+B on Chrome)</li>
+                <li>Drag the blue button above to your bookmarks bar</li>
+                <li>Done! Now visit any job posting and click the bookmarklet</li>
+              </ol>
+            </div>
+
+            {/* Manual Copy Option */}
+            <div className="pt-3 border-t border-blue-200">
+              <p className="text-xs text-blue-700 mb-2">If dragging doesn&apos;t work, copy the code manually:</p>
+              <div className="relative">
+                <code className="block p-2 bg-white/70 rounded text-[10px] text-blue-900 font-mono break-all border border-blue-200 max-h-16 overflow-y-auto">
+                  {BOOKMARKLET_CODE}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(BOOKMARKLET_CODE);
+                    alert('Bookmarklet code copied! Create a new bookmark and paste this as the URL.');
+                  }}
+                  className="absolute top-1 right-1 p-1.5 bg-blue-100 hover:bg-blue-200 rounded text-blue-700 transition-colors"
+                  title="Copy code"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
+
+          {/* Works With List */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            <span className="text-xs text-slate-400">Works with:</span>
+            {['LinkedIn', 'Workable', 'Indeed', 'Glassdoor', 'JobStreet', 'Any job site'].map((site) => (
+              <span key={site} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">
+                {site}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Paste Text */}
+      {inputMode === "paste" && (
+        <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Job Posting URL
+              Paste Job Description
             </label>
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://careers.company.com/jobs/..."
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            <textarea
+              value={pastedText}
+              onChange={(e) => setPastedText(e.target.value)}
+              placeholder="Open the job posting → Select all text (Ctrl+A) → Copy (Ctrl+C) → Paste here (Ctrl+V)
+
+Include: Job title, company name, responsibilities, requirements, qualifications..."
+              className="w-full min-h-[200px] px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-y"
             />
             <p className="mt-1 text-xs text-slate-500">
-              Works with company career pages, JobStreet, MyCareersFuture
+              {pastedText.length} characters {pastedText.length < 100 && "(minimum 100)"}
             </p>
           </div>
           <button
-            onClick={handleUrlSubmit}
-            disabled={loading || isLoading || !url.trim()}
+            onClick={handlePasteSubmit}
+            disabled={loading || isLoading || pastedText.length < 100}
             className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Fetching Job Details..." : "Load Job Description"}
+            {loading ? "Analyzing Job Description..." : "Analyze & Continue"}
           </button>
         </div>
       )}
@@ -328,159 +336,12 @@ export default function JobDescriptionInput({ onJobDescriptionReady, isLoading, 
         </div>
       )}
 
-      {/* Paste Text */}
-      {inputMode === "paste" && (
-        <div className="space-y-3">
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
-            <p className="text-xs text-green-700">
-              <strong>Recommended:</strong> Copy the full job description from LinkedIn, Indeed, or any job site and paste it here.
-              This method works with all job boards.
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Paste Job Description
-            </label>
-            <textarea
-              value={pastedText}
-              onChange={(e) => setPastedText(e.target.value)}
-              placeholder="Open the job posting → Select all text (Ctrl+A) → Copy (Ctrl+C) → Paste here (Ctrl+V)
-
-Include: Job title, company name, responsibilities, requirements, qualifications..."
-              className="w-full min-h-[200px] px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-y"
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              {pastedText.length} characters {pastedText.length < 100 && "(minimum 100)"}
-            </p>
-          </div>
-          <button
-            onClick={handlePasteSubmit}
-            disabled={loading || isLoading || pastedText.length < 100}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Analyzing Job Description..." : "Analyze & Continue"}
-          </button>
-        </div>
-      )}
-
       {/* Error Message */}
       {error && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600">{error}</p>
-          {errorType === "blocked" && (
-            <div className="mt-3 pt-3 border-t border-red-100">
-              <p className="text-xs text-red-500 mb-2">
-                <strong>Quick tip:</strong> Open the job posting in your browser, select all text (Ctrl+A), copy it (Ctrl+C), then paste below.
-              </p>
-            </div>
-          )}
         </div>
       )}
-
-      {/* Supported Platforms */}
-      <div className="mt-4 pt-4 border-t border-slate-100">
-        <p className="text-xs text-slate-500 text-center">
-          <strong>Best method:</strong> Copy & paste job description from any job board
-        </p>
-        <p className="text-xs text-slate-400 text-center mt-1">
-          URL parsing works with: JobStreet, MyCareersFuture, company career pages
-        </p>
-      </div>
-
-      {/* Bookmarklet Section */}
-      <div className="mt-4 pt-4 border-t border-slate-100">
-        <button
-          onClick={() => setShowBookmarklet(!showBookmarklet)}
-          className="w-full flex items-center justify-between text-sm text-slate-600 hover:text-slate-900 transition-colors"
-        >
-          <span className="flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-            <span className="font-medium">One-Click Import Bookmarklet</span>
-          </span>
-          <svg className={`w-4 h-4 transition-transform ${showBookmarklet ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        {showBookmarklet && (
-          <div className="mt-4 space-y-4">
-            <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
-              <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded">NEW</span>
-                Import from Any Job Board
-              </h4>
-              <p className="text-sm text-blue-800 mb-4">
-                Use this bookmarklet to instantly import job descriptions from LinkedIn, Workable, Indeed, or any job board - no copy-paste needed!
-              </p>
-
-              {/* Bookmarklet Button */}
-              <div className="flex flex-col gap-3 mb-4">
-                <div className="flex items-center gap-3">
-                  <a
-                    ref={bookmarkletRef}
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
-                    draggable="true"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium text-sm shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all cursor-grab active:cursor-grabbing"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                    📋 Import to Internship.sg
-                  </a>
-                  <span className="text-xs text-blue-600">← Drag this to your bookmarks bar</span>
-                </div>
-                <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded-lg">
-                  <strong>Tip:</strong> If dragging doesn&apos;t work, right-click the button → &quot;Copy link address&quot; → Create a new bookmark → Paste as the URL
-                </p>
-              </div>
-
-              {/* Instructions */}
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-blue-900">How to set up:</p>
-                <ol className="text-xs text-blue-800 space-y-1.5 list-decimal list-inside">
-                  <li>Show your bookmarks bar (Ctrl+Shift+B on Chrome)</li>
-                  <li>Drag the blue button above to your bookmarks bar</li>
-                  <li>Done! Now visit any job posting and click the bookmarklet</li>
-                </ol>
-              </div>
-
-              {/* Manual Copy Option */}
-              <div className="mt-4 pt-3 border-t border-blue-200">
-                <p className="text-xs text-blue-700 mb-2">Or copy the bookmarklet code manually:</p>
-                <div className="relative">
-                  <code className="block p-2 bg-white/70 rounded text-[10px] text-blue-900 font-mono break-all border border-blue-200 max-h-20 overflow-y-auto">
-                    {BOOKMARKLET_CODE}
-                  </code>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(BOOKMARKLET_CODE);
-                      alert('Bookmarklet code copied! Create a new bookmark and paste this as the URL.');
-                    }}
-                    className="absolute top-1 right-1 p-1.5 bg-blue-100 hover:bg-blue-200 rounded text-blue-700 transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Works With List */}
-            <div className="flex flex-wrap gap-2 justify-center">
-              <span className="text-xs text-slate-400">Works with:</span>
-              {['LinkedIn', 'Workable', 'Indeed', 'Glassdoor', 'JobStreet', 'All job boards'].map((site) => (
-                <span key={site} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">
-                  {site}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
