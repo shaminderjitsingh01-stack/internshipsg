@@ -1207,16 +1207,16 @@ export default function Home() {
         <section className="relative z-10 max-w-6xl mx-auto px-4 pt-16 sm:pt-24 pb-16 text-center">
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8 border ${isDarkTheme ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-red-50 text-red-600 border-red-200'}`}>
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            Singapore's #1 Interview Prep
+            Where Singapore's Top Intern Talent Proves Themselves
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
-            Ace Your Internship
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-500 block">Interview with AI</span>
+            Build Your Profile.
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-500 block">Get Noticed by Employers.</span>
           </h1>
 
           <p className={`text-lg sm:text-xl mb-6 max-w-2xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
-            Practice with our AI interviewer, get instant feedback, and land your dream internship.
+            Practice interviews, climb the leaderboard, earn badges, and showcase your skills to top Singapore employers.
           </p>
 
           {/* Social Proof */}
@@ -1227,7 +1227,7 @@ export default function Home() {
               ))}
             </div>
             <span className={`text-sm font-medium ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>
-              Join <span className="text-red-500 font-bold">1,000+</span> students preparing for interviews
+              Join <span className="text-red-500 font-bold">1,000+</span> students competing on the leaderboard
             </span>
           </div>
 
@@ -1288,9 +1288,9 @@ export default function Home() {
           {/* Stats */}
           <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
             {[
-              { value: "30 sec", label: "To Get Started" },
-              { value: "Real-Time", label: "AI Feedback" },
-              { value: "Unlimited", label: "Practice Sessions" },
+              { value: "25+", label: "Badges to Earn" },
+              { value: "5", label: "Talent Tiers" },
+              { value: "12", label: "Top Companies" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className={`text-3xl sm:text-4xl font-bold mb-1 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{stat.value}</div>
@@ -1304,14 +1304,14 @@ export default function Home() {
         <section className={`relative z-10 py-20 border-t ${isDarkTheme ? 'border-white/5' : 'border-slate-100'}`}>
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">How It Works</h2>
-            <p className={`text-center mb-12 max-w-xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Get interview-ready in minutes with our simple 4-step process</p>
+            <p className={`text-center mb-12 max-w-xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Build your talent profile and get noticed by employers</p>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { num: 1, icon: "👤", title: "Choose Your Field", desc: "Select your target internship role and industry" },
-                { num: 2, icon: "📄", title: "Add Your Resume", desc: "Paste or upload your resume for personalized questions" },
-                { num: 3, icon: "🎤", title: "Practice Interview", desc: "Have a real conversation with our AI interviewer" },
-                { num: 4, icon: "📊", title: "Get Feedback", desc: "Receive detailed scores and improvement tips" },
+                { num: 1, icon: "👤", title: "Create Your Profile", desc: "Set up your public profile with skills, school, and target role" },
+                { num: 2, icon: "🎤", title: "Practice & Improve", desc: "Complete AI interviews and earn XP with every session" },
+                { num: 3, icon: "🏆", title: "Climb the Ranks", desc: "Rise through talent tiers from Bronze to Elite" },
+                { num: 4, icon: "💼", title: "Get Discovered", desc: "Top performers get noticed by partner employers" },
               ].map((step) => (
                 <div key={step.num} className={`group relative rounded-2xl p-6 transition-all hover:scale-105 border ${isDarkTheme ? 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-red-500/50' : 'bg-white hover:bg-red-50 border-slate-200 hover:border-red-300 shadow-sm hover:shadow-md'}`}>
                   <div className="absolute -top-3 -left-3 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-sm font-bold shadow-lg text-white">
@@ -1330,16 +1330,16 @@ export default function Home() {
         <section className={`relative z-10 py-20 ${isDarkTheme ? 'bg-gradient-to-b from-transparent to-red-950/20' : 'bg-gradient-to-b from-transparent to-red-50/50'}`}>
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">Why Students Love Us</h2>
-            <p className={`text-center mb-12 max-w-xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Everything you need to nail your internship interview</p>
+            <p className={`text-center mb-12 max-w-xl mx-auto ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Everything you need to stand out and get hired</p>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { icon: "🤖", title: "AI-Powered Questions", desc: "Questions tailored to your resume and target role" },
-                { icon: "🎥", title: "Video Practice", desc: "Practice with camera on, just like a real interview" },
-                { icon: "⚡", title: "Instant Feedback", desc: "Get scores and tips immediately after each answer" },
-                { icon: "📈", title: "Track Progress", desc: "See your improvement over time with detailed analytics" },
-                { icon: "🎯", title: "Job-Specific Prep", desc: "Prepare for specific job postings with custom questions" },
-                { icon: "💼", title: "Employer Visibility", desc: "Top performers may be noticed by partner employers" },
+                { icon: "🏆", title: "Talent Leaderboard", desc: "Compete with students across Singapore and prove your worth" },
+                { icon: "🎖️", title: "25+ Badges", desc: "Earn achievements for streaks, interviews, and milestones" },
+                { icon: "📊", title: "Public Profiles", desc: "Showcase your scores, badges, and skills to employers" },
+                { icon: "🏢", title: "Company-Specific Prep", desc: "Practice for DBS, Grab, Shopee, Google and 12+ companies" },
+                { icon: "🎯", title: "Industry Tracks", desc: "Follow guided learning paths for your target industry" },
+                { icon: "💼", title: "Employer Discovery", desc: "Top-tier talent gets noticed by partner employers" },
               ].map((feature) => (
                 <div key={feature.title} className={`rounded-2xl p-6 transition-all border ${isDarkTheme ? 'bg-white/5 border-white/10 hover:border-red-500/30' : 'bg-white border-slate-200 hover:border-red-300 shadow-sm hover:shadow-md'}`}>
                   <div className="text-3xl mb-4">{feature.icon}</div>
@@ -1358,9 +1358,9 @@ export default function Home() {
 
             <div className="grid sm:grid-cols-3 gap-6">
               {[
-                { name: "Sarah L.", role: "NUS Business", text: "This helped me land my dream internship at a Big 4 firm. The AI feedback was incredibly accurate!" },
-                { name: "Marcus T.", role: "NTU Engineering", text: "Practiced 5 times before my interview and got an offer. The video practice really helped my confidence." },
-                { name: "Priya K.", role: "SMU Computing", text: "Way better than practicing with friends. The AI asks tough questions I wouldn't have thought of." },
+                { name: "Sarah L.", role: "NUS Business", text: "Reached Gold tier in 2 weeks! The leaderboard motivated me to practice daily. Landed a Big 4 internship!" },
+                { name: "Marcus T.", role: "NTU Engineering", text: "My public profile helped me stand out. A recruiter from Grab reached out after seeing my badges." },
+                { name: "Priya K.", role: "SMU Computing", text: "The company-specific prep for Google was spot on. 10/10 would recommend to any intern hopeful." },
               ].map((testimonial) => (
                 <div key={testimonial.name} className={`rounded-2xl p-6 border ${isDarkTheme ? 'bg-gradient-to-br from-white/10 to-white/5 border-white/10' : 'bg-gradient-to-br from-slate-50 to-white border-slate-200 shadow-sm'}`}>
                   <div className="flex items-center gap-1 text-yellow-400 mb-4">
@@ -1384,8 +1384,8 @@ export default function Home() {
         {/* Final CTA */}
         <section className="relative z-10 py-20">
           <div className="max-w-3xl mx-auto px-4 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Ace Your Interview?</h2>
-            <p className={`mb-8 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Start practicing in 30 seconds - completely free, no credit card required</p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Prove Yourself?</h2>
+            <p className={`mb-8 ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Join 1,000+ students building their talent profile - completely free</p>
 
             {status === "authenticated" ? (
               <button
