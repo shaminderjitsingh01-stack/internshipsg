@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// CORS headers for cross-origin bookmarklet requests
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 // Simple in-memory store for imported job descriptions (expires after 5 minutes)
 const importStore = new Map<string, { text: string; timestamp: number }>();
 
@@ -18,6 +25,11 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
+// Handle CORS preflight
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 export async function POST(request: NextRequest) {
   try {
     cleanupOldEntries();
@@ -27,7 +39,7 @@ export async function POST(request: NextRequest) {
     if (!text || typeof text !== "string" || text.length < 50) {
       return NextResponse.json(
         { error: "Invalid or too short text" },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -38,12 +50,12 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now(),
     });
 
-    return NextResponse.json({ id });
+    return NextResponse.json({ id }, { headers: corsHeaders });
   } catch (error) {
     console.error("Import job error:", error);
     return NextResponse.json(
       { error: "Failed to store job description" },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }
@@ -55,7 +67,7 @@ export async function GET(request: NextRequest) {
     const id = request.nextUrl.searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+      return NextResponse.json({ error: "Missing ID" }, { status: 400, headers: corsHeaders });
     }
 
     const data = importStore.get(id);
@@ -63,19 +75,19 @@ export async function GET(request: NextRequest) {
     if (!data) {
       return NextResponse.json(
         { error: "Import expired or not found" },
-        { status: 404 }
+        { status: 404, headers: corsHeaders }
       );
     }
 
     // Delete after retrieval (one-time use)
     importStore.delete(id);
 
-    return NextResponse.json({ text: data.text });
+    return NextResponse.json({ text: data.text }, { headers: corsHeaders });
   } catch (error) {
     console.error("Get import error:", error);
     return NextResponse.json(
       { error: "Failed to retrieve job description" },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }
