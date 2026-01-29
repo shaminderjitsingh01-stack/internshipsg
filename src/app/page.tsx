@@ -1193,7 +1193,7 @@ export default function Home() {
                 </a>
               ) : (
                 <button
-                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                  onClick={() => signIn("google", { callbackUrl: "/home" })}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${isDarkTheme ? 'bg-white/10 hover:bg-white/20 border-white/10 text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'}`}
                 >
                   Sign In
@@ -1250,7 +1250,7 @@ export default function Home() {
               <div className="space-y-3">
                 {/* Google Sign In - Primary */}
                 <button
-                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                  onClick={() => signIn("google", { callbackUrl: "/home" })}
                   className="w-full group px-8 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 text-white"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -1390,7 +1390,7 @@ export default function Home() {
               </a>
             ) : (
               <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                onClick={() => signIn("google", { callbackUrl: "/home" })}
                 className="px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 mx-auto text-white"
               >
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
