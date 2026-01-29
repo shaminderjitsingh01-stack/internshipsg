@@ -1188,8 +1188,8 @@ export default function Home() {
                 )}
               </button>
               {status === "authenticated" ? (
-                <a href="/dashboard" className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-all text-white">
-                  Dashboard
+                <a href="/home" className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-all text-white">
+                  My Feed
                 </a>
               ) : (
                 <button
@@ -1236,10 +1236,10 @@ export default function Home() {
             {status === "authenticated" ? (
               <div className="space-y-4">
                 <a
-                  href="/dashboard"
+                  href="/home"
                   className="w-full group px-8 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-3 text-white"
                 >
-                  Go to Dashboard
+                  Go to Feed
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -1383,10 +1383,10 @@ export default function Home() {
 
             {status === "authenticated" ? (
               <a
-                href="/dashboard"
+                href="/home"
                 className="inline-block px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-2xl font-bold text-xl transition-all shadow-lg shadow-red-500/25 text-white"
               >
-                Go to Dashboard
+                Go to Feed
               </a>
             ) : (
               <button
@@ -1516,8 +1516,8 @@ export default function Home() {
                 )}
               </button>
               {session && (
-                <a href="/dashboard" className={`text-sm ${isDarkTheme ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'}`}>
-                  Dashboard
+                <a href="/home" className={`text-sm ${isDarkTheme ? 'text-slate-300 hover:text-red-400' : 'text-slate-600 hover:text-red-600'}`}>
+                  My Feed
                 </a>
               )}
             </div>
