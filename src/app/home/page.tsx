@@ -64,7 +64,7 @@ export default function HomeFeed() {
 
       const currentOffset = isLoadMore ? offset : 0;
       const res = await fetch(
-        `/api/social/posts?email=${encodeURIComponent(session.user.email)}&type=feed&limit=20&offset=${currentOffset}`
+        `/api/social/posts?email=${encodeURIComponent(session.user?.email)}&type=feed&limit=20&offset=${currentOffset}`
       );
 
       if (res.ok) {
@@ -200,19 +200,19 @@ export default function HomeFeed() {
 
             {/* Profile Dropdown */}
             <Link
-              href={`/u/${session.user.email?.split("@")[0]}`}
+              href={`/u/${session.user?.email?.split("@")[0]}`}
               className="flex items-center gap-2"
             >
-              {session.user.image ? (
+              {session.user?.image ? (
                 <img
-                  src={session.user.image}
-                  alt={session.user.name || "Profile"}
+                  src={session.user?.image}
+                  alt={session.user?.name || "Profile"}
                   className="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700"
                 />
               ) : (
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isDarkTheme ? 'bg-red-900/50' : 'bg-red-100'}`}>
                   <span className="text-red-600 font-semibold">
-                    {session.user.name?.charAt(0) || "U"}
+                    {session.user?.name?.charAt(0) || "U"}
                   </span>
                 </div>
               )}
@@ -227,7 +227,7 @@ export default function HomeFeed() {
           {/* Left Sidebar - Stats */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
-              <SidebarStats userEmail={session.user.email!} userName={session.user.name || undefined} userImage={session.user.image || undefined} />
+              <SidebarStats userEmail={session.user?.email!} userName={session.user?.name || undefined} userImage={session.user?.image || undefined} />
             </div>
           </aside>
 
@@ -235,9 +235,9 @@ export default function HomeFeed() {
           <div className="flex-1 max-w-2xl">
             {/* Create Post */}
             <CreatePost
-              userEmail={session.user.email!}
-              userName={session.user.name || ""}
-              userImage={session.user.image || undefined}
+              userEmail={session.user?.email!}
+              userName={session.user?.name || ""}
+              userImage={session.user?.image || undefined}
               onPostCreated={handlePostCreated}
             />
 
@@ -264,7 +264,7 @@ export default function HomeFeed() {
                   <PostCard
                     key={post.id}
                     post={post}
-                    currentUserEmail={session.user.email!}
+                    currentUserEmail={session.user?.email!}
                     onDelete={handlePostDeleted}
                   />
                 ))
@@ -297,7 +297,7 @@ export default function HomeFeed() {
           {/* Right Sidebar - Suggestions */}
           <aside className="hidden xl:block w-72 flex-shrink-0">
             <div className="sticky top-24">
-              <SuggestedUsers currentUserEmail={session.user.email!} />
+              <SuggestedUsers currentUserEmail={session.user?.email!} />
             </div>
           </aside>
         </div>

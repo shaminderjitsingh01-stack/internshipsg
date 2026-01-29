@@ -79,7 +79,7 @@ function MessagesContent() {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/messages?email=${encodeURIComponent(session.user.email)}`
+        `/api/messages?email=${encodeURIComponent(session.user?.email)}`
       );
 
       if (res.ok) {
@@ -115,7 +115,7 @@ function MessagesContent() {
     try {
       setSearchingUsers(true);
       const res = await fetch(
-        `/api/messages/search?email=${encodeURIComponent(session.user.email)}&q=${encodeURIComponent(query)}`
+        `/api/messages/search?email=${encodeURIComponent(session.user?.email)}&q=${encodeURIComponent(query)}`
       );
 
       if (res.ok) {
@@ -200,7 +200,7 @@ function MessagesContent() {
     try {
       setLoadingMessages(true);
       const res = await fetch(
-        `/api/messages/${conversationId}?email=${encodeURIComponent(session.user.email)}`
+        `/api/messages/${conversationId}?email=${encodeURIComponent(session.user?.email)}`
       );
 
       if (res.ok) {
@@ -217,7 +217,7 @@ function MessagesContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             conversation_id: conversationId,
-            user_email: session.user.email,
+            user_email: session.user?.email,
           }),
         });
 
@@ -271,7 +271,7 @@ function MessagesContent() {
     const tempMessage: Message = {
       id: `temp-${Date.now()}`,
       content: messageContent,
-      sender_email: session.user.email,
+      sender_email: session.user?.email,
       is_read: false,
       created_at: new Date().toISOString(),
     };
@@ -282,7 +282,7 @@ function MessagesContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sender_email: session.user.email,
+          sender_email: session.user?.email,
           ...(isNewConversation
             ? { recipient_email: recipientEmail }
             : { conversation_id: activeConversationId }),
@@ -469,19 +469,19 @@ function MessagesContent() {
 
             {/* Profile */}
             <Link
-              href={`/u/${session.user.email?.split("@")[0]}`}
+              href={`/u/${session.user?.email?.split("@")[0]}`}
               className="flex items-center gap-2"
             >
-              {session.user.image ? (
+              {session.user?.image ? (
                 <img
-                  src={session.user.image}
-                  alt={session.user.name || "Profile"}
+                  src={session.user?.image}
+                  alt={session.user?.name || "Profile"}
                   className="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700"
                 />
               ) : (
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isDarkTheme ? 'bg-red-900/50' : 'bg-red-100'}`}>
                   <span className="text-red-600 font-semibold">
-                    {session.user.name?.charAt(0) || "U"}
+                    {session.user?.name?.charAt(0) || "U"}
                   </span>
                 </div>
               )}
@@ -593,7 +593,7 @@ function MessagesContent() {
                               : 'text-slate-500'
                         }`}>
                           {conv.lastMessage
-                            ? conv.lastMessage.sender_email === session.user.email
+                            ? conv.lastMessage.sender_email === session.user?.email
                               ? `You: ${conv.lastMessage.content}`
                               : conv.lastMessage.content
                             : "No messages yet"}
@@ -701,7 +701,7 @@ function MessagesContent() {
                     </div>
                   ) : (
                     messages.map((msg, index) => {
-                      const isOwn = msg.sender_email === session.user.email;
+                      const isOwn = msg.sender_email === session.user?.email;
                       const showAvatar = !isOwn && (index === 0 || messages[index - 1].sender_email !== msg.sender_email);
 
                       return (

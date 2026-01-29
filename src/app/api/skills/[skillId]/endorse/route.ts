@@ -102,16 +102,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Note: The trigger will automatically update the endorsement_count
 
     // Create notification for the skill owner
-    await supabase.from("notifications").insert({
-      user_email: skill.user_email,
-      type: "endorsement",
-      actor_email: endorser_email,
-      title: "New skill endorsement",
-      body: `endorsed your ${skill.skill_name} skill`,
-      link: `/profile`,
-    }).catch(() => {
+    try {
+      await supabase.from("notifications").insert({
+        user_email: skill.user_email,
+        type: "endorsement",
+        actor_email: endorser_email,
+        title: "New skill endorsement",
+        body: `endorsed your ${skill.skill_name} skill`,
+        link: `/profile`,
+      });
+    } catch {
       // Ignore notification errors
-    });
+    }
 
     return NextResponse.json({
       success: true,

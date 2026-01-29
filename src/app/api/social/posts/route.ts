@@ -196,10 +196,12 @@ export async function POST(request: NextRequest) {
 
         if (hashtag) {
           // Link post to hashtag
-          await supabase.from("post_hashtags").insert({
-            post_id: post.id,
-            hashtag_id: hashtag.id,
-          }).catch(() => {});
+          try {
+            await supabase.from("post_hashtags").insert({
+              post_id: post.id,
+              hashtag_id: hashtag.id,
+            });
+          } catch {}
 
           // Increment hashtag count
           await supabase

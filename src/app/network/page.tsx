@@ -265,7 +265,7 @@ export default function NetworkPage() {
         });
 
         if (session?.user?.email) {
-          params.append("email", session.user.email);
+          params.append("email", session.user?.email);
         }
 
         const leaderboardRes = await fetch(`/api/leaderboard?${params}`);
@@ -278,8 +278,8 @@ export default function NetworkPage() {
         // If logged in, get following list and user profile
         if (session?.user?.email) {
           const [followingRes, profileRes] = await Promise.all([
-            fetch(`/api/social/follow?email=${encodeURIComponent(session.user.email)}&type=following`),
-            fetch(`/api/profile?email=${encodeURIComponent(session.user.email)}`),
+            fetch(`/api/social/follow?email=${encodeURIComponent(session.user?.email)}&type=following`),
+            fetch(`/api/profile?email=${encodeURIComponent(session.user?.email)}`),
           ]);
 
           if (followingRes.ok) {
@@ -336,7 +336,7 @@ export default function NetworkPage() {
   // Filter users based on search and filters
   const filteredUsers = allUsers.filter((user) => {
     // Exclude current user
-    if (session?.user?.email && (user.email === session.user.email || user.username === session.user.email?.split("@")[0])) {
+    if (session?.user?.email && (user.email === session.user?.email || user.username === session.user?.email?.split("@")[0])) {
       return false;
     }
 
@@ -377,7 +377,7 @@ export default function NetworkPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            follower_email: session.user.email,
+            follower_email: session.user?.email,
             following_email: targetEmail,
           }),
         });
@@ -406,7 +406,7 @@ export default function NetworkPage() {
 
       try {
         const res = await fetch(
-          `/api/social/follow?follower=${encodeURIComponent(session.user.email)}&following=${encodeURIComponent(targetEmail)}`,
+          `/api/social/follow?follower=${encodeURIComponent(session.user?.email)}&following=${encodeURIComponent(targetEmail)}`,
           { method: "DELETE" }
         );
 

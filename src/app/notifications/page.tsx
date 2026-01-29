@@ -35,7 +35,7 @@ interface GroupedNotifications {
   earlier: Notification[];
 }
 
-const NOTIFICATION_ICONS: Record<string, { icon: JSX.Element; bgClass: string }> = {
+const NOTIFICATION_ICONS: Record<string, { icon: React.ReactNode; bgClass: string }> = {
   follow: {
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@ export default function NotificationsPage() {
 
     try {
       const res = await fetch(
-        `/api/social/notifications?email=${encodeURIComponent(session.user.email)}`
+        `/api/social/notifications?email=${encodeURIComponent(session.user?.email)}`
       );
 
       if (res.ok) {
@@ -209,7 +209,7 @@ export default function NotificationsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: session.user.email,
+          email: session.user?.email,
           notification_ids: [notificationId],
         }),
       });
@@ -235,7 +235,7 @@ export default function NotificationsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: session.user.email,
+          email: session.user?.email,
           mark_all: true,
         }),
       });

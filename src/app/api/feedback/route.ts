@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
+let supabase: SupabaseClient | null = null;
+
+function getSupabase() {
+  if (!supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+    supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY
+    );
+  }
+  return supabase;
+}
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FEEDBACK_EMAIL = "hello@shaminder.sg";
@@ -19,20 +26,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Feedback is required" }, { status: 400 });
     }
 
-    // Store in Supabase
-    const { data, error } = await supabase
-      .from("feedback")
-      .insert({
-        type: type || "general",
-        content: feedback.trim(),
-        email: email || null,
-        page: page || null,
-        user_agent: userAgent || null,
-        created_at: timestamp || new Date().toISOString(),
-        status: "new",
-      })
-      .select()
-      .single();
+    const db = getSupabase();
+    let data = null;
+    let error = null;
+
+    // Store in Supabase if configured
+    if (db) {
+      const result = await db
+        .from("feedback")
+        .insert({
+          type: type || "general",
+          content: feedback.trim(),
+          email: email || null,
+          page: page || null,
+          user_agent: userAgent || null,
+          created_at: timestamp || new Date().toISOString(),
+          status: "new",
+        })
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error("Failed to save feedback:", error);
@@ -78,12 +93,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const db = getSupabase();
+    if (!db) {
+      return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+    }
+
     // Simple admin endpoint to view feedback
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const limit = parseInt(searchParams.get("limit") || "50");
 
-    let query = supabase
+    let query = db
       .from("feedback")
       .select("*")
       .order("created_at", { ascending: false })

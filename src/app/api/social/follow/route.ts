@@ -171,22 +171,26 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     // Update counts
-    await Promise.all([
-      supabase.rpc("increment_follower_count", { user_email: following_email }),
-      supabase.rpc("increment_following_count", { user_email: follower_email }),
-    ]).catch(() => {
+    try {
+      await Promise.all([
+        supabase.rpc("increment_follower_count", { user_email: following_email }),
+        supabase.rpc("increment_following_count", { user_email: follower_email }),
+      ]);
+    } catch {
       // RPC might not exist yet, ignore
-    });
+    }
 
     // Create notification for the followed user
-    await supabase.from("notifications").insert({
-      user_email: following_email,
-      type: "follow",
-      actor_email: follower_email,
-      title: "New follower",
-      body: "started following you",
-      link: `/u/${follower_email}`,
-    }).catch(() => {});
+    try {
+      await supabase.from("notifications").insert({
+        user_email: following_email,
+        type: "follow",
+        actor_email: follower_email,
+        title: "New follower",
+        body: "started following you",
+        link: `/u/${follower_email}`,
+      });
+    } catch {}
 
     return NextResponse.json({ success: true, message: "Followed successfully" });
   } catch (error) {
@@ -219,10 +223,12 @@ export async function DELETE(request: NextRequest) {
     if (error) throw error;
 
     // Update counts
-    await Promise.all([
-      supabase.rpc("decrement_follower_count", { user_email: followingEmail }),
-      supabase.rpc("decrement_following_count", { user_email: followerEmail }),
-    ]).catch(() => {});
+    try {
+      await Promise.all([
+        supabase.rpc("decrement_follower_count", { user_email: followingEmail }),
+        supabase.rpc("decrement_following_count", { user_email: followerEmail }),
+      ]);
+    } catch {}
 
     return NextResponse.json({ success: true, message: "Unfollowed successfully" });
   } catch (error) {

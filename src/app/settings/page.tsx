@@ -77,7 +77,7 @@ export default function SettingsPage() {
       if (!session?.user?.email) return;
 
       try {
-        const res = await fetch(`/api/profile?email=${encodeURIComponent(session.user.email)}`);
+        const res = await fetch(`/api/profile?email=${encodeURIComponent(session.user?.email)}`);
         if (res.ok) {
           const data = await res.json();
           if (data.profile) {
@@ -85,8 +85,8 @@ export default function SettingsPage() {
             setShowOnLeaderboard(data.profile.show_on_leaderboard ?? true);
             setIsLooking(data.profile.is_looking ?? true);
             setUserData({
-              email: session.user.email,
-              name: session.user.name || null,
+              email: session.user?.email,
+              name: session.user?.name || null,
               auth_provider: data.profile.auth_provider || "unknown",
               created_at: data.profile.created_at || new Date().toISOString(),
               is_public: data.profile.is_public ?? false,
@@ -95,10 +95,10 @@ export default function SettingsPage() {
             });
 
             // Check if Google account is connected
-            if (data.profile.auth_provider === "google" || session.user.image?.includes("google")) {
+            if (data.profile.auth_provider === "google" || session.user?.image?.includes("google")) {
               setConnectedAccounts([{
                 provider: "google",
-                email: session.user.email,
+                email: session.user?.email,
                 connected_at: data.profile.created_at || new Date().toISOString(),
               }]);
             }
@@ -134,7 +134,7 @@ export default function SettingsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: session.user.email,
+          email: session.user?.email,
           [setting]: value,
         }),
       });
@@ -353,8 +353,8 @@ export default function SettingsPage() {
             <div className="flex items-center gap-2 sm:gap-3">
               {session.user?.image ? (
                 <img
-                  src={session.user.image}
-                  alt={session.user.name || "User"}
+                  src={session.user?.image}
+                  alt={session.user?.name || "User"}
                   className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 ${isDarkTheme ? 'border-slate-700' : 'border-slate-200'}`}
                 />
               ) : (
@@ -412,19 +412,19 @@ export default function SettingsPage() {
             {/* Profile Settings Section */}
             {activeSection === "profile" && session?.user?.email && (
               <ProfileSettings
-                userEmail={session.user.email}
-                userName={session.user.name || undefined}
+                userEmail={session.user?.email}
+                userName={session.user?.name || undefined}
               />
             )}
 
             {/* Experience & Education Section */}
             {activeSection === "experience" && session?.user?.email && (
-              <EducationExperienceSettings userEmail={session.user.email} />
+              <EducationExperienceSettings userEmail={session.user?.email} />
             )}
 
             {/* Projects Section */}
             {activeSection === "projects" && session?.user?.email && (
-              <ProjectsSection userEmail={session.user.email} isOwnProfile={true} />
+              <ProjectsSection userEmail={session.user?.email} isOwnProfile={true} />
             )}
 
             {/* Account Settings Section */}
@@ -727,7 +727,7 @@ export default function SettingsPage() {
 
             {/* Notification Settings Section */}
             {activeSection === "notifications" && session?.user?.email && (
-              <NotificationPreferences userEmail={session.user.email} />
+              <NotificationPreferences userEmail={session.user?.email} />
             )}
 
             {/* Connected Accounts Section */}

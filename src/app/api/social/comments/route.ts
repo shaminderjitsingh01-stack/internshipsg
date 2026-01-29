@@ -114,16 +114,18 @@ export async function POST(request: NextRequest) {
 
     // Notify post author (unless commenting on own post)
     if (post && post.author_email !== author_email) {
-      await supabase.from("notifications").insert({
-        user_email: post.author_email,
-        type: "comment",
-        actor_email: author_email,
-        post_id,
-        comment_id: comment.id,
-        title: "New comment",
-        body: "commented on your post",
-        link: `/post/${post_id}`,
-      }).catch(() => {});
+      try {
+        await supabase.from("notifications").insert({
+          user_email: post.author_email,
+          type: "comment",
+          actor_email: author_email,
+          post_id,
+          comment_id: comment.id,
+          title: "New comment",
+          body: "commented on your post",
+          link: `/post/${post_id}`,
+        });
+      } catch {}
     }
 
     // If replying to a comment, notify the original commenter
@@ -135,16 +137,18 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (parentComment && parentComment.author_email !== author_email) {
-        await supabase.from("notifications").insert({
-          user_email: parentComment.author_email,
-          type: "comment",
-          actor_email: author_email,
-          post_id,
-          comment_id: comment.id,
-          title: "New reply",
-          body: "replied to your comment",
-          link: `/post/${post_id}`,
-        }).catch(() => {});
+        try {
+          await supabase.from("notifications").insert({
+            user_email: parentComment.author_email,
+            type: "comment",
+            actor_email: author_email,
+            post_id,
+            comment_id: comment.id,
+            title: "New reply",
+            body: "replied to your comment",
+            link: `/post/${post_id}`,
+          });
+        } catch {}
       }
     }
 

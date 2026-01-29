@@ -67,7 +67,7 @@ interface SearchHashtag {
 type TabType = "all" | "people" | "posts" | "jobs" | "hashtags";
 
 // Constants
-const TABS: { id: TabType; label: string; icon: JSX.Element }[] = [
+const TABS: { id: TabType; label: string; icon: React.ReactNode }[] = [
   {
     id: "all",
     label: "All",
@@ -165,7 +165,7 @@ function formatSalary(min: number | null, max: number | null, currency: string =
   return "";
 }
 
-function highlightText(text: string, query: string): JSX.Element {
+function highlightText(text: string, query: string): React.ReactNode {
   if (!query) return <>{text}</>;
 
   const parts = text.split(new RegExp(`(${query})`, "gi"));
@@ -567,7 +567,7 @@ function SearchPageContent() {
         });
 
         if (session?.user?.email) {
-          params.set("email", session.user.email);
+          params.set("email", session.user?.email);
         }
 
         if (tab === "people" && schoolFilter) {

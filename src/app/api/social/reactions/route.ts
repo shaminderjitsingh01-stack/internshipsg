@@ -109,15 +109,17 @@ export async function POST(request: NextRequest) {
 
     // Create notification (don't notify yourself)
     if (post && post.author_email !== user_email) {
-      await supabase.from("notifications").insert({
-        user_email: post.author_email,
-        type: "reaction",
-        actor_email: user_email,
-        post_id,
-        title: "New reaction",
-        body: `reacted ${getReactionEmoji(reaction_type)} to your post`,
-        link: `/post/${post_id}`,
-      }).catch(() => {});
+      try {
+        await supabase.from("notifications").insert({
+          user_email: post.author_email,
+          type: "reaction",
+          actor_email: user_email,
+          post_id,
+          title: "New reaction",
+          body: `reacted ${getReactionEmoji(reaction_type)} to your post`,
+          link: `/post/${post_id}`,
+        });
+      } catch {}
     }
 
     return NextResponse.json({ success: true, action: "added", reaction_type });
