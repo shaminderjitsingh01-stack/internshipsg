@@ -10,7 +10,7 @@ import { useTheme } from "@/context/ThemeContext";
 function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || "/home";
   const error = searchParams.get("error");
   const referralCode = searchParams.get("ref");
   const { isDarkTheme } = useTheme();
