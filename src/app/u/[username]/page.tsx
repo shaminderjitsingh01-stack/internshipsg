@@ -21,36 +21,58 @@ async function getProfile(username: string) {
     return null;
   }
 
-  const { data: user, error } = await supabase
-    .from("user accounts")
+  // First, fetch from profiles table (where settings are saved)
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
     .select("*")
     .eq("username", username.toLowerCase())
     .single();
 
-  if (error || !user || !user.is_public) {
+  if (profileError || !profile || !profile.is_public) {
     return null;
   }
+
+  // Fetch gamification data from user accounts table
+  const { data: userAccount } = await supabase
+    .from("user accounts")
+    .select("name, image_url, xp, level, tier, profile_views, created_at")
+    .eq("email", profile.email)
+    .single();
 
   // Fetch streak data
   const { data: streakData } = await supabase
     .from("streaks")
     .select("*")
-    .eq("user_email", user.email)
+    .eq("user_email", profile.email)
     .single();
 
   // Fetch badges
   const { data: badges } = await supabase
     .from("user_badges")
     .select("*")
-    .eq("user_email", user.email)
+    .eq("user_email", profile.email)
     .order("unlocked_at", { ascending: true });
 
   // Fetch interview stats
   const { data: interviews } = await supabase
     .from("interviews")
     .select("score")
-    .eq("user_email", user.email)
+    .eq("user_email", profile.email)
     .not("score", "is", null);
+
+  // Fetch education
+  const { data: education } = await supabase
+    .from("user_education")
+    .select("*")
+    .eq("user_email", profile.email)
+    .order("start_date", { ascending: false });
+
+  // Fetch experience
+  const { data: experience } = await supabase
+    .from("user_experience")
+    .select("*")
+    .eq("user_email", profile.email)
+    .order("start_date", { ascending: false });
 
   const averageScore =
     interviews && interviews.length > 0
@@ -62,29 +84,31 @@ async function getProfile(username: string) {
       : null;
 
   return {
-    username: user.username,
-    name: user.name,
-    image: user.image,
-    school: user.school,
-    year_of_study: user.year_of_study,
-    target_role: user.target_role,
-    bio: user.bio,
-    linkedin_url: user.linkedin_url,
-    portfolio_url: user.portfolio_url,
-    skills: user.skills || [],
-    preferred_industries: user.preferred_industries || [],
-    is_looking: user.is_looking,
-    xp: user.xp || 0,
-    level: user.level || 1,
-    tier: user.tier || "bronze",
-    profile_views: user.profile_views || 0,
-    created_at: user.created_at,
+    username: profile.username,
+    name: profile.display_name || userAccount?.name || "Anonymous",
+    image: userAccount?.image_url || null,
+    school: profile.school,
+    year_of_study: profile.year_of_study,
+    target_role: profile.target_role,
+    bio: profile.bio,
+    linkedin_url: profile.linkedin_url,
+    portfolio_url: profile.portfolio_url,
+    skills: profile.skills || [],
+    preferred_industries: profile.preferred_industries || [],
+    is_looking: profile.is_looking,
+    xp: userAccount?.xp || 0,
+    level: userAccount?.level || 1,
+    tier: userAccount?.tier || "bronze",
+    profile_views: userAccount?.profile_views || 0,
+    created_at: userAccount?.created_at || profile.created_at,
     current_streak: streakData?.current_streak || 0,
     longest_streak: streakData?.longest_streak || 0,
     total_activities: streakData?.total_activities || 0,
     average_score: averageScore,
     total_interviews: interviews?.length || 0,
     badges: badges || [],
+    education: education || [],
+    experience: experience || [],
   };
 }
 

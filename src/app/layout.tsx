@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import { ThemeProvider } from "@/context/ThemeContext";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -40,7 +41,10 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            {children}
+            <FeedbackWidget />
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
 import ProfileSettings from "@/components/ProfileSettings";
 import NotificationPreferences from "@/components/NotificationPreferences";
+import EducationExperienceSettings from "@/components/EducationExperienceSettings";
 
 interface ConnectedAccount {
   provider: string;
@@ -30,7 +31,7 @@ export default function SettingsPage() {
   const { isDarkTheme, toggleTheme } = useTheme();
 
   // State
-  const [activeSection, setActiveSection] = useState<"profile" | "account" | "privacy" | "notifications" | "connected" | "data">("profile");
+  const [activeSection, setActiveSection] = useState<"profile" | "experience" | "account" | "privacy" | "notifications" | "connected" | "data">("profile");
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
 
@@ -280,6 +281,11 @@ export default function SettingsPage() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
       </svg>
     )},
+    { id: "experience", label: "Experience & Education", icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    )},
     { id: "account", label: "Account", icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -403,6 +409,11 @@ export default function SettingsPage() {
                 userEmail={session.user.email}
                 userName={session.user.name || undefined}
               />
+            )}
+
+            {/* Experience & Education Section */}
+            {activeSection === "experience" && session?.user?.email && (
+              <EducationExperienceSettings userEmail={session.user.email} />
             )}
 
             {/* Account Settings Section */}
