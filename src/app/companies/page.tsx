@@ -80,39 +80,40 @@ export default function CompaniesPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-200 mb-6">
-            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-red-50 border border-red-200 mb-4 sm:mb-6">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
-            <span className="text-sm font-medium text-red-700">Company-Specific Interview Prep</span>
+            <span className="text-xs sm:text-sm font-medium text-red-700">Company-Specific Prep</span>
           </div>
-          <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
+          <h1 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
             Prepare for Your{" "}
             <span className="text-gradient">Dream Company</span>
           </h1>
-          <p className={`text-xl max-w-3xl mx-auto ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
+          <p className={`text-base sm:text-lg md:text-xl max-w-3xl mx-auto ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
             Get tailored interview preparation for top companies hiring interns in Singapore.
-            Real questions, insider tips, and structured practice.
           </p>
         </div>
       </section>
 
       {/* Companies Grid */}
-      <section className="pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Filter Tabs */}
-          <div className="flex flex-wrap gap-3 mb-10 justify-center">
-            <button className="tab-pill tab-pill-active">All Companies</button>
-            <button className="tab-pill tab-pill-inactive">Tech</button>
-            <button className="tab-pill tab-pill-inactive">Banking</button>
-            <button className="tab-pill tab-pill-inactive">E-commerce</button>
-            <button className="tab-pill tab-pill-inactive">Government</button>
+          {/* Filter Tabs - Scrollable on mobile */}
+          <div className="overflow-x-auto -mx-4 px-4 mb-6 sm:mb-10">
+            <div className="flex gap-2 sm:gap-3 justify-start sm:justify-center min-w-max sm:min-w-0">
+              <button className="tab-pill tab-pill-active text-xs sm:text-sm py-2 px-3 sm:px-4 min-h-[40px]">All</button>
+              <button className="tab-pill tab-pill-inactive text-xs sm:text-sm py-2 px-3 sm:px-4 min-h-[40px]">Tech</button>
+              <button className="tab-pill tab-pill-inactive text-xs sm:text-sm py-2 px-3 sm:px-4 min-h-[40px]">Banking</button>
+              <button className="tab-pill tab-pill-inactive text-xs sm:text-sm py-2 px-3 sm:px-4 min-h-[40px]">E-commerce</button>
+              <button className="tab-pill tab-pill-inactive text-xs sm:text-sm py-2 px-3 sm:px-4 min-h-[40px]">Government</button>
+            </div>
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {COMPANIES.map((company, index) => {
               const colors = industryColors[company.industry] || {
                 bg: "bg-gray-50",
@@ -124,51 +125,51 @@ export default function CompaniesPage() {
                 <Link
                   key={company.slug}
                   href={`/companies/${company.slug}`}
-                  className={`card-premium p-6 group fade-in-up ${isDarkTheme ? "bg-gray-800/80 border-gray-700" : ""}`}
+                  className={`card-premium p-4 sm:p-6 group fade-in-up ${isDarkTheme ? "bg-gray-800/80 border-gray-700" : ""}`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {/* Company Logo */}
-                  <div className="flex items-start justify-between mb-4">
-                    <CompanyLogo name={company.name} />
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <CompanyLogo name={company.name} size="sm" />
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} ${colors.border} border`}
+                      className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${colors.bg} ${colors.text} ${colors.border} border`}
                     >
                       {company.industry.split(" / ")[0]}
                     </span>
                   </div>
 
                   {/* Company Info */}
-                  <h3 className={`text-lg font-semibold mb-2 group-hover:text-red-600 transition-colors ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
+                  <h3 className={`text-base sm:text-lg font-semibold mb-1 sm:mb-2 group-hover:text-red-600 transition-colors ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
                     {company.name}
                   </h3>
-                  <p className={`text-sm mb-4 line-clamp-2 ${isDarkTheme ? "text-gray-400" : "text-gray-500"}`}>
+                  <p className={`text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2 ${isDarkTheme ? "text-gray-400" : "text-gray-500"}`}>
                     {company.description}
                   </p>
 
                   {/* Stats */}
-                  <div className="flex items-center gap-4 text-sm mb-4">
+                  <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm mb-3 sm:mb-4">
                     <div className={`flex items-center gap-1 ${isDarkTheme ? "text-gray-400" : "text-gray-500"}`}>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      {company.headquarters.split(" (")[0]}
+                      <span className="truncate max-w-[60px] sm:max-w-none">{company.headquarters.split(" (")[0]}</span>
                     </div>
                     <div className={`flex items-center gap-1 ${isDarkTheme ? "text-gray-400" : "text-gray-500"}`}>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      {company.commonQuestions.length} questions
+                      {company.commonQuestions.length} Q's
                     </div>
                   </div>
 
                   {/* Prepare Button */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <span className="text-sm font-medium text-red-600 group-hover:underline">
+                  <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100 min-h-[40px]">
+                    <span className="text-xs sm:text-sm font-medium text-red-600 group-hover:underline">
                       Start Preparing
                     </span>
                     <svg
-                      className="w-5 h-5 text-red-600 transform group-hover:translate-x-1 transition-transform"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 transform group-hover:translate-x-1 transition-transform"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -184,17 +185,16 @@ export default function CompaniesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className={`py-16 px-4 sm:px-6 lg:px-8 ${isDarkTheme ? "bg-gray-800/50" : "bg-red-50"}`}>
+      <section className={`py-10 sm:py-16 px-4 sm:px-6 lg:px-8 ${isDarkTheme ? "bg-gray-800/50" : "bg-red-50"}`}>
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className={`text-3xl font-bold mb-4 ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
+          <h2 className={`text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
             Don&apos;t see your target company?
           </h2>
-          <p className={`text-lg mb-8 ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
+          <p className={`text-sm sm:text-base md:text-lg mb-6 sm:mb-8 ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
             You can still practice with our AI interviewer using any job description.
-            Just paste the job posting and get personalized interview preparation.
           </p>
-          <Link href="/job-interview" className="btn-premium inline-flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link href="/job-interview" className="btn-premium inline-flex items-center gap-2 text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 min-h-[44px]">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             Start Custom Practice
@@ -203,17 +203,17 @@ export default function CompaniesPage() {
       </section>
 
       {/* Footer */}
-      <footer className={`py-8 px-4 border-t ${isDarkTheme ? "border-gray-800 bg-gray-900" : "border-gray-200"}`}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <footer className={`py-6 sm:py-8 px-4 border-t ${isDarkTheme ? "border-gray-800 bg-gray-900" : "border-gray-200"}`}>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">i</span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg gradient-primary flex items-center justify-center">
+              <span className="text-white font-bold text-xs sm:text-sm">i</span>
             </div>
-            <span className={`font-semibold ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
+            <span className={`font-semibold text-sm sm:text-base ${isDarkTheme ? "text-white" : "text-gray-900"}`}>
               internship.sg
             </span>
           </div>
-          <p className={`text-sm ${isDarkTheme ? "text-gray-400" : "text-gray-500"}`}>
+          <p className={`text-xs sm:text-sm text-center ${isDarkTheme ? "text-gray-400" : "text-gray-500"}`}>
             Helping Singapore students land their dream internships
           </p>
         </div>

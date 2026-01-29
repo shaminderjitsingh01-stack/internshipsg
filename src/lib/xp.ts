@@ -2,28 +2,30 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 
 // XP amounts for different actions
 export const XP_REWARDS = {
-  INTERVIEW_COMPLETE: 10,
+  INTERVIEW_COMPLETE: 50,
   INTERVIEW_SCORE_8_PLUS: 25,
-  SEVEN_DAY_STREAK: 50,
-  CHALLENGE_COMPLETE: 30,
-  CHALLENGE_EASY: 25,
-  CHALLENGE_MEDIUM: 50,
-  CHALLENGE_HARD: 100,
-  WEEKLY_WINNER: 200,
-  WEEKLY_TOP_3: 100,
-  ALL_CHALLENGES: 75,
+  SEVEN_DAY_STREAK: 30,
+  CHALLENGE_COMPLETE: 25,
+  CHALLENGE_EASY: 15,
+  CHALLENGE_MEDIUM: 25,
+  CHALLENGE_HARD: 50,
+  WEEKLY_WINNER: 100,
+  WEEKLY_TOP_3: 50,
+  ALL_CHALLENGES: 40,
   PROFILE_COMPLETE: 20,
-  DAILY_LOGIN: 5,
+  DAILY_LOGIN: 10,
   REFERRAL_SIGNUP: 100,
 };
 
-// Tier thresholds
+// Tier thresholds (designed for quick progression to encourage participation)
+// Bronze: 0 XP (start) | Silver: 50 XP (1 interview) | Gold: 200 XP (4 interviews)
+// Diamond: 500 XP (10 interviews) | Elite: Top 5% percentile
 export const TIERS = {
-  bronze: { min: 0, max: 499, color: "#CD7F32", label: "Bronze" },
-  silver: { min: 500, max: 1999, color: "#C0C0C0", label: "Silver" },
-  gold: { min: 2000, max: 4999, color: "#FFD700", label: "Gold" },
-  verified: { min: 5000, max: 9999, color: "#4F46E5", label: "Verified" },
-  elite: { min: 10000, max: Infinity, color: "#7C3AED", label: "Elite" },
+  bronze: { min: 0, max: 49, color: "#CD7F32", label: "Bronze" },
+  silver: { min: 50, max: 199, color: "#C0C0C0", label: "Silver" },
+  gold: { min: 200, max: 499, color: "#FFD700", label: "Gold" },
+  diamond: { min: 500, max: Infinity, color: "#06B6D4", label: "Diamond" },
+  elite: { min: 0, max: Infinity, color: "#7C3AED", label: "Elite" }, // Percentile-based
 };
 
 export type TierName = keyof typeof TIERS;
@@ -83,19 +85,13 @@ export function getLevelProgress(xp: number): number {
 
 // Tier calculation
 export function calculateTier(xp: number, percentile?: number): TierName {
-  // If user is in top 1% percentile, they get Elite regardless of XP
-  if (percentile !== undefined && percentile >= 99) {
+  // Elite is purely percentile-based: Top 5%
+  if (percentile !== undefined && percentile >= 95) {
     return "elite";
   }
 
-  // If user is in top 5% percentile, they get at least Verified
-  if (percentile !== undefined && percentile >= 95 && xp >= TIERS.gold.min) {
-    return "verified";
-  }
-
   // Otherwise, base tier on XP thresholds
-  if (xp >= TIERS.elite.min) return "elite";
-  if (xp >= TIERS.verified.min) return "verified";
+  if (xp >= TIERS.diamond.min) return "diamond";
   if (xp >= TIERS.gold.min) return "gold";
   if (xp >= TIERS.silver.min) return "silver";
   return "bronze";

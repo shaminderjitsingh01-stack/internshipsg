@@ -446,19 +446,19 @@ export default function DashboardPage() {
                   <div className="text-center min-w-[50px]">
                     <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold mb-1 mx-auto">S</div>
                     <span className={`block ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Silver</span>
-                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>500 XP</span>
+                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>50 XP</span>
                   </div>
                   <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
                   <div className="text-center min-w-[50px]">
                     <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold mb-1 mx-auto">G</div>
                     <span className={`block ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Gold</span>
-                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>1,000 XP</span>
+                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>200 XP</span>
                   </div>
                   <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
                   <div className="text-center min-w-[50px]">
                     <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold mb-1 mx-auto">D</div>
                     <span className={`block ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Diamond</span>
-                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>2,500 XP</span>
+                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>500 XP</span>
                   </div>
                   <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
                   <div className="text-center min-w-[50px]">
