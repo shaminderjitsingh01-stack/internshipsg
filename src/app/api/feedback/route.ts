@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_KEY!
 );
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const FEEDBACK_EMAIL = "hello@shaminder.sg";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,9 +36,37 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Failed to save feedback:", error);
-      // Still return success - we don't want to show error to user
-      // In production, you might want to log this to an error service
-      return NextResponse.json({ success: true, message: "Feedback received" });
+    }
+
+    // Send email notification
+    if (resend) {
+      try {
+        const typeEmoji = type === "bug" ? "🐛" : type === "feature" ? "💡" : "💬";
+        await resend.emails.send({
+          from: "Internship.sg <feedback@internship.sg>",
+          to: FEEDBACK_EMAIL,
+          subject: `${typeEmoji} New ${type || "general"} feedback from Internship.sg`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #dc2626;">New Feedback Received</h2>
+              <p><strong>Type:</strong> ${typeEmoji} ${type || "general"}</p>
+              <p><strong>Page:</strong> ${page || "Unknown"}</p>
+              <p><strong>User Email:</strong> ${email || "Not provided"}</p>
+              <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                <p style="margin: 0; white-space: pre-wrap;">${feedback}</p>
+              </div>
+              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+              <p style="color: #64748b; font-size: 12px;">
+                Submitted at: ${timestamp || new Date().toISOString()}<br />
+                User Agent: ${userAgent || "Unknown"}
+              </p>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.error("Failed to send feedback email:", emailError);
+        // Don't fail the request if email fails
+      }
     }
 
     return NextResponse.json({ success: true, feedback: data });
