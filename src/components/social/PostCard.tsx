@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
 import { formatDistanceToNow } from "date-fns";
@@ -15,6 +15,13 @@ interface Author {
   level: number | null;
 }
 
+interface PollOption {
+  id: string;
+  option_text: string;
+  vote_count: number;
+  percentage: number;
+}
+
 interface Post {
   id: string;
   author_email: string;
@@ -26,6 +33,8 @@ interface Post {
   reaction_count: number;
   comment_count: number;
   created_at: string;
+  poll_ends_at?: string | null;
+  poll_options?: PollOption[];
   author: Author;
   userReaction: string | null;
 }
@@ -34,6 +43,8 @@ interface Props {
   post: Post;
   currentUserEmail: string;
   onDelete?: (postId: string) => void;
+  isBookmarked?: boolean;
+  onBookmarkToggle?: (postId: string) => void;
 }
 
 const REACTIONS = [
@@ -53,7 +64,7 @@ const TIER_COLORS: Record<string, string> = {
   elite: "text-purple-500",
 };
 
-export default function PostCard({ post, currentUserEmail, onDelete }: Props) {
+export default function PostCard({ post, currentUserEmail, onDelete, isBookmarked: initialBookmarked, onBookmarkToggle }: Props) {
   const { isDarkTheme } = useTheme();
   const [showReactions, setShowReactions] = useState(false);
   const [currentReaction, setCurrentReaction] = useState(post.userReaction);
@@ -63,8 +74,92 @@ export default function PostCard({ post, currentUserEmail, onDelete }: Props) {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
+  const [bookmarked, setBookmarked] = useState(initialBookmarked ?? false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
+  // Poll state
+  const [pollOptions, setPollOptions] = useState<PollOption[]>([]);
+  const [totalVotes, setTotalVotes] = useState(0);
+  const [userVote, setUserVote] = useState<string | null>(null);
+  const [pollHasEnded, setPollHasEnded] = useState(false);
+  const [loadingPoll, setLoadingPoll] = useState(false);
+  const [votingOption, setVotingOption] = useState<string | null>(null);
 
   const isOwnPost = post.author_email === currentUserEmail;
+  const isPoll = post.post_type === "poll";
+
+  // Load poll data
+  useEffect(() => {
+    if (isPoll) {
+      loadPollData();
+    }
+  }, [post.id, isPoll]);
+
+  const loadPollData = async () => {
+    setLoadingPoll(true);
+    try {
+      const res = await fetch(`/api/social/polls?postId=${post.id}&userEmail=${currentUserEmail}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPollOptions(data.options || []);
+        setTotalVotes(data.totalVotes || 0);
+        setUserVote(data.userVote || null);
+        setPollHasEnded(data.hasEnded || false);
+      }
+    } catch (error) {
+      console.error("Failed to load poll:", error);
+    } finally {
+      setLoadingPoll(false);
+    }
+  };
+
+  const handleVote = async (optionId: string) => {
+    if (pollHasEnded || votingOption) return;
+
+    setVotingOption(optionId);
+    try {
+      const res = await fetch("/api/social/polls/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          poll_option_id: optionId,
+          user_email: currentUserEmail,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.action !== "none") {
+          // Reload poll data to get updated counts
+          await loadPollData();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to vote:", error);
+    } finally {
+      setVotingOption(null);
+    }
+  };
+
+  // Check bookmark status on mount if not provided
+  useEffect(() => {
+    if (initialBookmarked !== undefined || !currentUserEmail) return;
+
+    const checkBookmarkStatus = async () => {
+      try {
+        const res = await fetch(`/api/social/bookmarks?email=${encodeURIComponent(currentUserEmail)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const isBookmarked = data.posts?.some((p: any) => p.id === post.id) ?? false;
+          setBookmarked(isBookmarked);
+        }
+      } catch (error) {
+        // Silently fail - bookmark status is not critical
+      }
+    };
+
+    checkBookmarkStatus();
+  }, [post.id, currentUserEmail, initialBookmarked]);
 
   const handleReaction = async (reactionType: string) => {
     try {
@@ -158,6 +253,43 @@ export default function PostCard({ post, currentUserEmail, onDelete }: Props) {
     }
   };
 
+  const handleBookmark = async () => {
+    if (!currentUserEmail) return;
+
+    setBookmarkLoading(true);
+    try {
+      if (bookmarked) {
+        // Remove bookmark
+        const res = await fetch(
+          `/api/social/bookmarks?postId=${post.id}&email=${encodeURIComponent(currentUserEmail)}`,
+          { method: "DELETE" }
+        );
+        if (res.ok) {
+          setBookmarked(false);
+          onBookmarkToggle?.(post.id);
+        }
+      } else {
+        // Add bookmark
+        const res = await fetch("/api/social/bookmarks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            post_id: post.id,
+            user_email: currentUserEmail,
+          }),
+        });
+        if (res.ok) {
+          setBookmarked(true);
+          onBookmarkToggle?.(post.id);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to toggle bookmark:", error);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
+
   // Parse content for hashtags and mentions
   const renderContent = (text: string) => {
     const parts = text.split(/(\s+)/);
@@ -181,6 +313,15 @@ export default function PostCard({ post, currentUserEmail, onDelete }: Props) {
   };
 
   const currentReactionEmoji = REACTIONS.find(r => r.type === currentReaction)?.emoji;
+
+  // Calculate time remaining for poll
+  const getPollTimeRemaining = () => {
+    if (!post.poll_ends_at) return null;
+    const endsAt = new Date(post.poll_ends_at);
+    const now = new Date();
+    if (endsAt <= now) return "Poll ended";
+    return `Ends ${formatDistanceToNow(endsAt, { addSuffix: true })}`;
+  };
 
   return (
     <div className={`rounded-2xl shadow-sm border overflow-hidden ${isDarkTheme ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
@@ -213,6 +354,11 @@ export default function PostCard({ post, currentUserEmail, onDelete }: Props) {
               {post.author.tier && (
                 <span className={`text-xs ${TIER_COLORS[post.author.tier] || 'text-slate-400'}`}>
                   {post.author.tier === "verified" ? "✓" : post.author.tier === "elite" ? "★" : ""}
+                </span>
+              )}
+              {isPoll && (
+                <span className={`text-xs px-2 py-0.5 rounded-full ${isDarkTheme ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+                  Poll
                 </span>
               )}
             </div>
@@ -252,6 +398,98 @@ export default function PostCard({ post, currentUserEmail, onDelete }: Props) {
       <div className={`px-4 pb-3 ${isDarkTheme ? 'text-slate-200' : 'text-slate-800'}`}>
         <p className="whitespace-pre-wrap">{renderContent(post.content)}</p>
       </div>
+
+      {/* Poll Section */}
+      {isPoll && (
+        <div className="px-4 pb-3">
+          {loadingPoll ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {pollOptions.map(option => {
+                const isSelected = userVote === option.id;
+                const showResults = userVote !== null || pollHasEnded;
+
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => !showResults && handleVote(option.id)}
+                    disabled={pollHasEnded || votingOption !== null}
+                    className={`w-full relative overflow-hidden rounded-xl border transition-all ${
+                      pollHasEnded || votingOption !== null
+                        ? 'cursor-not-allowed'
+                        : showResults
+                          ? 'cursor-default'
+                          : 'cursor-pointer hover:border-red-400'
+                    } ${
+                      isSelected
+                        ? isDarkTheme
+                          ? 'border-red-500 bg-red-900/20'
+                          : 'border-red-500 bg-red-50'
+                        : isDarkTheme
+                          ? 'border-slate-700 bg-slate-800'
+                          : 'border-slate-200 bg-slate-50'
+                    }`}
+                  >
+                    {/* Progress bar background */}
+                    {showResults && (
+                      <div
+                        className={`absolute left-0 top-0 h-full transition-all duration-500 ${
+                          isSelected
+                            ? isDarkTheme ? 'bg-red-900/40' : 'bg-red-100'
+                            : isDarkTheme ? 'bg-slate-700/50' : 'bg-slate-200'
+                        }`}
+                        style={{ width: `${option.percentage}%` }}
+                      />
+                    )}
+
+                    <div className="relative px-4 py-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {votingOption === option.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                        ) : isSelected ? (
+                          <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                          </svg>
+                        ) : !showResults && (
+                          <div className={`w-5 h-5 rounded-full border-2 ${
+                            isDarkTheme ? 'border-slate-600' : 'border-slate-300'
+                          }`} />
+                        )}
+                        <span className={`font-medium ${
+                          isDarkTheme ? 'text-white' : 'text-slate-900'
+                        }`}>
+                          {option.option_text}
+                        </span>
+                      </div>
+
+                      {showResults && (
+                        <span className={`font-semibold ${
+                          isSelected
+                            ? 'text-red-500'
+                            : isDarkTheme ? 'text-slate-400' : 'text-slate-500'
+                        }`}>
+                          {option.percentage}%
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+
+              {/* Poll footer */}
+              <div className={`flex items-center justify-between pt-2 text-sm ${
+                isDarkTheme ? 'text-slate-400' : 'text-slate-500'
+              }`}>
+                <span>{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
+                <span>{getPollTimeRemaining()}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Image */}
       {post.image_url && (
@@ -365,6 +603,36 @@ export default function PostCard({ post, currentUserEmail, onDelete }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
           Share
+        </button>
+
+        {/* Bookmark Button */}
+        <button
+          onClick={handleBookmark}
+          disabled={bookmarkLoading || !currentUserEmail}
+          className={`py-2 px-3 rounded-lg font-medium transition-colors flex items-center justify-center ${
+            bookmarkLoading
+              ? 'opacity-50 cursor-not-allowed'
+              : bookmarked
+                ? isDarkTheme
+                  ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30'
+                  : 'bg-red-50 text-red-600 hover:bg-red-100'
+                : isDarkTheme
+                  ? 'hover:bg-slate-800 text-slate-400'
+                  : 'hover:bg-slate-100 text-slate-600'
+          }`}
+          title={bookmarked ? "Remove bookmark" : "Save post"}
+        >
+          {bookmarkLoading ? (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+          ) : bookmarked ? (
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M5 2h14a1 1 0 011 1v19.143a.5.5 0 01-.766.424L12 18.03l-7.234 4.536A.5.5 0 014 22.143V3a1 1 0 011-1z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+          )}
         </button>
       </div>
 
