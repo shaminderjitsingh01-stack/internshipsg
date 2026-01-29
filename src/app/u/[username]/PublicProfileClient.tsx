@@ -6,6 +6,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { BADGES } from "@/lib/streaks";
 import ShareButton from "@/components/ShareButton";
 import ShareableCard from "@/components/ShareableCard";
+import ProjectsSection from "@/components/ProjectsSection";
 
 interface Badge {
   id: string;
@@ -37,6 +38,18 @@ interface Experience {
   description: string | null;
 }
 
+interface Project {
+  id: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  image_url: string | null;
+  technologies: string[] | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_featured: boolean;
+}
+
 interface ProfileData {
   username: string;
   name: string;
@@ -63,6 +76,7 @@ interface ProfileData {
   badges: Badge[];
   education: Education[];
   experience: Experience[];
+  projects: Project[];
 }
 
 interface Props {
@@ -753,6 +767,13 @@ export default function PublicProfileClient({ profile }: Props) {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Projects Section */}
+        {profile.projects && profile.projects.length > 0 && (
+          <div className="mt-6">
+            <ProjectsSection projects={profile.projects} isOwnProfile={false} />
           </div>
         )}
 

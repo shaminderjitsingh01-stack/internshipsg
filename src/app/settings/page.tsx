@@ -8,6 +8,7 @@ import { useTheme } from "@/context/ThemeContext";
 import ProfileSettings from "@/components/ProfileSettings";
 import NotificationPreferences from "@/components/NotificationPreferences";
 import EducationExperienceSettings from "@/components/EducationExperienceSettings";
+import ProjectsSection from "@/components/ProjectsSection";
 
 interface ConnectedAccount {
   provider: string;
@@ -31,7 +32,7 @@ export default function SettingsPage() {
   const { isDarkTheme, toggleTheme } = useTheme();
 
   // State
-  const [activeSection, setActiveSection] = useState<"profile" | "experience" | "account" | "privacy" | "notifications" | "connected" | "data">("profile");
+  const [activeSection, setActiveSection] = useState<"profile" | "experience" | "projects" | "account" | "privacy" | "notifications" | "connected" | "data">("profile");
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
 
@@ -286,6 +287,11 @@ export default function SettingsPage() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
       </svg>
     )},
+    { id: "projects", label: "Projects", icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+      </svg>
+    )},
     { id: "account", label: "Account", icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -414,6 +420,11 @@ export default function SettingsPage() {
             {/* Experience & Education Section */}
             {activeSection === "experience" && session?.user?.email && (
               <EducationExperienceSettings userEmail={session.user.email} />
+            )}
+
+            {/* Projects Section */}
+            {activeSection === "projects" && session?.user?.email && (
+              <ProjectsSection userEmail={session.user.email} isOwnProfile={true} />
             )}
 
             {/* Account Settings Section */}

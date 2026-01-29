@@ -74,6 +74,15 @@ async function getProfile(username: string) {
     .eq("user_email", profile.email)
     .order("start_date", { ascending: false });
 
+  // Fetch projects
+  const { data: projects } = await supabase
+    .from("user_projects")
+    .select("*")
+    .eq("user_email", profile.email)
+    .order("is_featured", { ascending: false })
+    .order("display_order", { ascending: true })
+    .order("start_date", { ascending: false });
+
   const averageScore =
     interviews && interviews.length > 0
       ? Math.round(
@@ -109,6 +118,7 @@ async function getProfile(username: string) {
     badges: badges || [],
     education: education || [],
     experience: experience || [],
+    projects: projects || [],
   };
 }
 
