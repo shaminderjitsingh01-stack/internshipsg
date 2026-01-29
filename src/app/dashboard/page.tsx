@@ -436,30 +436,35 @@ export default function DashboardPage() {
               {/* Tier Progress */}
               <div className={`mt-4 pt-4 border-t ${isDarkTheme ? 'border-slate-700' : 'border-slate-200'}`}>
                 <h3 className={`text-sm font-medium mb-3 ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>Talent Tiers</h3>
-                <div className="flex items-center justify-between gap-2 text-xs">
-                  <div className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold mb-1">B</div>
-                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Bronze</span>
+                <div className="flex items-center justify-between gap-1 sm:gap-2 text-xs">
+                  <div className="text-center min-w-[50px]">
+                    <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold mb-1 mx-auto">B</div>
+                    <span className={`block ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Bronze</span>
+                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>0 XP</span>
                   </div>
                   <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
-                  <div className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold mb-1">S</div>
-                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Silver</span>
+                  <div className="text-center min-w-[50px]">
+                    <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold mb-1 mx-auto">S</div>
+                    <span className={`block ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Silver</span>
+                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>500 XP</span>
                   </div>
                   <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
-                  <div className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold mb-1">G</div>
-                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Gold</span>
+                  <div className="text-center min-w-[50px]">
+                    <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold mb-1 mx-auto">G</div>
+                    <span className={`block ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Gold</span>
+                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>1,000 XP</span>
                   </div>
                   <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
-                  <div className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold mb-1">D</div>
-                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Diamond</span>
+                  <div className="text-center min-w-[50px]">
+                    <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold mb-1 mx-auto">D</div>
+                    <span className={`block ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Diamond</span>
+                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>2,500 XP</span>
                   </div>
                   <div className={`flex-1 h-1 ${isDarkTheme ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
-                  <div className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold mb-1">E</div>
-                    <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-600'}>Elite</span>
+                  <div className="text-center min-w-[50px]">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold mb-1 mx-auto">E</div>
+                    <span className={`block ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>Elite</span>
+                    <span className={`block text-[10px] ${isDarkTheme ? 'text-slate-500' : 'text-slate-400'}`}>Top 5%</span>
                   </div>
                 </div>
               </div>
