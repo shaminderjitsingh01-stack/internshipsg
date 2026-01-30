@@ -8,12 +8,28 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const email = searchParams.get("email");
+  let email = searchParams.get("email");
+  const username = searchParams.get("username"); // Support username lookup
   const targetEmail = searchParams.get("target");
   const type = searchParams.get("type"); // 'followers', 'following', 'status'
 
+  // If username provided instead of email, look up the email
+  if (!email && username) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("username", username.toLowerCase())
+      .single();
+
+    if (profile?.email) {
+      email = profile.email;
+    } else {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+  }
+
   if (!email) {
-    return NextResponse.json({ error: "Email required" }, { status: 400 });
+    return NextResponse.json({ error: "Email or username required" }, { status: 400 });
   }
 
   try {
