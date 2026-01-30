@@ -55,16 +55,16 @@ export async function GET(request: NextRequest) {
       return map;
     };
 
-    // Build date filter
-    const buildDateFilter = (query: ReturnType<typeof supabase.from>) => {
-      let q = query;
+    // Build date filter - uses 'any' because query type varies by select columns
+    const buildDateFilter = <T>(query: T): T => {
+      let q = query as any;
       if (startDate) {
         q = q.gte("created_at", startDate);
       }
       if (endDate) {
         q = q.lte("created_at", endDate);
       }
-      return q;
+      return q as T;
     };
 
     // Fetch posts

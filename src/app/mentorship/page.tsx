@@ -25,6 +25,8 @@ interface Mentor {
   total_reviews: number;
   total_sessions: number;
   is_verified: boolean;
+  linkedin_url?: string | null;
+  website_url?: string | null;
   name?: string;
   image_url?: string;
   school?: string;

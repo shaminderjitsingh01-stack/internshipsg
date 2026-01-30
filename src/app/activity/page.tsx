@@ -262,13 +262,13 @@ export default function ActivityPage() {
                     >
                       {activity.description}
                     </p>
-                    {activity.metadata?.preview && (
+                    {typeof activity.metadata?.preview === "string" && activity.metadata.preview && (
                       <p
                         className={`text-xs mt-1 truncate ${
                           isDarkTheme ? "text-slate-500" : "text-slate-400"
                         }`}
                       >
-                        "{String(activity.metadata.preview)}..."
+                        "{activity.metadata.preview}..."
                       </p>
                     )}
                     <p

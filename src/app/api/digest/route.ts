@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { isEmailConfigured } from "@/lib/email";
-import { renderToStaticMarkup } from "react-dom/server";
-import WeeklyDigestEmail, {
+import {
   getSubject,
   type TopPost,
   type NewFollower,
@@ -109,25 +108,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate HTML from React component
-    const emailHtml = renderToStaticMarkup(
-      WeeklyDigestEmail({
-        ...digestData,
-        baseUrl: BASE_URL,
-      })
-    );
-
-    // Wrap in HTML doctype
-    const fullHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 0;">
-  ${emailHtml}
-</body>
-</html>`;
+    // Generate HTML email using plain template
+    const fullHtml = generateDigestEmailHtml({
+      ...digestData,
+      baseUrl: BASE_URL,
+    });
 
     // Send email using the existing email service
     // Note: We're using a custom send since the email type is more complex
@@ -410,14 +395,17 @@ async function getRecommendedJobs(): Promise<RecommendedJob[]> {
 
   if (!jobs) return [];
 
-  return jobs.map((job: { id: string; title: string; location: string | null; job_type: string; company: { name: string; logo_url: string | null } | null }) => ({
-    id: job.id,
-    title: job.title,
-    company: job.company?.name || "Unknown Company",
-    companyLogo: job.company?.logo_url,
-    location: job.location,
-    jobType: job.job_type || "internship",
-  }));
+  return jobs.map((job) => {
+    const company = Array.isArray(job.company) ? job.company[0] : job.company;
+    return {
+      id: job.id,
+      title: job.title,
+      company: company?.name || "Unknown Company",
+      companyLogo: company?.logo_url ?? undefined,
+      location: job.location ?? undefined,
+      jobType: job.job_type || "internship",
+    };
+  });
 }
 
 // Get upcoming events
@@ -443,4 +431,120 @@ async function getUpcomingEvents(_email: string): Promise<UpcomingEvent[]> {
     eventType: event.event_type,
     isVirtual: event.is_virtual,
   }));
+}
+
+// Generate digest email HTML (plain template to avoid react-dom/server)
+function generateDigestEmailHtml(data: {
+  name: string;
+  xpEarned: number;
+  interviewsCompleted: number;
+  currentStreak: number;
+  avgScore: number | null;
+  topPosts: TopPost[];
+  newFollowers: NewFollower[];
+  newFollowersCount: number;
+  recommendedJobs: RecommendedJob[];
+  upcomingEvents: UpcomingEvent[];
+  baseUrl: string;
+}): string {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-SG", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+
+  const topPostsHtml = data.topPosts.length > 0
+    ? data.topPosts.map(post => `
+      <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px;">
+        <p style="margin: 0 0 8px 0; font-weight: 600;">${post.authorName}</p>
+        <p style="margin: 0; color: #4b5563;">${post.content.slice(0, 100)}${post.content.length > 100 ? '...' : ''}</p>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: #9ca3af;">${post.likes} likes · ${post.comments} comments</p>
+      </div>
+    `).join('')
+    : '<p style="color: #9ca3af;">No posts this week</p>';
+
+  const newFollowersHtml = data.newFollowersCount > 0
+    ? `<p>${data.newFollowersCount} new follower${data.newFollowersCount > 1 ? 's' : ''} this week!</p>`
+    : '';
+
+  const jobsHtml = data.recommendedJobs.length > 0
+    ? data.recommendedJobs.map(job => `
+      <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px;">
+        <p style="margin: 0; font-weight: 600;">${job.title}</p>
+        <p style="margin: 4px 0 0 0; color: #4b5563;">${job.company}${job.location ? ` · ${job.location}` : ''}</p>
+      </div>
+    `).join('')
+    : '<p style="color: #9ca3af;">No new jobs</p>';
+
+  const eventsHtml = data.upcomingEvents.length > 0
+    ? data.upcomingEvents.map(event => `
+      <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px;">
+        <p style="margin: 0; font-weight: 600;">${event.title}</p>
+        <p style="margin: 4px 0 0 0; color: #4b5563;">${formatDate(event.startTime)}${event.isVirtual ? ' · Virtual' : ''}</p>
+      </div>
+    `).join('')
+    : '<p style="color: #9ca3af;">No upcoming events</p>';
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!-- Header -->
+    <div style="text-align: center; padding: 30px 20px; background: linear-gradient(135deg, #dc2626, #b91c1c); border-radius: 16px 16px 0 0;">
+      <h1 style="color: white; margin: 0; font-size: 24px;">Your Weekly Digest</h1>
+      <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0;">Hey ${data.name}!</p>
+    </div>
+
+    <!-- Stats -->
+    <div style="background: white; padding: 24px; border-bottom: 1px solid #e5e7eb;">
+      <h2 style="margin: 0 0 16px 0; font-size: 18px;">This Week's Highlights</h2>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 100px; text-align: center; padding: 16px; background: #fef2f2; border-radius: 12px;">
+          <p style="margin: 0; font-size: 24px; font-weight: bold; color: #dc2626;">${data.xpEarned}</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">XP Earned</p>
+        </div>
+        <div style="flex: 1; min-width: 100px; text-align: center; padding: 16px; background: #f0fdf4; border-radius: 12px;">
+          <p style="margin: 0; font-size: 24px; font-weight: bold; color: #16a34a;">${data.interviewsCompleted}</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">Interviews</p>
+        </div>
+        <div style="flex: 1; min-width: 100px; text-align: center; padding: 16px; background: #fef3c7; border-radius: 12px;">
+          <p style="margin: 0; font-size: 24px; font-weight: bold; color: #d97706;">${data.currentStreak}</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">Day Streak</p>
+        </div>
+      </div>
+      ${newFollowersHtml}
+    </div>
+
+    <!-- Top Posts -->
+    <div style="background: white; padding: 24px; border-bottom: 1px solid #e5e7eb;">
+      <h2 style="margin: 0 0 16px 0; font-size: 18px;">Top Posts from Your Network</h2>
+      ${topPostsHtml}
+    </div>
+
+    <!-- Jobs -->
+    <div style="background: white; padding: 24px; border-bottom: 1px solid #e5e7eb;">
+      <h2 style="margin: 0 0 16px 0; font-size: 18px;">Recommended Internships</h2>
+      ${jobsHtml}
+      <a href="${data.baseUrl}/jobs" style="display: inline-block; margin-top: 12px; color: #dc2626; text-decoration: none; font-weight: 500;">View all jobs →</a>
+    </div>
+
+    <!-- Events -->
+    <div style="background: white; padding: 24px; border-radius: 0 0 16px 16px;">
+      <h2 style="margin: 0 0 16px 0; font-size: 18px;">Upcoming Events</h2>
+      ${eventsHtml}
+      <a href="${data.baseUrl}/events" style="display: inline-block; margin-top: 12px; color: #dc2626; text-decoration: none; font-weight: 500;">View all events →</a>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; padding: 24px; color: #6b7280; font-size: 12px;">
+      <p style="margin: 0 0 8px 0;">Keep up the great work!</p>
+      <a href="${data.baseUrl}/settings/notifications" style="color: #9ca3af;">Manage email preferences</a>
+      <p style="margin: 16px 0 0 0;">© ${new Date().getFullYear()} Internship.sg</p>
+    </div>
+  </div>
+</body>
+</html>`;
 }
