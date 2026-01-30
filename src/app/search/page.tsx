@@ -262,8 +262,9 @@ function PostCard({ post, isDark, query }: { post: SearchPost; isDark: boolean; 
     const parts = text.split(/(\s+)/);
     return parts.map((part, i) => {
       if (part.startsWith("#")) {
+        const hashtag = part.slice(1).replace(/[^\w]/g, "");
         return (
-          <Link key={i} href={`/search?q=${encodeURIComponent(part)}&tab=posts`} className="text-red-500 hover:underline">
+          <Link key={i} href={`/hashtag/${hashtag}`} className="text-red-500 hover:underline">
             {part}
           </Link>
         );
@@ -410,7 +411,7 @@ function JobCard({ job, isDark, query }: { job: SearchJob; isDark: boolean; quer
 function HashtagCard({ hashtag, isDark, query }: { hashtag: SearchHashtag; isDark: boolean; query: string }) {
   return (
     <Link
-      href={`/search?q=%23${hashtag.tag}&tab=posts`}
+      href={`/hashtag/${hashtag.tag}`}
       className={`block rounded-xl border p-4 transition-all hover:shadow-lg ${
         isDark
           ? "bg-slate-900 border-slate-800 hover:border-red-500/50"

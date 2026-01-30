@@ -76,6 +76,7 @@ export default function PostCard({ post, currentUserEmail, onDelete, isBookmarke
   const [loadingComments, setLoadingComments] = useState(false);
   const [bookmarked, setBookmarked] = useState(initialBookmarked ?? false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const [showShareToast, setShowShareToast] = useState(false);
 
   // Poll state
   const [pollOptions, setPollOptions] = useState<PollOption[]>([]);
@@ -290,6 +291,44 @@ export default function PostCard({ post, currentUserEmail, onDelete, isBookmarke
     }
   };
 
+  // Handle share
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}/post/${post.id}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${post.author.name}`,
+          text: post.content.slice(0, 100),
+          url: postUrl,
+        });
+      } catch (err) {
+        // User cancelled or share failed, fallback to copy
+        copyToClipboard(postUrl);
+      }
+    } else {
+      copyToClipboard(postUrl);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setShowShareToast(true);
+      setTimeout(() => setShowShareToast(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setShowShareToast(true);
+      setTimeout(() => setShowShareToast(false), 2000);
+    }
+  };
+
   // Parse content for hashtags and mentions
   const renderContent = (text: string) => {
     const parts = text.split(/(\s+)/);
@@ -364,7 +403,9 @@ export default function PostCard({ post, currentUserEmail, onDelete, isBookmarke
             </div>
             <div className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-500'}`}>
               {post.author.school && `${post.author.school} · `}
-              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              <Link href={`/post/${post.id}`} className="hover:underline">
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              </Link>
             </div>
           </div>
         </div>
@@ -593,16 +634,30 @@ export default function PostCard({ post, currentUserEmail, onDelete, isBookmarke
 
         {/* Share Button */}
         <button
+          onClick={handleShare}
           className={`flex-1 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-            isDarkTheme
-              ? 'hover:bg-slate-800 text-slate-400'
-              : 'hover:bg-slate-100 text-slate-600'
+            showShareToast
+              ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+              : isDarkTheme
+                ? 'hover:bg-slate-800 text-slate-400'
+                : 'hover:bg-slate-100 text-slate-600'
           }`}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-          Share
+          {showShareToast ? (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Copied!
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Share
+            </>
+          )}
         </button>
 
         {/* Bookmark Button */}
