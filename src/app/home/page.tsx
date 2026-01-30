@@ -9,6 +9,22 @@ import CreatePost from "@/components/social/CreatePost";
 import PostCard from "@/components/social/PostCard";
 import SidebarStats from "@/components/social/SidebarStats";
 import SuggestedUsers from "@/components/social/SuggestedUsers";
+import StoriesBar from "@/components/social/StoriesBar";
+import StoryViewer from "@/components/social/StoryViewer";
+import CreateStoryModal from "@/components/social/CreateStoryModal";
+
+interface StoryGroup {
+  authorEmail: string;
+  author: {
+    email: string;
+    username: string | null;
+    name: string | null;
+    image_url: string | null;
+  } | null;
+  stories: any[];
+  hasUnviewed: boolean;
+  isCurrentUser: boolean;
+}
 
 interface Post {
   id: string;
@@ -43,6 +59,13 @@ export default function HomeFeed() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
+
+  // Stories state
+  const [showStoryViewer, setShowStoryViewer] = useState(false);
+  const [showCreateStory, setShowCreateStory] = useState(false);
+  const [selectedStoryGroup, setSelectedStoryGroup] = useState<StoryGroup | null>(null);
+  const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
+  const [storiesKey, setStoriesKey] = useState(0);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -99,6 +122,23 @@ export default function HomeFeed() {
   // Handle post deleted
   const handlePostDeleted = (postId: string) => {
     setPosts(prev => prev.filter(p => p.id !== postId));
+  };
+
+  // Handle story click - open viewer
+  const handleStoryClick = (group: StoryGroup, index: number) => {
+    setSelectedStoryGroup(group);
+    setSelectedStoryIndex(index);
+    setShowStoryViewer(true);
+  };
+
+  // Handle add story - open create modal
+  const handleAddStory = () => {
+    setShowCreateStory(true);
+  };
+
+  // Handle story created - refresh stories bar
+  const handleStoryCreated = () => {
+    setStoriesKey(prev => prev + 1);
   };
 
   if (status === "loading" || loading) {
@@ -233,6 +273,16 @@ export default function HomeFeed() {
 
           {/* Main Feed */}
           <div className="flex-1 max-w-2xl">
+            {/* Stories Bar */}
+            <div className="mb-4">
+              <StoriesBar
+                key={storiesKey}
+                userEmail={session.user?.email!}
+                onStoryClick={handleStoryClick}
+                onAddStory={handleAddStory}
+              />
+            </div>
+
             {/* Create Post */}
             <CreatePost
               userEmail={session.user?.email!}
@@ -335,6 +385,28 @@ export default function HomeFeed() {
           </Link>
         </div>
       </nav>
+
+      {/* Story Viewer Modal */}
+      {showStoryViewer && selectedStoryGroup && (
+        <StoryViewer
+          group={selectedStoryGroup}
+          initialIndex={selectedStoryIndex}
+          currentUserEmail={session.user?.email!}
+          onClose={() => {
+            setShowStoryViewer(false);
+            setSelectedStoryGroup(null);
+          }}
+        />
+      )}
+
+      {/* Create Story Modal */}
+      {showCreateStory && (
+        <CreateStoryModal
+          userEmail={session.user?.email!}
+          onClose={() => setShowCreateStory(false)}
+          onStoryCreated={handleStoryCreated}
+        />
+      )}
     </div>
   );
 }
