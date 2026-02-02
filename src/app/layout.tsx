@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import BuildBanner from "@/components/BuildBanner";
 import SharePopup from "@/components/SharePopup";
+import CookieConsent from "@/components/CookieConsent";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -54,6 +55,7 @@ export default function RootLayout({
             {children}
             <BuildBanner />
             <SharePopup />
+            <CookieConsent />
           </ThemeProvider>
         </AuthProvider>
       </body>
