@@ -16,9 +16,9 @@ export async function POST(request: Request) {
     const result = await runScraper();
 
     return NextResponse.json({
+      ...result,
       success: true,
       message: 'Scraper completed',
-      ...result,
     });
   } catch (error: any) {
     console.error('Scraper error:', error);
