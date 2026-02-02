@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Header, Footer, JobCard } from '@/components';
+import { useAuth } from '@/context/AuthContext';
 
 interface Company {
   id: string;
@@ -51,6 +52,7 @@ const workArrangements = [
 export default function JobsPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
+  const { user } = useAuth();
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
@@ -58,6 +60,12 @@ export default function JobsPage() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedIndustry, setSelectedIndustry] = useState('All Industries');
   const [selectedArrangement, setSelectedArrangement] = useState('all');
+
+  // Job Alert Widget State
+  const [showAlertWidget, setShowAlertWidget] = useState(false);
+  const [alertName, setAlertName] = useState('');
+  const [alertSaving, setAlertSaving] = useState(false);
+  const [alertSuccess, setAlertSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchJobs() {
@@ -108,6 +116,44 @@ export default function JobsPage() {
 
     setFilteredJobs(filtered);
   }, [searchQuery, selectedIndustry, selectedArrangement, jobs]);
+
+  // Save current filters as job alert
+  async function saveJobAlert() {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+
+    if (!alertName.trim()) return;
+
+    setAlertSaving(true);
+    try {
+      const res = await fetch('/api/user/job-alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: alertName,
+          keywords: searchQuery ? searchQuery.split(' ').filter(Boolean) : [],
+          industries: selectedIndustry !== 'All Industries' ? [selectedIndustry] : [],
+          work_arrangements: selectedArrangement !== 'all' ? [selectedArrangement] : [],
+          frequency: 'daily',
+        }),
+      });
+
+      if (res.ok) {
+        setAlertSuccess(true);
+        setAlertName('');
+        setTimeout(() => {
+          setShowAlertWidget(false);
+          setAlertSuccess(false);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error saving alert:', error);
+    } finally {
+      setAlertSaving(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
@@ -193,7 +239,72 @@ export default function JobsPage() {
                   </button>
                 ))}
               </div>
+              {/* Create Alert Button */}
+              <button
+                onClick={() => setShowAlertWidget(!showAlertWidget)}
+                className="px-4 py-3 rounded-xl text-sm font-medium bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] hover:border-[#dc2626]/50 hover:bg-[#dc2626]/10 transition-all duration-300 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                Create Alert
+              </button>
             </div>
+
+            {/* Job Alert Widget */}
+            <AnimatePresence>
+              {showAlertWidget && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl">
+                    {alertSuccess ? (
+                      <div className="flex items-center gap-3 text-green-400">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="font-medium">Alert created! You'll be notified of new matches.</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={alertName}
+                            onChange={(e) => setAlertName(e.target.value)}
+                            placeholder="Name your alert (e.g., Software Internships)"
+                            className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:border-[#dc2626]"
+                          />
+                          <p className="mt-2 text-xs text-[var(--muted)]">
+                            Get notified when new jobs match: {searchQuery || 'all keywords'}
+                            {selectedIndustry !== 'All Industries' && ` in ${selectedIndustry}`}
+                            {selectedArrangement !== 'all' && ` (${selectedArrangement})`}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={saveJobAlert}
+                            disabled={alertSaving || !alertName.trim()}
+                            className="px-6 py-3 bg-[#dc2626] text-white font-semibold rounded-lg hover:bg-[#b91c1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {alertSaving ? 'Saving...' : 'Save Alert'}
+                          </button>
+                          <button
+                            onClick={() => setShowAlertWidget(false)}
+                            className="px-4 py-3 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Jobs List */}
