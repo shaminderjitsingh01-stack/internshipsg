@@ -1,14 +1,21 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+let supabaseInstance: SupabaseClient | null = null;
 
-// Use service role for scraper (bypasses RLS), fallback to anon key
-const supabase = createClient(
-  supabaseUrl,
-  supabaseServiceKey || supabaseAnonKey
-);
+function getSupabase(): SupabaseClient {
+  if (!supabaseInstance) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+    if (!supabaseUrl) {
+      throw new Error('Supabase URL not configured');
+    }
+
+    supabaseInstance = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey);
+  }
+  return supabaseInstance;
+}
 
 export interface ScrapedJob {
   title: string;
@@ -36,6 +43,8 @@ export async function scrapeCompanyJobs(companyName: string, careersUrl: string)
 
 // Insert scraped jobs into database
 export async function insertJobs(jobs: ScrapedJob[]) {
+  const supabase = getSupabase();
+
   for (const job of jobs) {
     // Get company ID
     const { data: company } = await supabase
@@ -87,6 +96,7 @@ export async function insertJobs(jobs: ScrapedJob[]) {
 
 // Get all companies from database
 export async function getCompanies() {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from('companies')
     .select('*');
@@ -103,10 +113,7 @@ export async function getCompanies() {
 export async function runScraper() {
   console.log('Starting job scraper...');
   const startTime = Date.now();
-
-  if (!supabaseUrl) {
-    throw new Error('Supabase URL not configured');
-  }
+  const supabase = getSupabase();
 
   const companies = await getCompanies();
   console.log(`Found ${companies.length} companies`);
@@ -128,7 +135,7 @@ export async function runScraper() {
   await insertJobs(sampleJobs);
 
   // Get new job count
-  const { count: afterCount } = await supabase
+  const { count: afterCount } = await getSupabase()
     .from('jobs')
     .select('*', { count: 'exact', head: true });
 
