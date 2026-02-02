@@ -255,35 +255,41 @@ export async function getApplications(userId: string) {
   return data || [];
 }
 
-// Fetch a single job by slug
-export async function getJobBySlug(slug: string): Promise<Job | null> {
+// Fetch a single job by slug or ID
+export async function getJobBySlug(slugOrId: string): Promise<Job | null> {
+  // Check if it's a UUID (ID) or a slug
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+
   const { data, error } = await supabase
     .from('jobs')
     .select(`
       *,
       company:companies(*)
     `)
-    .eq('slug', slug)
+    .eq(isUUID ? 'id' : 'slug', slugOrId)
     .single();
 
   if (error) {
-    console.error('Error fetching job by slug:', error);
+    console.error('Error fetching job by slug/id:', error);
     return null;
   }
 
   return data;
 }
 
-// Fetch a single company by slug
-export async function getCompanyBySlug(slug: string): Promise<Company | null> {
+// Fetch a single company by slug or ID
+export async function getCompanyBySlug(slugOrId: string): Promise<Company | null> {
+  // Check if it's a UUID (ID) or a slug
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+
   const { data, error } = await supabase
     .from('companies')
     .select('*')
-    .eq('slug', slug)
+    .eq(isUUID ? 'id' : 'slug', slugOrId)
     .single();
 
   if (error) {
-    console.error('Error fetching company by slug:', error);
+    console.error('Error fetching company by slug/id:', error);
     return null;
   }
 
