@@ -2,638 +2,363 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Header, Footer } from '@/components';
+import { EmployerLayout } from '../components';
+import { getSupabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
-interface Job {
+interface DashboardStats {
+  totalJobs: number;
+  activeJobs: number;
+  totalApplicants: number;
+  totalViews: number;
+  pendingReview: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'application' | 'view' | 'job_posted';
+  message: string;
+  time: string;
+}
+
+interface RecentJob {
   id: string;
   title: string;
   slug: string;
-  location: string;
-  is_active: boolean;
-  created_at: string;
-  applications_count?: number;
-}
-
-interface Company {
-  id: string;
-  name: string;
-  slug: string;
-  industry?: string;
-  size?: string;
-  website?: string;
-  description?: string;
-  logo_url?: string;
-  is_verified: boolean;
-}
-
-interface Application {
-  id: string;
   status: string;
-  created_at: string;
-  user_email?: string;
-  resume_url?: string;
-  cover_letter?: string;
-  job: {
-    id: string;
-    title: string;
-  };
+  views: number;
+  applicants: number;
+  posted_at: string;
 }
 
 export default function EmployerDashboardPage() {
-  const { user, loading, signOut } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const isWelcome = searchParams.get('welcome') === 'true';
-
-  const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'applications' | 'company' | 'post'>('overview');
-  const [company, setCompany] = useState<Company | null>(null);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(isWelcome);
-
-  // New job form
-  const [newJob, setNewJob] = useState({
-    title: '',
-    description: '',
-    requirements: '',
-    location: 'Singapore',
-    work_arrangement: 'onsite',
-    duration: '',
-    salary_min: '',
-    salary_max: '',
-    application_url: '',
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalJobs: 0,
+    activeJobs: 0,
+    totalApplicants: 0,
+    totalViews: 0,
+    pendingReview: 0,
   });
-  const [posting, setPosting] = useState(false);
-  const [postError, setPostError] = useState('');
-  const [postSuccess, setPostSuccess] = useState(false);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/employer/login');
-    }
-  }, [user, loading, router]);
+  const [recentJobs, setRecentJobs] = useState<RecentJob[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   useEffect(() => {
     if (user) {
-      fetchEmployerData();
+      fetchDashboardData();
     }
   }, [user]);
 
-  const fetchEmployerData = async () => {
-    setIsLoading(true);
+  const fetchDashboardData = async () => {
     try {
       const res = await fetch('/api/employer/dashboard');
       if (res.ok) {
         const data = await res.json();
-        setCompany(data.company);
-        setJobs(data.jobs || []);
-        setApplications(data.applications || []);
+
+        const jobs = data.jobs || [];
+        const applications = data.applications || [];
+
+        setStats({
+          totalJobs: jobs.length,
+          activeJobs: jobs.filter((j: any) => j.status === 'active' || j.is_active).length,
+          totalApplicants: applications.length,
+          totalViews: jobs.reduce((sum: number, j: any) => sum + (j.views || 0), 0),
+          pendingReview: applications.filter((a: any) => a.status === 'pending').length,
+        });
+
+        setRecentJobs(
+          jobs.slice(0, 5).map((job: any) => ({
+            id: job.id,
+            title: job.title,
+            slug: job.slug,
+            status: job.status || (job.is_active ? 'active' : 'inactive'),
+            views: job.views || 0,
+            applicants: job.applications_count || 0,
+            posted_at: job.posted_at || job.created_at,
+          }))
+        );
+
+        // Generate recent activity from applications
+        const activities: RecentActivity[] = applications.slice(0, 5).map((app: any) => ({
+          id: app.id,
+          type: 'application' as const,
+          message: `New application for ${app.job?.title || 'a job'}`,
+          time: formatTimeAgo(app.created_at),
+        }));
+        setRecentActivity(activities);
       }
     } catch (error) {
-      console.error('Error fetching employer data:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
-  };
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  const handlePostJob = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPostError('');
-    setPosting(true);
-
-    try {
-      const res = await fetch('/api/employer/jobs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...newJob,
-          requirements: newJob.requirements.split('\n').filter(r => r.trim()),
-          salary_min: newJob.salary_min ? parseInt(newJob.salary_min) : null,
-          salary_max: newJob.salary_max ? parseInt(newJob.salary_max) : null,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setPostError(data.error || 'Failed to post job');
-        return;
-      }
-
-      setPostSuccess(true);
-      setNewJob({
-        title: '',
-        description: '',
-        requirements: '',
-        location: 'Singapore',
-        work_arrangement: 'onsite',
-        duration: '',
-        salary_min: '',
-        salary_max: '',
-        application_url: '',
-      });
-      fetchEmployerData();
-      setTimeout(() => {
-        setPostSuccess(false);
-        setActiveTab('jobs');
-      }, 2000);
-    } catch (error: any) {
-      setPostError(error.message || 'Failed to post job');
-    } finally {
-      setPosting(false);
-    }
-  };
-
-  const updateApplicationStatus = async (appId: string, status: string) => {
-    try {
-      await fetch(`/api/employer/applications/${appId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-      fetchEmployerData();
-    } catch (error) {
-      console.error('Error updating application:', error);
-    }
-  };
-
-  const toggleJobStatus = async (jobId: string, isActive: boolean) => {
-    try {
-      await fetch(`/api/employer/jobs/${jobId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !isActive }),
-      });
-      fetchEmployerData();
-    } catch (error) {
-      console.error('Error toggling job:', error);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'reviewed': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'interview': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'accepted': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-      case 'rejected': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
-    }
+    if (diffHrs < 1) return 'Just now';
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' });
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-SG', {
-      day: 'numeric', month: 'short', year: 'numeric',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-      </div>
+      <EmployerLayout title="Dashboard" subtitle="Loading...">
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-2 border-[#dc2626] border-t-transparent rounded-full animate-spin" />
+        </div>
+      </EmployerLayout>
     );
   }
 
-  if (!user) return null;
-
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
-      <Header />
-
-      <main className="flex-1 pt-24 pb-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Welcome Modal */}
-          {showWelcome && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-md mx-4 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Welcome to internship.sg!</h2>
-                <p className="text-zinc-400 mb-6">Your employer account has been created. Start posting internships to find top talent.</p>
-                <button
-                  onClick={() => setShowWelcome(false)}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90"
-                >
-                  Get Started
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+    <EmployerLayout title="Dashboard" subtitle="Overview of your hiring activity">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white">
-                {company?.name || 'Employer Dashboard'}
-              </h1>
-              <p className="text-zinc-400 mt-1">
-                {company?.is_verified ? (
-                  <span className="flex items-center gap-1 text-emerald-400">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Verified Company
-                  </span>
-                ) : (
-                  'Manage your job postings and applications'
-                )}
-              </p>
+              <p className="text-3xl font-bold text-white">{stats.totalJobs}</p>
+              <p className="text-sm text-zinc-400">Total Jobs</p>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
-            >
-              Logout
-            </button>
+            <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center">
+              <svg className="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-emerald-400">{stats.activeJobs}</p>
+              <p className="text-sm text-zinc-400">Active Jobs</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-blue-400">{stats.totalApplicants}</p>
+              <p className="text-sm text-zinc-400">Applicants</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-purple-400">{stats.totalViews}</p>
+              <p className="text-sm text-zinc-400">Total Views</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-yellow-400">{stats.pendingReview}</p>
+              <p className="text-sm text-zinc-400">Pending Review</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8">
+        <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+        <div className="flex flex-wrap gap-4">
+          <Link
+            href="/employer/jobs/new"
+            className="px-6 py-3 bg-[#dc2626] text-white font-medium rounded-xl hover:bg-[#b91c1c] transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Post New Job
+          </Link>
+          <Link
+            href="/employer/applicants"
+            className="px-6 py-3 bg-zinc-800 text-white font-medium rounded-xl hover:bg-zinc-700 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Review Applicants
+            {stats.pendingReview > 0 && (
+              <span className="px-2 py-0.5 bg-[#dc2626] text-white text-xs rounded-full">
+                {stats.pendingReview}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/employer/company"
+            className="px-6 py-3 bg-zinc-800 text-white font-medium rounded-xl hover:bg-zinc-700 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            Edit Company Profile
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Recent Jobs */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Recent Job Postings</h2>
+            <Link href="/employer/jobs" className="text-[#dc2626] hover:text-red-400 text-sm">
+              View All
+            </Link>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex flex-wrap gap-2 mb-8 border-b border-zinc-800 pb-4">
-            {[
-              { id: 'overview', label: 'Overview' },
-              { id: 'post', label: 'Post Job' },
-              { id: 'jobs', label: 'My Jobs' },
-              { id: 'applications', label: 'Applications' },
-              { id: 'company', label: 'Company Profile' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                }`}
+          {recentJobs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-zinc-400 mb-4">No jobs posted yet</p>
+              <Link
+                href="/employer/jobs/new"
+                className="px-4 py-2 bg-[#dc2626] text-white rounded-lg text-sm hover:bg-[#b91c1c]"
               >
-                {tab.label}
-                {tab.id === 'applications' && applications.filter(a => a.status === 'pending').length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                    {applications.filter(a => a.status === 'pending').length}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content */}
-          {activeTab === 'overview' && (
-            <div className="space-y-8">
-              {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                  <p className="text-3xl font-bold text-white">{jobs.length}</p>
-                  <p className="text-zinc-400">Total Jobs</p>
-                </div>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                  <p className="text-3xl font-bold text-emerald-400">{jobs.filter(j => j.is_active).length}</p>
-                  <p className="text-zinc-400">Active Jobs</p>
-                </div>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                  <p className="text-3xl font-bold text-purple-400">{applications.length}</p>
-                  <p className="text-zinc-400">Applications</p>
-                </div>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                  <p className="text-3xl font-bold text-yellow-400">{applications.filter(a => a.status === 'pending').length}</p>
-                  <p className="text-zinc-400">Pending Review</p>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
-                <div className="flex flex-wrap gap-4">
-                  <button
-                    onClick={() => setActiveTab('post')}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl hover:opacity-90"
-                  >
-                    Post New Job
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('applications')}
-                    className="px-6 py-3 bg-zinc-800 text-white font-medium rounded-xl hover:bg-zinc-700"
-                  >
-                    Review Applications
-                  </button>
-                </div>
-              </div>
+                Post Your First Job
+              </Link>
             </div>
-          )}
-
-          {activeTab === 'post' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-              <h2 className="text-xl font-bold text-white mb-6">Post New Internship</h2>
-
-              {postSuccess ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <p className="text-xl text-white">Job posted successfully!</p>
-                </div>
-              ) : (
-                <form onSubmit={handlePostJob} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-2">Job Title *</label>
-                    <input
-                      type="text"
-                      value={newJob.title}
-                      onChange={(e) => setNewJob({ ...newJob, title: e.target.value })}
-                      placeholder="e.g. Software Engineering Intern"
-                      required
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-2">Description *</label>
-                    <textarea
-                      value={newJob.description}
-                      onChange={(e) => setNewJob({ ...newJob, description: e.target.value })}
-                      placeholder="Describe the role, responsibilities, and what interns will learn..."
-                      required
-                      rows={5}
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-2">Requirements (one per line)</label>
-                    <textarea
-                      value={newJob.requirements}
-                      onChange={(e) => setNewJob({ ...newJob, requirements: e.target.value })}
-                      placeholder="Currently pursuing Computer Science degree&#10;Proficient in Python or JavaScript&#10;Strong communication skills"
-                      rows={4}
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-2">Location</label>
-                      <input
-                        type="text"
-                        value={newJob.location}
-                        onChange={(e) => setNewJob({ ...newJob, location: e.target.value })}
-                        placeholder="Singapore"
-                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-2">Work Arrangement</label>
-                      <select
-                        value={newJob.work_arrangement}
-                        onChange={(e) => setNewJob({ ...newJob, work_arrangement: e.target.value })}
-                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:outline-none focus:border-purple-500"
+          ) : (
+            <div className="space-y-3">
+              {recentJobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="p-4 bg-zinc-800/50 rounded-xl hover:bg-zinc-800 transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <Link
+                        href={`/employer/jobs/${job.id}/edit`}
+                        className="font-medium text-white hover:text-[#dc2626] transition-colors"
                       >
-                        <option value="onsite">On-site</option>
-                        <option value="remote">Remote</option>
-                        <option value="hybrid">Hybrid</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-2">Duration</label>
-                      <input
-                        type="text"
-                        value={newJob.duration}
-                        onChange={(e) => setNewJob({ ...newJob, duration: e.target.value })}
-                        placeholder="e.g. 3 months"
-                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-2">Min Salary (SGD/month)</label>
-                      <input
-                        type="number"
-                        value={newJob.salary_min}
-                        onChange={(e) => setNewJob({ ...newJob, salary_min: e.target.value })}
-                        placeholder="e.g. 1000"
-                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-2">Max Salary (SGD/month)</label>
-                      <input
-                        type="number"
-                        value={newJob.salary_max}
-                        onChange={(e) => setNewJob({ ...newJob, salary_max: e.target.value })}
-                        placeholder="e.g. 2000"
-                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-2">Application URL</label>
-                    <input
-                      type="url"
-                      value={newJob.application_url}
-                      onChange={(e) => setNewJob({ ...newJob, application_url: e.target.value })}
-                      placeholder="https://company.com/apply"
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
-                    />
-                    <p className="text-xs text-zinc-500 mt-1">Leave empty to receive applications through internship.sg</p>
-                  </div>
-
-                  {postError && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                      <p className="text-red-400 text-sm">{postError}</p>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={posting}
-                    className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 disabled:opacity-50"
-                  >
-                    {posting ? 'Posting...' : 'Post Internship'}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'jobs' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-              <h2 className="text-xl font-bold text-white mb-6">My Job Postings</h2>
-
-              {jobs.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-zinc-400 mb-4">No jobs posted yet</p>
-                  <button
-                    onClick={() => setActiveTab('post')}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl"
-                  >
-                    Post Your First Job
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {jobs.map((job) => (
-                    <div key={job.id} className="p-6 bg-zinc-800/50 rounded-xl flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-white">{job.title}</h3>
-                          <span className={`px-2 py-1 rounded-full text-xs ${job.is_active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-600/20 text-zinc-400'}`}>
-                            {job.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                        <p className="text-sm text-zinc-400 mt-1">{job.location} | Posted {formatDate(job.created_at)}</p>
-                      </div>
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => toggleJobStatus(job.id, job.is_active)}
-                          className="px-4 py-2 bg-zinc-700 text-white rounded-lg hover:bg-zinc-600 text-sm"
-                        >
-                          {job.is_active ? 'Deactivate' : 'Activate'}
-                        </button>
-                        <Link
-                          href={`/jobs/${job.slug}`}
-                          className="px-4 py-2 bg-purple-600/20 text-purple-400 rounded-lg hover:bg-purple-600/30 text-sm"
-                        >
-                          View
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'applications' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Applications</h2>
-
-              {applications.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-zinc-400">No applications yet</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {applications.map((app) => (
-                    <div key={app.id} className="p-6 bg-zinc-800/50 rounded-xl">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-semibold text-white">{app.user_email || 'Applicant'}</p>
-                          <p className="text-sm text-zinc-400">Applied for: {app.job?.title}</p>
-                          <p className="text-xs text-zinc-500 mt-1">{formatDate(app.created_at)}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border capitalize ${getStatusColor(app.status)}`}>
-                          {app.status}
+                        {job.title}
+                      </Link>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-zinc-400">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          {job.views} views
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          {job.applicants} applicants
                         </span>
                       </div>
-
-                      {app.cover_letter && (
-                        <div className="mt-4 p-4 bg-zinc-800 rounded-lg">
-                          <p className="text-sm text-zinc-400">{app.cover_letter}</p>
-                        </div>
-                      )}
-
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          onClick={() => updateApplicationStatus(app.id, 'reviewed')}
-                          className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30"
-                        >
-                          Mark Reviewed
-                        </button>
-                        <button
-                          onClick={() => updateApplicationStatus(app.id, 'interview')}
-                          className="px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-sm hover:bg-purple-500/30"
-                        >
-                          Schedule Interview
-                        </button>
-                        <button
-                          onClick={() => updateApplicationStatus(app.id, 'accepted')}
-                          className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm hover:bg-emerald-500/30"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => updateApplicationStatus(app.id, 'rejected')}
-                          className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30"
-                        >
-                          Reject
-                        </button>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'company' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Company Profile</h2>
-
-              {company ? (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                      <span className="text-3xl text-white font-bold">{company.name.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-white">{company.name}</h3>
-                      <p className="text-zinc-400">{company.industry}</p>
-                    </div>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        job.status === 'active'
+                          ? 'bg-emerald-500/20 text-emerald-400'
+                          : 'bg-zinc-600/20 text-zinc-400'
+                      }`}
+                    >
+                      {job.status === 'active' ? 'Active' : 'Inactive'}
+                    </span>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm text-zinc-400 mb-2">Company Size</label>
-                      <p className="text-white">{company.size || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-zinc-400 mb-2">Website</label>
-                      <p className="text-white">{company.website || 'Not specified'}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-zinc-400 mb-2">Description</label>
-                    <p className="text-zinc-300">{company.description || 'No description added'}</p>
-                  </div>
-
-                  <Link
-                    href={`/companies/${company.slug}`}
-                    className="inline-block px-6 py-3 bg-zinc-800 text-white rounded-xl hover:bg-zinc-700"
-                  >
-                    View Public Profile
-                  </Link>
                 </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-zinc-400 mb-4">Company profile not set up</p>
-                  <Link
-                    href="/employer/claim"
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl"
-                  >
-                    Claim or Create Company
-                  </Link>
-                </div>
-              )}
+              ))}
             </div>
           )}
         </div>
-      </main>
 
-      <Footer />
-    </div>
+        {/* Recent Activity */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+          </div>
+
+          {recentActivity.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-zinc-400">No recent activity</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentActivity.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-center gap-4 p-4 bg-zinc-800/50 rounded-xl"
+                >
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      activity.type === 'application'
+                        ? 'bg-blue-500/10'
+                        : activity.type === 'view'
+                        ? 'bg-purple-500/10'
+                        : 'bg-emerald-500/10'
+                    }`}
+                  >
+                    {activity.type === 'application' ? (
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    ) : activity.type === 'view' ? (
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white text-sm">{activity.message}</p>
+                    <p className="text-zinc-500 text-xs">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </EmployerLayout>
   );
 }

@@ -48,17 +48,51 @@ export default function EmployerSignupPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateForm = () => {
+    if (!formData.companyName.trim()) {
+      setError('Company name is required');
+      return false;
+    }
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    if (!formData.password) {
+      setError('Password is required');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+    if (!formData.industry) {
+      setError('Please select an industry');
+      return false;
+    }
+    if (!formData.size) {
+      setError('Please select company size');
+      return false;
+    }
+    if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
+      setError('Please enter a valid website URL (starting with http:// or https://)');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (!validateForm()) {
       return;
     }
 
@@ -108,7 +142,7 @@ export default function EmployerSignupPage() {
         <div className="w-full max-w-lg">
           {/* Logo/Icon */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#dc2626] flex items-center justify-center">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
@@ -118,7 +152,7 @@ export default function EmployerSignupPage() {
           </div>
 
           {/* Signup Form */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-2">
@@ -131,7 +165,7 @@ export default function EmployerSignupPage() {
                   onChange={handleChange}
                   placeholder="Acme Inc."
                   required
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-[#dc2626] transition-colors"
                 />
               </div>
 
@@ -146,7 +180,7 @@ export default function EmployerSignupPage() {
                   onChange={handleChange}
                   placeholder="hr@company.com"
                   required
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-[#dc2626] transition-colors"
                 />
               </div>
 
@@ -162,7 +196,7 @@ export default function EmployerSignupPage() {
                     onChange={handleChange}
                     placeholder="Min 6 characters"
                     required
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-[#dc2626] transition-colors"
                   />
                 </div>
                 <div>
@@ -176,7 +210,7 @@ export default function EmployerSignupPage() {
                     onChange={handleChange}
                     placeholder="Confirm password"
                     required
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-[#dc2626] transition-colors"
                   />
                 </div>
               </div>
@@ -190,7 +224,7 @@ export default function EmployerSignupPage() {
                   value={formData.industry}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition-colors"
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:outline-none focus:border-[#dc2626] transition-colors"
                 >
                   <option value="">Select industry</option>
                   {industries.map((ind) => (
@@ -209,7 +243,7 @@ export default function EmployerSignupPage() {
                     value={formData.size}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:outline-none focus:border-[#dc2626] transition-colors"
                   >
                     <option value="">Select size</option>
                     {companySizes.map((size) => (
@@ -227,7 +261,7 @@ export default function EmployerSignupPage() {
                     value={formData.website}
                     onChange={handleChange}
                     placeholder="https://company.com"
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-[#dc2626] transition-colors"
                   />
                 </div>
               </div>
@@ -241,7 +275,7 @@ export default function EmployerSignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 bg-[#dc2626] text-white font-semibold rounded-xl hover:bg-[#b91c1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -257,18 +291,34 @@ export default function EmployerSignupPage() {
               </button>
 
               <p className="text-xs text-zinc-500 text-center">
-                By signing up, you agree to our Terms of Service and Privacy Policy
+                By signing up, you agree to our{' '}
+                <Link href="/terms" className="text-[#dc2626] hover:text-red-400">Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="/privacy" className="text-[#dc2626] hover:text-red-400">Privacy Policy</Link>
               </p>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-zinc-400">
                 Already have an account?{' '}
-                <Link href="/employer/login" className="text-purple-400 hover:text-purple-300">
+                <Link href="/employer/login" className="text-[#dc2626] hover:text-red-400">
                   Sign in
                 </Link>
               </p>
             </div>
+
+            <div className="mt-4 text-center">
+              <Link href="/employer/pricing" className="text-zinc-500 hover:text-zinc-300 text-sm">
+                View pricing plans
+              </Link>
+            </div>
+          </div>
+
+          {/* Back to main site */}
+          <div className="mt-6 text-center">
+            <Link href="/" className="text-zinc-500 hover:text-zinc-300 text-sm">
+              Back to internship.sg
+            </Link>
           </div>
         </div>
       </main>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -12,18 +13,98 @@ interface Company {
   industry?: string;
 }
 
+// Known company domain mappings for Singapore companies
+const KNOWN_DOMAINS: Record<string, string> = {
+  'dbs': 'dbs.com',
+  'dbs bank': 'dbs.com',
+  'ocbc': 'ocbc.com',
+  'ocbc bank': 'ocbc.com',
+  'uob': 'uob.com.sg',
+  'google': 'google.com',
+  'meta': 'meta.com',
+  'facebook': 'facebook.com',
+  'microsoft': 'microsoft.com',
+  'amazon': 'amazon.com',
+  'apple': 'apple.com',
+  'grab': 'grab.com',
+  'shopee': 'shopee.sg',
+  'lazada': 'lazada.sg',
+  'singtel': 'singtel.com',
+  'starhub': 'starhub.com',
+  'gojek': 'gojek.com',
+  'sea': 'sea.com',
+  'sea limited': 'sea.com',
+  'bytedance': 'bytedance.com',
+  'tiktok': 'tiktok.com',
+  'stripe': 'stripe.com',
+  'wise': 'wise.com',
+  'revolut': 'revolut.com',
+  'standard chartered': 'sc.com',
+  'hsbc': 'hsbc.com',
+  'citibank': 'citi.com',
+  'jp morgan': 'jpmorgan.com',
+  'goldman sachs': 'goldmansachs.com',
+  'morgan stanley': 'morganstanley.com',
+  'barclays': 'barclays.com',
+  'nus': 'nus.edu.sg',
+  'ntu': 'ntu.edu.sg',
+  'smu': 'smu.edu.sg',
+  'sutd': 'sutd.edu.sg',
+  'govtech': 'tech.gov.sg',
+  'temasek': 'temasek.com.sg',
+  'gic': 'gic.com.sg',
+  'capitaland': 'capitaland.com',
+  'keppel': 'kepcorp.com',
+  'sembcorp': 'sembcorp.com',
+  'wilmar': 'wilmar-international.com',
+  'sia': 'singaporeair.com',
+  'singapore airlines': 'singaporeair.com',
+  'changi airport': 'changiairport.com',
+  'foodpanda': 'foodpanda.com',
+  'deliveroo': 'deliveroo.com',
+  'carousell': 'carousell.com',
+  'ninja van': 'ninjavan.co',
+  'razer': 'razer.com',
+};
+
 // Get logo URL - use logo_url if available, otherwise try Clearbit
 function getLogoUrl(company?: Company): string | null {
-  if (company?.logo_url) return company.logo_url;
+  if (!company) return null;
 
-  if (company?.website) {
-    // Extract domain from website URL
+  // 1. Use logo_url if available
+  if (company.logo_url) return company.logo_url;
+
+  // 2. Try website field
+  if (company.website) {
     try {
       const domain = new URL(company.website.startsWith('http') ? company.website : `https://${company.website}`).hostname.replace('www.', '');
       return `https://logo.clearbit.com/${domain}`;
     } catch {
-      return null;
+      // Continue to fallbacks
     }
+  }
+
+  // 3. Try known domain mappings
+  const nameLower = company.name.toLowerCase().trim();
+  if (KNOWN_DOMAINS[nameLower]) {
+    return `https://logo.clearbit.com/${KNOWN_DOMAINS[nameLower]}`;
+  }
+
+  // 4. Try partial matches in known domains
+  for (const [key, domain] of Object.entries(KNOWN_DOMAINS)) {
+    if (nameLower.includes(key) || key.includes(nameLower)) {
+      return `https://logo.clearbit.com/${domain}`;
+    }
+  }
+
+  // 5. Last resort: guess domain from company name
+  const guessedDomain = nameLower
+    .replace(/\s+(pte|ltd|limited|inc|corp|corporation|singapore|sg)\.?/gi, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+
+  if (guessedDomain.length >= 2) {
+    return `https://logo.clearbit.com/${guessedDomain}.com`;
   }
 
   return null;
@@ -60,6 +141,9 @@ function getRelativeTime(dateString: string): string {
 }
 
 export default function JobCard({ job }: JobCardProps) {
+  const [logoError, setLogoError] = useState(false);
+  const logoUrl = getLogoUrl(job.company);
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 20 }}
@@ -80,24 +164,21 @@ export default function JobCard({ job }: JobCardProps) {
             className="relative flex-shrink-0"
           >
             <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-500 to-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
-            <div className="relative w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden ring-2 ring-[var(--border)] group-hover:ring-0 transition-all duration-300">
-              {getLogoUrl(job.company) ? (
+            <div className="relative w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden ring-2 ring-[var(--border)] group-hover:ring-0 transition-all duration-300 bg-white">
+              {logoUrl && !logoError ? (
                 <img
-                  src={getLogoUrl(job.company)!}
+                  src={logoUrl}
                   alt={job.company?.name || 'Company'}
-                  className="w-full h-full object-contain bg-white p-1"
-                  onError={(e) => {
-                    // Hide image and show fallback
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                  }}
+                  className="w-full h-full object-contain p-1.5"
+                  onError={() => setLogoError(true)}
                 />
-              ) : null}
-              <div className={`w-full h-full bg-gradient-to-br from-[#dc2626] to-[#dc2626] flex items-center justify-center ${getLogoUrl(job.company) ? 'hidden' : ''}`}>
-                <span className="text-2xl font-bold text-white">
-                  {job.company?.name?.charAt(0) || '?'}
-                </span>
-              </div>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#dc2626] to-[#b91c1c] flex items-center justify-center">
+                  <span className="text-2xl font-bold text-white">
+                    {job.company?.name?.charAt(0).toUpperCase() || '?'}
+                  </span>
+                </div>
+              )}
             </div>
           </motion.div>
 
