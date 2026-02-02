@@ -138,7 +138,27 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-white mb-4">9. Contact Us</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">9. Job Aggregation (PDPA Compliance)</h2>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                <p className="text-zinc-300 mb-4">
+                  We aggregate internship listings from publicly available sources. Our scraping practices are PDPA compliant:
+                </p>
+                <ul className="list-disc list-inside text-zinc-300 space-y-2">
+                  <li><strong>No Personal Data:</strong> We only collect job listing information, NOT personal data (names, emails, phone numbers)</li>
+                  <li><strong>Robots.txt Compliance:</strong> We respect website robots.txt directives</li>
+                  <li><strong>Data Minimization:</strong> Only job-relevant data is collected (title, description, requirements, salary range)</li>
+                  <li><strong>Source Attribution:</strong> All listings link back to original sources</li>
+                  <li><strong>Removal Requests:</strong> Companies can request listing removal by contacting us</li>
+                  <li><strong>Rate Limiting:</strong> We use responsible scraping practices to avoid server overload</li>
+                </ul>
+                <p className="text-zinc-300 mt-4">
+                  Any personal data inadvertently collected is automatically stripped before storage.
+                </p>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-white mb-4">10. Contact Us</h2>
               <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
                 <p className="text-zinc-300">
                   For privacy-related inquiries or to exercise your data rights:
