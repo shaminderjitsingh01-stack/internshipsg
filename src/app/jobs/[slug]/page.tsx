@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { getJobBySlug, getJobs } from '@/lib/mockData';
+import { getJobBySlug, getJobsFromDB } from '@/lib/database';
 import ShareButton from './ShareButton';
 import JobDetailClient from './JobDetailClient';
 
@@ -13,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const job = getJobBySlug(slug);
+  const job = await getJobBySlug(slug);
 
   if (!job) {
     return {
@@ -56,14 +56,14 @@ export default async function JobDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const job = getJobBySlug(slug);
+  const job = await getJobBySlug(slug);
 
   if (!job) {
     notFound();
   }
 
   // Get similar jobs (same company or similar title keywords)
-  const allJobs = getJobs();
+  const allJobs = await getJobsFromDB();
   const similarJobs = allJobs
     .filter(j => j.id !== job.id && (
       j.company_id === job.company_id ||

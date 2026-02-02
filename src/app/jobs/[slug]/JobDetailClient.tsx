@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import ShareButton from './ShareButton';
-import { Job } from '@/lib/mockData';
+import { Job } from '@/lib/database';
 
 interface JobDetailClientProps {
   job: Job;

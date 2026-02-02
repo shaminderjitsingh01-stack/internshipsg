@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Header, Footer } from '@/components';
-import { filterCompanies, getIndustries, getJobCountByCompany } from '@/lib/mockData';
-import type { Company } from '@/lib/mockData';
+import { getCompaniesFromDB, getIndustries, getJobCountByCompany, type Company } from '@/lib/database';
 
 export default function CompaniesPage() {
   const [search, setSearch] = useState('');
@@ -21,14 +20,28 @@ export default function CompaniesPage() {
     const ind = params.get('industry') || '';
     setSearch(q);
     setIndustry(ind);
-    setCompanies(filterCompanies(q, ind));
-    setIndustries(getIndustries());
-    setJobCounts(getJobCountByCompany());
+
+    // Fetch data from database
+    const fetchData = async () => {
+      const [companiesData, industriesData, jobCountsData] = await Promise.all([
+        getCompaniesFromDB(q, ind),
+        getIndustries(),
+        getJobCountByCompany(),
+      ]);
+      setCompanies(companiesData);
+      setIndustries(industriesData);
+      setJobCounts(jobCountsData);
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
-    setCompanies(filterCompanies(search, industry));
-    setVisibleCount(9);
+    const fetchCompanies = async () => {
+      const data = await getCompaniesFromDB(search, industry);
+      setCompanies(data);
+      setVisibleCount(9);
+    };
+    fetchCompanies();
   }, [search, industry]);
 
   const handleSearch = (e: React.FormEvent) => {

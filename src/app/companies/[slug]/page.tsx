@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Header, Footer } from '@/components';
-import { getCompanyBySlug, getJobsByCompanyId } from '@/lib/mockData';
+import { getCompanyBySlug, getJobsByCompanyId } from '@/lib/database';
 
 export default async function CompanyPage({
   params
@@ -9,13 +9,13 @@ export default async function CompanyPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params;
-  const company = getCompanyBySlug(slug);
+  const company = await getCompanyBySlug(slug);
 
   if (!company) {
     notFound();
   }
 
-  const jobs = getJobsByCompanyId(company.id);
+  const jobs = await getJobsByCompanyId(company.id);
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col">

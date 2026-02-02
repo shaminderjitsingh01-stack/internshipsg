@@ -1,5 +1,39 @@
 import { supabase } from './supabase';
 
+// Types
+export interface Company {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logo_url?: string;
+  website?: string;
+  industry?: string;
+  size?: string;
+  location?: string;
+  created_at: string;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  requirements?: string[];
+  location: string;
+  work_arrangement?: 'onsite' | 'remote' | 'hybrid';
+  duration?: string;
+  salary_min?: number;
+  salary_max?: number;
+  application_url: string;
+  company_id: string;
+  company?: Company;
+  industry?: string;
+  is_active: boolean;
+  posted_at: string;
+  created_at: string;
+}
+
 // Fetch all jobs with company info
 export async function getJobsFromDB(search?: string, industry?: string) {
   let query = supabase
@@ -219,4 +253,59 @@ export async function getApplications(userId: string) {
   }
 
   return data || [];
+}
+
+// Fetch a single job by slug
+export async function getJobBySlug(slug: string): Promise<Job | null> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select(`
+      *,
+      company:companies(*)
+    `)
+    .eq('slug', slug)
+    .single();
+
+  if (error) {
+    console.error('Error fetching job by slug:', error);
+    return null;
+  }
+
+  return data;
+}
+
+// Fetch a single company by slug
+export async function getCompanyBySlug(slug: string): Promise<Company | null> {
+  const { data, error } = await supabase
+    .from('companies')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error) {
+    console.error('Error fetching company by slug:', error);
+    return null;
+  }
+
+  return data;
+}
+
+// Get job count by company
+export async function getJobCountByCompany(): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('company_id')
+    .eq('is_active', true);
+
+  if (error) {
+    console.error('Error fetching job counts:', error);
+    return {};
+  }
+
+  const counts: Record<string, number> = {};
+  data?.forEach((job) => {
+    counts[job.company_id] = (counts[job.company_id] || 0) + 1;
+  });
+
+  return counts;
 }
