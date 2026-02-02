@@ -13,6 +13,7 @@ interface Company {
 
 interface Job {
   id: string;
+  slug?: string;
   title: string;
   location?: string;
   work_arrangement?: string;
@@ -81,7 +82,12 @@ export default function JobCard({ job }: JobCardProps) {
           {/* Job Details */}
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-[var(--foreground)] mb-1 truncate">
-              {job.title}
+              <Link
+                href={`/jobs/${job.slug || job.id}`}
+                className="hover:text-[#dc2626] transition-colors duration-200"
+              >
+                {job.title}
+              </Link>
             </h2>
             <p className="text-[var(--muted)] mb-3">
               {job.company ? (

@@ -423,21 +423,23 @@ export default function Home() {
                   <JobCard
                     job={{
                       id: job.id,
+                      slug: job.slug,
                       title: job.title,
                       company: job.company ? {
                         id: job.company.id,
                         name: job.company.name,
-                        slug: job.company.id,
-                        logo_url: job.company.logo,
+                        slug: job.company.slug || job.company.id,
+                        logo_url: job.company.logo_url || job.company.logo,
                         industry: job.company.industry,
                       } : undefined,
                       location: job.location || 'Singapore',
                       salary: job.salary_min && job.salary_max
                         ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}/mo`
-                        : 'Competitive',
-                      work_arrangement: 'hybrid',
-                      application_url: job.company?.website || '#',
-                      posted_at: job.created_at,
+                        : undefined,
+                      work_arrangement: job.work_arrangement || 'onsite',
+                      duration: job.duration,
+                      application_url: job.application_url || '#',
+                      posted_at: job.posted_at || job.created_at,
                     }}
                   />
                 </motion.div>

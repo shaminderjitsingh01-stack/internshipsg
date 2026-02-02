@@ -17,6 +17,7 @@ export default function Header() {
     { href: '/', label: 'Jobs' },
     { href: '/companies', label: 'Companies' },
     { href: '/resources', label: 'Resources' },
+    { href: '/employer/login', label: 'For Employers' },
   ];
 
   const isActiveLink = (href: string) => {
@@ -100,9 +101,12 @@ export default function Header() {
             <>
               {user ? (
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-[var(--muted)]">
-                    {user.user_metadata?.full_name || user.email?.split('@')[0]}
-                  </span>
+                  <Link
+                    href="/dashboard"
+                    className="px-4 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                  >
+                    Dashboard
+                  </Link>
                   <button
                     onClick={() => signOut()}
                     className="px-4 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
@@ -237,9 +241,13 @@ export default function Header() {
                 >
                   {user ? (
                     <>
-                      <div className="py-3 px-4 text-sm text-[var(--muted)]">
-                        Signed in as {user.user_metadata?.full_name || user.email?.split('@')[0]}
-                      </div>
+                      <Link
+                        href="/dashboard"
+                        className="block w-full text-center py-3 px-4 text-sm font-medium text-[var(--foreground)] bg-[var(--card)] border border-[var(--border)] rounded-lg transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
                       <button
                         onClick={() => { signOut(); setMobileMenuOpen(false); }}
                         className="block w-full text-center py-3 px-4 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] rounded-lg transition-colors"
