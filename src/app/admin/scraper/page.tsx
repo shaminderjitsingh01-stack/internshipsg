@@ -22,7 +22,7 @@ export default function AdminScraperPage() {
   const [error, setError] = useState('');
 
   // Simple password check (set ADMIN_PASSWORD in env)
-  const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'internship2024';
+  const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'internship2026';
 
   useEffect(() => {
     // Check if already authenticated
