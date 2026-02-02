@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Header, Footer, JobCard } from '@/components';
-import { jobs, companies, getStats } from '@/lib/mockData';
+import { getJobsFromDB, getStats } from '@/lib/database';
 
 // Popular search tags
 const popularSearches = [
@@ -118,6 +118,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [mounted, setMounted] = useState(false);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [stats, setStats] = useState({ jobs: 0, companies: 0 });
+  const [loading, setLoading] = useState(true);
   const { scrollY } = useScroll();
 
   // Parallax effect for blobs
@@ -127,16 +130,32 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
 
-  const stats = getStats();
+    // Fetch jobs and stats from database
+    async function fetchData() {
+      try {
+        const [jobsData, statsData] = await Promise.all([
+          getJobsFromDB(),
+          getStats(),
+        ]);
+        setJobs(jobsData);
+        setStats(statsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   // Filter jobs based on category
   const filteredJobs = activeFilter === 'all'
     ? jobs.slice(0, 6)
     : jobs.filter(job => {
         const category = filterCategories.find(c => c.id === activeFilter);
-        return category?.industries?.includes(job.company.industry);
+        return category?.industries?.includes(job.company?.industry || job.industry);
       }).slice(0, 6);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -384,22 +403,46 @@ export default function Home() {
 
           {/* Jobs Grid */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 mb-8">
-            {filteredJobs.map((job, index) => (
-              <motion.div
-                key={job.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <JobCard
-                  job={{
-                    ...job,
-                    salary: `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}/mo`,
-                  }}
-                />
-              </motion.div>
-            ))}
+            {loading ? (
+              <div className="col-span-full text-center py-12 text-[var(--muted)]">
+                Loading jobs...
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-[var(--muted)]">
+                No jobs found
+              </div>
+            ) : (
+              filteredJobs.map((job, index) => (
+                <motion.div
+                  key={job.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <JobCard
+                    job={{
+                      id: job.id,
+                      title: job.title,
+                      company: job.company ? {
+                        id: job.company.id,
+                        name: job.company.name,
+                        slug: job.company.id,
+                        logo_url: job.company.logo,
+                        industry: job.company.industry,
+                      } : undefined,
+                      location: job.location || 'Singapore',
+                      salary: job.salary_min && job.salary_max
+                        ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}/mo`
+                        : 'Competitive',
+                      work_arrangement: 'hybrid',
+                      application_url: job.company?.website || '#',
+                      posted_at: job.created_at,
+                    }}
+                  />
+                </motion.div>
+              ))
+            )}
           </div>
 
           {/* View All Button */}
