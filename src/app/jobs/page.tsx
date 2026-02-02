@@ -11,6 +11,7 @@ interface Company {
   name: string;
   slug: string;
   logo_url?: string;
+  website?: string;
   industry?: string;
 }
 
@@ -359,6 +360,7 @@ export default function JobsPage() {
                             name: job.company.name,
                             slug: job.company.slug,
                             logo_url: job.company.logo_url,
+                            website: job.company.website,
                             industry: job.company.industry,
                           }
                         : undefined,

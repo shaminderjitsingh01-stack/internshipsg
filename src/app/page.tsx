@@ -430,6 +430,7 @@ export default function Home() {
                         name: job.company.name,
                         slug: job.company.slug || job.company.id,
                         logo_url: job.company.logo_url || job.company.logo,
+                        website: job.company.website,
                         industry: job.company.industry,
                       } : undefined,
                       location: job.location || 'Singapore',

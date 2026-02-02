@@ -8,7 +8,25 @@ interface Company {
   name: string;
   slug: string;
   logo_url?: string;
+  website?: string;
   industry?: string;
+}
+
+// Get logo URL - use logo_url if available, otherwise try Clearbit
+function getLogoUrl(company?: Company): string | null {
+  if (company?.logo_url) return company.logo_url;
+
+  if (company?.website) {
+    // Extract domain from website URL
+    try {
+      const domain = new URL(company.website.startsWith('http') ? company.website : `https://${company.website}`).hostname.replace('www.', '');
+      return `https://logo.clearbit.com/${domain}`;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
 }
 
 interface Job {
@@ -63,19 +81,23 @@ export default function JobCard({ job }: JobCardProps) {
           >
             <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-500 to-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
             <div className="relative w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden ring-2 ring-[var(--border)] group-hover:ring-0 transition-all duration-300">
-              {job.company?.logo_url ? (
+              {getLogoUrl(job.company) ? (
                 <img
-                  src={job.company.logo_url}
-                  alt={job.company.name}
-                  className="w-full h-full object-cover"
+                  src={getLogoUrl(job.company)!}
+                  alt={job.company?.name || 'Company'}
+                  className="w-full h-full object-contain bg-white p-1"
+                  onError={(e) => {
+                    // Hide image and show fallback
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#dc2626] to-[#dc2626] flex items-center justify-center">
-                  <span className="text-2xl font-bold text-white">
-                    {job.company?.name?.charAt(0) || '?'}
-                  </span>
-                </div>
-              )}
+              ) : null}
+              <div className={`w-full h-full bg-gradient-to-br from-[#dc2626] to-[#dc2626] flex items-center justify-center ${getLogoUrl(job.company) ? 'hidden' : ''}`}>
+                <span className="text-2xl font-bold text-white">
+                  {job.company?.name?.charAt(0) || '?'}
+                </span>
+              </div>
             </div>
           </motion.div>
 
