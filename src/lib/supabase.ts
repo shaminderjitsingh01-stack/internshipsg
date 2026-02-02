@@ -1,16 +1,42 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+let supabaseInstance: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Lazy-initialized Supabase client (for client-side and general use)
+export function getSupabase(): SupabaseClient {
+  if (!supabaseInstance) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase credentials not configured');
+    }
+
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return supabaseInstance;
+}
+
+// For backward compatibility - lazy getter
+export const supabase = {
+  from: (...args: Parameters<SupabaseClient['from']>) => getSupabase().from(...args),
+  auth: new Proxy({} as SupabaseClient['auth'], {
+    get: (_, prop) => (getSupabase().auth as any)[prop],
+  }),
+  storage: new Proxy({} as SupabaseClient['storage'], {
+    get: (_, prop) => (getSupabase().storage as any)[prop],
+  }),
+};
 
 // Server-side client with service role (for scraper and admin operations)
 export function createServiceClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Supabase service credentials not configured');
   }
+
   return createClient(supabaseUrl, serviceRoleKey);
 }
 
