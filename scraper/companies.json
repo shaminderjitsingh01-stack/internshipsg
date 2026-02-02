@@ -1,0 +1,244 @@
+{
+  "companies": [
+    {
+      "name": "Google",
+      "logo_url": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+      "website": "https://www.google.com",
+      "careers_url": "https://www.google.com/about/careers/applications/jobs/results/?location=Singapore&target_level=INTERN_AND_APPRENTICE",
+      "industry": "Technology",
+      "size": "10000+"
+    },
+    {
+      "name": "Shopee",
+      "logo_url": "https://careers.shopee.sg/favicon.ico",
+      "website": "https://www.shopee.sg",
+      "careers_url": "https://careers.shopee.sg/jobs?country_id=1&employment_type=2",
+      "industry": "E-commerce",
+      "size": "10000+"
+    },
+    {
+      "name": "Grab",
+      "logo_url": "https://grab.careers/favicon.ico",
+      "website": "https://www.grab.com",
+      "careers_url": "https://grab.careers/jobs/?search=intern&location=singapore",
+      "industry": "Technology",
+      "size": "5000+"
+    },
+    {
+      "name": "TikTok",
+      "logo_url": "https://sf-static.tiktokcdn.com/obj/eden-sg/uhtyvueh7nulogpoguhm/tiktok-icon2.png",
+      "website": "https://www.tiktok.com",
+      "careers_url": "https://careers.tiktok.com/position?keywords=intern&location=CT_163",
+      "industry": "Technology",
+      "size": "10000+"
+    },
+    {
+      "name": "ByteDance",
+      "logo_url": "https://jobs.bytedance.com/favicon.ico",
+      "website": "https://www.bytedance.com",
+      "careers_url": "https://jobs.bytedance.com/en/position?keywords=intern&location=CT_163",
+      "industry": "Technology",
+      "size": "10000+"
+    },
+    {
+      "name": "DBS Bank",
+      "logo_url": "https://www.dbs.com.sg/iwov-resources/media/images/dbs-logo.png",
+      "website": "https://www.dbs.com.sg",
+      "careers_url": "https://www.dbs.com/careers/internships",
+      "industry": "Banking",
+      "size": "10000+"
+    },
+    {
+      "name": "OCBC Bank",
+      "logo_url": "https://www.ocbc.com/favicon.ico",
+      "website": "https://www.ocbc.com",
+      "careers_url": "https://www.ocbc.com/group/careers",
+      "industry": "Banking",
+      "size": "10000+"
+    },
+    {
+      "name": "GovTech",
+      "logo_url": "https://www.tech.gov.sg/images/ogp.png",
+      "website": "https://www.tech.gov.sg",
+      "careers_url": "https://www.tech.gov.sg/careers/students-and-graduates/internships/",
+      "industry": "Government",
+      "size": "1000+"
+    },
+    {
+      "name": "Stripe",
+      "logo_url": "https://stripe.com/favicon.ico",
+      "website": "https://stripe.com",
+      "careers_url": "https://stripe.com/jobs/search?office_locations=Asia+Pacific--Singapore",
+      "industry": "Fintech",
+      "size": "5000+"
+    },
+    {
+      "name": "Meta",
+      "logo_url": "https://www.metacareers.com/favicon.ico",
+      "website": "https://www.meta.com",
+      "careers_url": "https://www.metacareers.com/jobs?offices[0]=Singapore&roles[0]=Intern",
+      "industry": "Technology",
+      "size": "10000+"
+    },
+    {
+      "name": "Visa",
+      "logo_url": "https://www.visa.com.sg/favicon.ico",
+      "website": "https://www.visa.com.sg",
+      "careers_url": "https://www.visa.com.sg/careers.html",
+      "industry": "Fintech",
+      "size": "10000+"
+    },
+    {
+      "name": "JPMorgan Chase",
+      "logo_url": "https://careers.jpmorgan.com/favicon.ico",
+      "website": "https://www.jpmorganchase.com",
+      "careers_url": "https://careers.jpmorgan.com/us/en/students/programs?search=&tags=location__AsiaPacific__Singapore",
+      "industry": "Banking",
+      "size": "10000+"
+    },
+    {
+      "name": "Goldman Sachs",
+      "logo_url": "https://www.goldmansachs.com/favicon.ico",
+      "website": "https://www.goldmansachs.com",
+      "careers_url": "https://higher.gs.com/internships",
+      "industry": "Banking",
+      "size": "10000+"
+    },
+    {
+      "name": "Deloitte",
+      "logo_url": "https://www.deloitte.com/favicon.ico",
+      "website": "https://www.deloitte.com/sg",
+      "careers_url": "https://apply.deloitte.com/careers/SearchJobs/?listFilterMode=1&country=3316",
+      "industry": "Consulting",
+      "size": "10000+"
+    },
+    {
+      "name": "PwC",
+      "logo_url": "https://www.pwc.com/favicon.ico",
+      "website": "https://www.pwc.com/sg",
+      "careers_url": "https://www.pwc.com/sg/en/careers/students.html",
+      "industry": "Consulting",
+      "size": "10000+"
+    },
+    {
+      "name": "EY",
+      "logo_url": "https://www.ey.com/favicon.ico",
+      "website": "https://www.ey.com/sg",
+      "careers_url": "https://www.ey.com/en_sg/careers/students",
+      "industry": "Consulting",
+      "size": "10000+"
+    },
+    {
+      "name": "KPMG",
+      "logo_url": "https://www.kpmg.com/favicon.ico",
+      "website": "https://www.kpmg.com.sg",
+      "careers_url": "https://www.kpmg.com.sg/en/home/careers.html",
+      "industry": "Consulting",
+      "size": "10000+"
+    },
+    {
+      "name": "Accenture",
+      "logo_url": "https://www.accenture.com/favicon.ico",
+      "website": "https://www.accenture.com/sg-en",
+      "careers_url": "https://www.accenture.com/sg-en/careers/jobsearch?jk=internship",
+      "industry": "Consulting",
+      "size": "10000+"
+    },
+    {
+      "name": "McKinsey",
+      "logo_url": "https://www.mckinsey.com/favicon.ico",
+      "website": "https://www.mckinsey.com",
+      "careers_url": "https://www.mckinsey.com/careers/search-jobs?locations=Singapore",
+      "industry": "Consulting",
+      "size": "10000+"
+    },
+    {
+      "name": "BCG",
+      "logo_url": "https://www.bcg.com/favicon.ico",
+      "website": "https://www.bcg.com",
+      "careers_url": "https://careers.bcg.com/locations/singapore",
+      "industry": "Consulting",
+      "size": "10000+"
+    },
+    {
+      "name": "Lazada",
+      "logo_url": "https://www.lazada.sg/favicon.ico",
+      "website": "https://www.lazada.sg",
+      "careers_url": "https://www.lazada.com/en/careers/",
+      "industry": "E-commerce",
+      "size": "5000+"
+    },
+    {
+      "name": "Sea Group",
+      "logo_url": "https://www.sea.com/favicon.ico",
+      "website": "https://www.sea.com",
+      "careers_url": "https://www.sea.com/careers",
+      "industry": "Technology",
+      "size": "10000+"
+    },
+    {
+      "name": "Procter & Gamble",
+      "logo_url": "https://www.pg.com/favicon.ico",
+      "website": "https://www.pg.com",
+      "careers_url": "https://www.pgcareers.com/search-jobs?k=intern&l=singapore",
+      "industry": "FMCG",
+      "size": "10000+"
+    },
+    {
+      "name": "Unilever",
+      "logo_url": "https://www.unilever.com/favicon.ico",
+      "website": "https://www.unilever.com.sg",
+      "careers_url": "https://careers.unilever.com/location/singapore-jobs/34155/4765951/2",
+      "industry": "FMCG",
+      "size": "10000+"
+    },
+    {
+      "name": "Dyson",
+      "logo_url": "https://www.dyson.com.sg/favicon.ico",
+      "website": "https://www.dyson.com.sg",
+      "careers_url": "https://careers.dyson.com/en-gb/search-results?keywords=intern&location=singapore",
+      "industry": "Technology",
+      "size": "5000+"
+    },
+    {
+      "name": "Micron",
+      "logo_url": "https://www.micron.com/favicon.ico",
+      "website": "https://www.micron.com",
+      "careers_url": "https://careers.micron.com/careers?location=Singapore",
+      "industry": "Semiconductor",
+      "size": "10000+"
+    },
+    {
+      "name": "ShopBack",
+      "logo_url": "https://www.shopback.sg/favicon.ico",
+      "website": "https://www.shopback.sg",
+      "careers_url": "https://careers.shopback.com/?search=intern",
+      "industry": "E-commerce",
+      "size": "1000+"
+    },
+    {
+      "name": "Carousell",
+      "logo_url": "https://www.carousell.sg/favicon.ico",
+      "website": "https://www.carousell.sg",
+      "careers_url": "https://careers.carousell.com/",
+      "industry": "E-commerce",
+      "size": "500+"
+    },
+    {
+      "name": "Razer",
+      "logo_url": "https://www.razer.com/favicon.ico",
+      "website": "https://www.razer.com",
+      "careers_url": "https://careers.razer.com/",
+      "industry": "Technology",
+      "size": "1000+"
+    },
+    {
+      "name": "Singapore Airlines",
+      "logo_url": "https://www.singaporeair.com/favicon.ico",
+      "website": "https://www.singaporeair.com",
+      "careers_url": "https://www.singaporeair.com/en_UK/sg/careers/",
+      "industry": "Aviation",
+      "size": "10000+"
+    }
+  ]
+}
