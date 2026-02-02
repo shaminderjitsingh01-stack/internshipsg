@@ -25,12 +25,40 @@ const filterCategories = [
   { id: 'marketing', label: 'Marketing', industries: ['E-commerce'] },
 ];
 
-// University logos (placeholder paths - would use actual logos in production)
+// University logos with SVG representations
 const universities = [
-  { name: 'NUS', logo: '/logos/nus.png' },
-  { name: 'NTU', logo: '/logos/ntu.png' },
-  { name: 'SMU', logo: '/logos/smu.png' },
-  { name: 'SUTD', logo: '/logos/sutd.png' },
+  {
+    name: 'NUS',
+    logo: (
+      <svg viewBox="0 0 120 40" className="h-10 w-auto">
+        <text x="0" y="30" className="fill-current" style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'serif' }}>NUS</text>
+      </svg>
+    )
+  },
+  {
+    name: 'NTU',
+    logo: (
+      <svg viewBox="0 0 120 40" className="h-10 w-auto">
+        <text x="0" y="30" className="fill-current" style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'serif' }}>NTU</text>
+      </svg>
+    )
+  },
+  {
+    name: 'SMU',
+    logo: (
+      <svg viewBox="0 0 120 40" className="h-10 w-auto">
+        <text x="0" y="30" className="fill-current" style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'serif' }}>SMU</text>
+      </svg>
+    )
+  },
+  {
+    name: 'SUTD',
+    logo: (
+      <svg viewBox="0 0 140 40" className="h-10 w-auto">
+        <text x="0" y="30" className="fill-current" style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'serif' }}>SUTD</text>
+      </svg>
+    )
+  },
 ];
 
 // Features for bento grid
@@ -300,11 +328,8 @@ export default function Home() {
                 transition={{ delay: index * 0.1 }}
                 className="group"
               >
-                <div className="w-24 h-12 flex items-center justify-center opacity-50 hover:opacity-100 transition-all duration-300">
-                  {/* Placeholder for university logos - show name instead */}
-                  <span className="text-2xl font-bold text-[var(--muted)] group-hover:text-[#dc2626] transition-all duration-300">
-                    {uni.name}
-                  </span>
+                <div className="h-12 flex items-center justify-center opacity-50 hover:opacity-100 transition-all duration-300 text-[var(--muted)] group-hover:text-[#dc2626]">
+                  {uni.logo}
                 </div>
               </motion.div>
             ))}
