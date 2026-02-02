@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Use service role for scraper (bypasses RLS)
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Use service role for scraper (bypasses RLS), fallback to anon key
+const supabase = createClient(
+  supabaseUrl,
+  supabaseServiceKey || supabaseAnonKey
+);
 
 export interface ScrapedJob {
   title: string;
@@ -98,29 +102,44 @@ export async function getCompanies() {
 // Main scraper function
 export async function runScraper() {
   console.log('Starting job scraper...');
+  const startTime = Date.now();
+
+  if (!supabaseUrl) {
+    throw new Error('Supabase URL not configured');
+  }
 
   const companies = await getCompanies();
   console.log(`Found ${companies.length} companies`);
 
+  // Get current job count
+  const { count: beforeCount } = await supabase
+    .from('jobs')
+    .select('*', { count: 'exact', head: true });
+
   // For now, we'll add sample internships manually
   // In production, you'd scrape each company's careers page
+  // TODO: Implement actual scrapers for company career pages
 
   const sampleJobs: ScrapedJob[] = [
-    {
-      title: 'Software Engineering Intern',
-      description: 'Join our engineering team to build scalable solutions.',
-      requirements: ['Computer Science student', 'Python or Java', 'Problem-solving skills'],
-      location: 'Singapore',
-      salary_min: 3500,
-      salary_max: 5000,
-      application_url: 'https://careers.example.com',
-      company_name: 'Google',
-    },
-    // Add more sample jobs here
+    // Placeholder - scrapers will be added for each company
   ];
 
+  // Insert all sample jobs
   await insertJobs(sampleJobs);
 
-  console.log('Scraper completed');
-  return { success: true, jobsProcessed: sampleJobs.length };
+  // Get new job count
+  const { count: afterCount } = await supabase
+    .from('jobs')
+    .select('*', { count: 'exact', head: true });
+
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`Scraper completed in ${duration}s`);
+
+  return {
+    success: true,
+    jobsScraped: sampleJobs.length,
+    newJobs: (afterCount || 0) - (beforeCount || 0),
+    companiesUpdated: companies.length,
+    totalJobs: afterCount || 0,
+  };
 }

@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 
-// API route to trigger scraper (protected by secret key)
+// API route to trigger scraper (protected by secret key or same-origin)
 export async function POST(request: Request) {
   // Check authorization
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('host');
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Allow if: no secret set, valid bearer token, or same-origin request
+  const isValidBearer = cronSecret && authHeader === `Bearer ${cronSecret}`;
+  const isSameOrigin = origin && host && origin.includes(host.split(':')[0]);
+  const noSecretSet = !cronSecret;
+
+  if (!isValidBearer && !isSameOrigin && !noSecretSet) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
