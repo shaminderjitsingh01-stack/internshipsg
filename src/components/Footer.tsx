@@ -18,9 +18,9 @@ export default function Footer() {
   ];
 
   const companyLinks = [
-    { href: '/post-job', label: 'Post a Job' },
-    { href: '/pricing', label: 'Pricing' },
-    { href: '/contact', label: 'Contact Us' },
+    { href: '/employer/signup', label: 'Post a Job' },
+    { href: '/employer/login', label: 'Employer Login' },
+    { href: '/employer/claim', label: 'Claim Company' },
   ];
 
   const legalLinks = [
