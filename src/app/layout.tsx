@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import BuildBanner from "@/components/BuildBanner";
+import SharePopup from "@/components/SharePopup";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -52,6 +53,7 @@ export default function RootLayout({
           <ThemeProvider>
             {children}
             <BuildBanner />
+            <SharePopup />
           </ThemeProvider>
         </AuthProvider>
       </body>
