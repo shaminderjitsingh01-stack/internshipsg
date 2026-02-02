@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { loadAnalytics } from '@/lib/cookies';
+
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
@@ -20,12 +23,18 @@ export default function CookieConsent() {
     localStorage.setItem('cookie_consent', 'all');
     localStorage.setItem('cookie_consent_date', new Date().toISOString());
     setShowBanner(false);
+
+    // Load analytics immediately after consent
+    if (GA_MEASUREMENT_ID) {
+      loadAnalytics(GA_MEASUREMENT_ID);
+    }
   };
 
   const acceptEssential = () => {
     localStorage.setItem('cookie_consent', 'essential');
     localStorage.setItem('cookie_consent_date', new Date().toISOString());
     setShowBanner(false);
+    // Analytics NOT loaded - user declined
   };
 
   if (!showBanner) return null;

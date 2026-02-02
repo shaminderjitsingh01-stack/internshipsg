@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import BuildBanner from "@/components/BuildBanner";
 import SharePopup from "@/components/SharePopup";
 import CookieConsent from "@/components/CookieConsent";
+import Analytics from "@/components/Analytics";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -56,6 +57,7 @@ export default function RootLayout({
             <BuildBanner />
             <SharePopup />
             <CookieConsent />
+            <Analytics />
           </ThemeProvider>
         </AuthProvider>
       </body>
