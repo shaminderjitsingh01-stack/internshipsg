@@ -28,6 +28,41 @@ export interface ScrapedJob {
   company_name: string;
 }
 
+// Keywords that indicate an internship position
+const INTERNSHIP_KEYWORDS = [
+  'intern',
+  'internship',
+  'trainee',
+  'graduate program',
+  'student',
+  'co-op',
+  'placement',
+  'industrial attachment',
+];
+
+// HARD RULE: Only internships are allowed
+function isInternship(job: ScrapedJob): boolean {
+  const titleLower = job.title.toLowerCase();
+  const descLower = (job.description || '').toLowerCase();
+
+  // Check if any internship keyword is present in title or description
+  return INTERNSHIP_KEYWORDS.some(keyword =>
+    titleLower.includes(keyword) || descLower.includes(keyword)
+  );
+}
+
+// Filter function to ensure only internships are scraped
+export function filterInternshipsOnly(jobs: ScrapedJob[]): ScrapedJob[] {
+  const internships = jobs.filter(isInternship);
+  const rejected = jobs.length - internships.length;
+
+  if (rejected > 0) {
+    console.log(`[SCRAPER] Rejected ${rejected} non-internship jobs (HARD RULE: internships only)`);
+  }
+
+  return internships;
+}
+
 // Fetch jobs from a company's career page (example structure)
 export async function scrapeCompanyJobs(companyName: string, careersUrl: string): Promise<ScrapedJob[]> {
   // This is a placeholder - in production you'd use:
@@ -42,10 +77,15 @@ export async function scrapeCompanyJobs(companyName: string, careersUrl: string)
 }
 
 // Insert scraped jobs into database
+// HARD RULE: Only internships are inserted
 export async function insertJobs(jobs: ScrapedJob[]) {
   const supabase = getSupabase();
 
-  for (const job of jobs) {
+  // ENFORCE: Filter to internships only before inserting
+  const internshipsOnly = filterInternshipsOnly(jobs);
+  console.log(`[SCRAPER] Processing ${internshipsOnly.length} internships out of ${jobs.length} total jobs`);
+
+  for (const job of internshipsOnly) {
     // Get company ID
     const { data: company } = await supabase
       .from('companies')
@@ -71,19 +111,22 @@ export async function insertJobs(jobs: ScrapedJob[]) {
       continue;
     }
 
-    // Insert new job
+    // Insert new job - ALWAYS marked as Internship (HARD RULE)
     const { error } = await supabase.from('jobs').insert({
       company_id: company.id,
       title: job.title,
+      slug: job.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Math.random().toString(36).substring(2, 8),
       description: job.description,
       requirements: job.requirements,
       location: job.location || 'Singapore',
-      type: 'Internship',
+      job_type: 'Internship', // HARD RULE: Only internships
+      application_url: job.application_url,
       salary_min: job.salary_min,
       salary_max: job.salary_max,
       industry: null, // Will be filled from company
       is_featured: false,
       is_active: true,
+      posted_at: new Date().toISOString(),
     });
 
     if (error) {
