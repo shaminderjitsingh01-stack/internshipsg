@@ -579,10 +579,10 @@ export default function Home() {
               Browse Jobs
             </Link>
             <Link
-              href="/companies"
+              href="/employer/signup"
               className="px-8 py-4 bg-transparent text-white font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-[#dc2626] transition-all duration-300"
             >
-              For Companies
+              For Employers
             </Link>
           </motion.div>
         </div>
