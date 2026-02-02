@@ -18,7 +18,6 @@ export default function Footer() {
   ];
 
   const companyLinks = [
-    { href: '/about', label: 'About Us' },
     { href: '/post-job', label: 'Post a Job' },
     { href: '/pricing', label: 'Pricing' },
     { href: '/contact', label: 'Contact Us' },

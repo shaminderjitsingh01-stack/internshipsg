@@ -5,17 +5,18 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { user, loading, signOut } = useAuth();
 
   const navLinks = [
     { href: '/', label: 'Jobs' },
     { href: '/companies', label: 'Companies' },
     { href: '/resources', label: 'Resources' },
-    { href: '/about', label: 'About' },
   ];
 
   const isActiveLink = (href: string) => {
@@ -75,7 +76,7 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Right Side - Theme Toggle & CTA */}
+        {/* Right Side - Theme Toggle & Auth */}
         <div className="hidden md:flex items-center gap-4">
           {/* Theme Toggle */}
           <button
@@ -94,13 +95,39 @@ export default function Header() {
             )}
           </button>
 
-          {/* Post a Job CTA */}
-          <Link
-            href="/post-job"
-            className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#dc2626] to-[#dc2626] rounded-full hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300 hover:scale-105"
-          >
-            Post a Job
-          </Link>
+          {/* Auth Buttons */}
+          {!loading && (
+            <>
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-[var(--muted)]">
+                    {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                  </span>
+                  <button
+                    onClick={() => signOut()}
+                    className="px-4 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="px-4 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="px-5 py-2.5 text-sm font-semibold text-white bg-[#dc2626] rounded-full hover:bg-[#b91c1c] hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
+            </>
+          )}
         </div>
 
         {/* Mobile - Theme Toggle & Menu Button */}
@@ -199,22 +226,47 @@ export default function Header() {
                 </motion.div>
               ))}
 
-              {/* Mobile Post a Job CTA */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ delay: navLinks.length * 0.1, duration: 0.3 }}
-                className="pt-4"
-              >
-                <Link
-                  href="/post-job"
-                  className="block w-full text-center py-3 px-4 text-sm font-semibold text-white bg-gradient-to-r from-[#dc2626] to-[#dc2626] rounded-lg transition-all duration-300"
-                  onClick={() => setMobileMenuOpen(false)}
+              {/* Mobile Auth Buttons */}
+              {!loading && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ delay: navLinks.length * 0.1, duration: 0.3 }}
+                  className="pt-4 space-y-2"
                 >
-                  Post a Job
-                </Link>
-              </motion.div>
+                  {user ? (
+                    <>
+                      <div className="py-3 px-4 text-sm text-[var(--muted)]">
+                        Signed in as {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                      </div>
+                      <button
+                        onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                        className="block w-full text-center py-3 px-4 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] rounded-lg transition-colors"
+                      >
+                        Sign out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="block w-full text-center py-3 px-4 text-sm font-medium text-[var(--foreground)] bg-[var(--card)] border border-[var(--border)] rounded-lg transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Sign in
+                      </Link>
+                      <Link
+                        href="/signup"
+                        className="block w-full text-center py-3 px-4 text-sm font-semibold text-white bg-[#dc2626] rounded-lg transition-all duration-300"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Sign up
+                      </Link>
+                    </>
+                  )}
+                </motion.div>
+              )}
             </div>
           </motion.nav>
         )}

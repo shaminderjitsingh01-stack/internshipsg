@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/context/AuthContext";
+import BuildBanner from "@/components/BuildBanner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,9 +48,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            {children}
+            <BuildBanner />
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
