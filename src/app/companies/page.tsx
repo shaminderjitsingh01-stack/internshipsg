@@ -195,10 +195,18 @@ export default function CompaniesPage() {
                   <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 hover:border-transparent transition-all duration-500 group-hover:-translate-y-1 h-full">
                     <div className="flex flex-col h-full">
                       {/* Company Logo/Initial */}
-                      <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center mb-4 shadow-lg shadow-purple-500/20">
-                        <span className="text-2xl font-bold text-[var(--foreground)]">
-                          {company.name?.charAt(0) || '?'}
-                        </span>
+                      <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center mb-4 shadow-lg shadow-purple-500/20 overflow-hidden">
+                        {company.logo_url ? (
+                          <img
+                            src={company.logo_url}
+                            alt={company.name}
+                            className="w-full h-full object-contain p-2 bg-white"
+                          />
+                        ) : (
+                          <span className="text-2xl font-bold text-white">
+                            {company.name?.charAt(0) || '?'}
+                          </span>
+                        )}
                       </div>
 
                       {/* Company Name */}

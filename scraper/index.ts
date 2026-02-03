@@ -117,12 +117,24 @@ async function saveJob(companyId: string, job: {
   url: string;
   location?: string;
   description?: string;
-}): Promise<boolean> {
+  salary_min?: number;
+  salary_max?: number;
+  work_arrangement?: string;
+  duration?: string;
+}, careersUrl: string): Promise<boolean> {
   // Check duplicate
   const exists = await jobExists(companyId, job.title);
   if (exists) {
     stats.jobsSkipped++;
     return false;
+  }
+
+  // Validate URL - use careers page as fallback if URL is invalid
+  let applicationUrl = job.url;
+  try {
+    new URL(applicationUrl);
+  } catch {
+    applicationUrl = careersUrl;
   }
 
   const { error } = await supabase
@@ -133,9 +145,14 @@ async function saveJob(companyId: string, job: {
       description: job.description || 'See job posting for full details.',
       location: job.location || 'Singapore',
       job_type: 'internship',
-      application_url: job.url,
+      work_arrangement: job.work_arrangement || 'onsite',
+      salary_min: job.salary_min || null,
+      salary_max: job.salary_max || null,
+      duration: job.duration || null,
+      application_url: applicationUrl,
       source: 'scraped',
       status: 'active',
+      is_active: true,
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     });
 
@@ -149,15 +166,68 @@ async function saveJob(companyId: string, job: {
   return true;
 }
 
-/**
- * Generic job scraper - works for most career pages
- */
-async function scrapeJobs(page: Page, company: CompanyConfig): Promise<{
+interface ScrapedJob {
   title: string;
   url: string;
   location?: string;
-}[]> {
-  const jobs: { title: string; url: string; location?: string }[] = [];
+  description?: string;
+  salary_min?: number;
+  salary_max?: number;
+  work_arrangement?: string;
+  duration?: string;
+}
+
+/**
+ * Extract salary from text
+ */
+function extractSalary(text: string): { min?: number; max?: number } {
+  // Match patterns like "$1,000 - $2,000", "1000-2000", "$1.5k - $2k"
+  const patterns = [
+    /\$?([\d,]+)\s*[-–to]+\s*\$?([\d,]+)/i,
+    /\$?([\d.]+)k\s*[-–to]+\s*\$?([\d.]+)k/i,
+    /sgd?\s*([\d,]+)\s*[-–to]+\s*([\d,]+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      let min = parseFloat(match[1].replace(/,/g, ''));
+      let max = parseFloat(match[2].replace(/,/g, ''));
+
+      // Handle "k" notation
+      if (text.toLowerCase().includes('k')) {
+        if (min < 100) min *= 1000;
+        if (max < 100) max *= 1000;
+      }
+
+      return { min: Math.round(min), max: Math.round(max) };
+    }
+  }
+  return {};
+}
+
+/**
+ * Extract work arrangement from text
+ */
+function extractWorkArrangement(text: string): string | undefined {
+  const lower = text.toLowerCase();
+  if (lower.includes('remote') || lower.includes('work from home') || lower.includes('wfh')) {
+    return 'remote';
+  }
+  if (lower.includes('hybrid')) {
+    return 'hybrid';
+  }
+  if (lower.includes('on-site') || lower.includes('onsite') || lower.includes('office')) {
+    return 'onsite';
+  }
+  return undefined;
+}
+
+/**
+ * Generic job scraper - works for most career pages
+ */
+async function scrapeJobs(page: Page, company: CompanyConfig): Promise<ScrapedJob[]> {
+  const jobs: ScrapedJob[] = [];
 
   try {
     await page.goto(company.careers_url, {
@@ -214,11 +284,31 @@ async function scrapeJobs(page: Page, company: CompanyConfig): Promise<{
           const base = new URL(company.careers_url);
           url = `${base.origin}${url}`;
         } else if (!url.startsWith('http')) {
-          return; // Skip invalid URLs
+          // Try to make it absolute anyway
+          try {
+            const base = new URL(company.careers_url);
+            url = new URL(url, base).href;
+          } catch {
+            // Use careers URL as fallback
+            url = company.careers_url;
+          }
         }
 
         if (title.length >= 5 && title.length <= 200) {
-          jobs.push({ title, url });
+          // Try to get additional context from parent/sibling elements
+          const $parent = $el.closest('[class*="job"], [class*="position"], [class*="listing"], article, li');
+          const contextText = $parent.text() || '';
+
+          const salary = extractSalary(contextText);
+          const work_arrangement = extractWorkArrangement(contextText);
+
+          jobs.push({
+            title,
+            url,
+            salary_min: salary.min,
+            salary_max: salary.max,
+            work_arrangement
+          });
         }
       });
     }
@@ -255,7 +345,7 @@ async function scrapeCompany(browser: Browser, company: CompanyConfig) {
     stats.jobsFound += jobs.length;
 
     for (const job of jobs) {
-      await saveJob(companyId, job);
+      await saveJob(companyId, job, company.careers_url);
     }
 
     stats.companiesProcessed++;

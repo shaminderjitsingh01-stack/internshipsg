@@ -50,6 +50,13 @@ const workArrangements = [
   { value: 'hybrid', label: 'Hybrid' },
 ];
 
+const sortOptions = [
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
+  { value: 'salary_high', label: 'Salary: High to Low' },
+  { value: 'salary_low', label: 'Salary: Low to High' },
+];
+
 export default function JobsPageClient() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
@@ -61,6 +68,7 @@ export default function JobsPageClient() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedIndustry, setSelectedIndustry] = useState('All Industries');
   const [selectedArrangement, setSelectedArrangement] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
   // Job Alert Widget State
   const [showAlertWidget, setShowAlertWidget] = useState(false);
@@ -108,15 +116,37 @@ export default function JobsPageClient() {
       );
     }
 
-    // Work arrangement filter
+    // Work arrangement filter (case-insensitive)
     if (selectedArrangement !== 'all') {
       filtered = filtered.filter(
-        (job) => job.work_arrangement === selectedArrangement
+        (job) => job.work_arrangement?.toLowerCase() === selectedArrangement.toLowerCase()
       );
     }
 
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.posted_at || b.created_at).getTime() - new Date(a.posted_at || a.created_at).getTime();
+        case 'oldest':
+          return new Date(a.posted_at || a.created_at).getTime() - new Date(b.posted_at || b.created_at).getTime();
+        case 'salary_high': {
+          const salaryA = a.salary_max || a.salary_min || 0;
+          const salaryB = b.salary_max || b.salary_min || 0;
+          return salaryB - salaryA;
+        }
+        case 'salary_low': {
+          const salaryA = a.salary_min || a.salary_max || Infinity;
+          const salaryB = b.salary_min || b.salary_max || Infinity;
+          return salaryA - salaryB;
+        }
+        default:
+          return 0;
+      }
+    });
+
     setFilteredJobs(filtered);
-  }, [searchQuery, selectedIndustry, selectedArrangement, jobs]);
+  }, [searchQuery, selectedIndustry, selectedArrangement, sortBy, jobs]);
 
   // Save current filters as job alert
   async function saveJobAlert() {
@@ -220,6 +250,19 @@ export default function JobsPageClient() {
                 {industries.map((industry) => (
                   <option key={industry} value={industry}>
                     {industry}
+                  </option>
+                ))}
+              </select>
+
+              {/* Sort By */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-3 bg-[var(--card)] border border-[var(--border)] rounded-xl text-[var(--foreground)] focus:outline-none focus:border-[#dc2626] transition-colors"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>
@@ -368,6 +411,10 @@ export default function JobsPageClient() {
                       salary:
                         job.salary_min && job.salary_max
                           ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}/mo`
+                          : job.salary_min
+                          ? `From $${job.salary_min.toLocaleString()}/mo`
+                          : job.salary_max
+                          ? `Up to $${job.salary_max.toLocaleString()}/mo`
                           : undefined,
                       work_arrangement: job.work_arrangement,
                       duration: job.duration,
