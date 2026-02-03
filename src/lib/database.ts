@@ -42,7 +42,7 @@ export async function getJobsFromDB(search?: string, industry?: string) {
       *,
       company:companies(*)
     `)
-    .or('is_active.eq.true,status.eq.active')
+    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
   if (search) {
@@ -129,7 +129,7 @@ export async function getJobsByCompanyId(companyId: string) {
     .from('jobs')
     .select('*')
     .eq('company_id', companyId)
-    .or('is_active.eq.true,status.eq.active')
+    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -143,7 +143,7 @@ export async function getJobsByCompanyId(companyId: string) {
 // Get stats (job count, company count)
 export async function getStats() {
   const [jobsResult, companiesResult] = await Promise.all([
-    supabase.from('jobs').select('id', { count: 'exact', head: true }).or('is_active.eq.true,status.eq.active'),
+    supabase.from('jobs').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('companies').select('id', { count: 'exact', head: true }),
   ]);
 
@@ -301,7 +301,7 @@ export async function getJobCountByCompany(): Promise<Record<string, number>> {
   const { data, error } = await supabase
     .from('jobs')
     .select('company_id')
-    .or('is_active.eq.true,status.eq.active');
+    .eq('is_active', true);
 
   if (error) {
     console.error('Error fetching job counts:', error);

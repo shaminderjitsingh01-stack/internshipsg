@@ -54,6 +54,45 @@ function getSupabase(): SupabaseClient {
 }
 
 // ============================================================================
+// Types
+// ============================================================================
+interface ScraperCompany {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  website: string | null;
+  careers_url: string;
+  industry: string | null;
+  size: string | null;
+  is_enabled: boolean;
+  last_scraped_at: string | null;
+  last_jobs_found: number;
+}
+
+interface ScraperLog {
+  id?: string;
+  started_at: string;
+  completed_at?: string;
+  status: 'running' | 'completed' | 'failed';
+  companies_processed: number;
+  jobs_found: number;
+  jobs_added: number;
+  jobs_skipped: number;
+  errors: { company: string; error: string }[];
+}
+
+export interface ScrapedJob {
+  title: string;
+  description: string;
+  requirements: string[];
+  location: string;
+  salary_min?: number;
+  salary_max?: number;
+  application_url: string;
+  company_name: string;
+}
+
+// ============================================================================
 // PDPA COMPLIANCE: Personal Data Patterns to Strip
 // ============================================================================
 const PERSONAL_DATA_PATTERNS = [
@@ -162,17 +201,6 @@ async function rateLimitedFetch(url: string): Promise<Response | null> {
   }
 }
 
-export interface ScrapedJob {
-  title: string;
-  description: string;
-  requirements: string[];
-  location: string;
-  salary_min?: number;
-  salary_max?: number;
-  application_url: string;
-  company_name: string;
-}
-
 // Keywords that indicate an internship position
 const INTERNSHIP_KEYWORDS = [
   'intern',
@@ -254,6 +282,73 @@ function sanitizeJobForPDPA(job: ScrapedJob): ScrapedJob {
   };
 }
 
+// ============================================================================
+// Database Operations
+// ============================================================================
+
+/**
+ * Get enabled scraper companies from database
+ */
+async function getScraperCompanies(): Promise<ScraperCompany[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('scraper_companies')
+    .select('*')
+    .eq('is_enabled', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching scraper companies:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * Update company scraping stats
+ */
+async function updateCompanyStats(companyId: string, jobsFound: number): Promise<void> {
+  const supabase = getSupabase();
+  await supabase
+    .from('scraper_companies')
+    .update({
+      last_scraped_at: new Date().toISOString(),
+      last_jobs_found: jobsFound,
+    })
+    .eq('id', companyId);
+}
+
+/**
+ * Create a scraper log entry
+ */
+async function createScraperLog(log: Omit<ScraperLog, 'id'>): Promise<string | null> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('scraper_logs')
+    .insert(log)
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Error creating scraper log:', error);
+    return null;
+  }
+
+  return data?.id || null;
+}
+
+/**
+ * Update a scraper log entry
+ */
+async function updateScraperLog(logId: string, updates: Partial<ScraperLog>): Promise<void> {
+  const supabase = getSupabase();
+  await supabase
+    .from('scraper_logs')
+    .update(updates)
+    .eq('id', logId);
+}
+
 // Insert scraped jobs into database
 // HARD RULES: Only internships, PDPA compliant
 export async function insertJobs(jobs: ScrapedJob[]) {
@@ -266,6 +361,9 @@ export async function insertJobs(jobs: ScrapedJob[]) {
   // PDPA COMPLIANCE: Sanitize all jobs before storage
   const sanitizedJobs = internshipsOnly.map(sanitizeJobForPDPA);
   console.log(`[PDPA] Sanitized ${sanitizedJobs.length} jobs (personal data stripped)`);
+
+  let addedCount = 0;
+  let skippedCount = 0;
 
   for (const job of sanitizedJobs) {
     // Get company ID
@@ -290,6 +388,7 @@ export async function insertJobs(jobs: ScrapedJob[]) {
 
     if (existingJob) {
       console.log(`Job already exists: ${job.title} at ${job.company_name}`);
+      skippedCount++;
       continue;
     }
 
@@ -315,11 +414,14 @@ export async function insertJobs(jobs: ScrapedJob[]) {
       console.error(`Error inserting job: ${error.message}`);
     } else {
       console.log(`Inserted job: ${job.title} at ${job.company_name}`);
+      addedCount++;
     }
   }
+
+  return { added: addedCount, skipped: skippedCount };
 }
 
-// Get all companies from database
+// Get all companies from database (legacy support)
 export async function getCompanies() {
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -340,38 +442,122 @@ export async function runScraper() {
   const startTime = Date.now();
   const supabase = getSupabase();
 
-  const companies = await getCompanies();
-  console.log(`Found ${companies.length} companies`);
-
-  // Get current job count
-  const { count: beforeCount } = await supabase
-    .from('jobs')
-    .select('*', { count: 'exact', head: true });
-
-  // For now, we'll add sample internships manually
-  // In production, you'd scrape each company's careers page
-  // TODO: Implement actual scrapers for company career pages
-
-  const sampleJobs: ScrapedJob[] = [
-    // Placeholder - scrapers will be added for each company
-  ];
-
-  // Insert all sample jobs
-  await insertJobs(sampleJobs);
-
-  // Get new job count
-  const { count: afterCount } = await getSupabase()
-    .from('jobs')
-    .select('*', { count: 'exact', head: true });
-
-  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`Scraper completed in ${duration}s`);
-
-  return {
-    success: true,
-    jobsScraped: sampleJobs.length,
-    newJobs: (afterCount || 0) - (beforeCount || 0),
-    companiesUpdated: companies.length,
-    totalJobs: afterCount || 0,
+  // Initialize scraper log
+  const logEntry: Omit<ScraperLog, 'id'> = {
+    started_at: new Date().toISOString(),
+    status: 'running',
+    companies_processed: 0,
+    jobs_found: 0,
+    jobs_added: 0,
+    jobs_skipped: 0,
+    errors: [],
   };
+
+  const logId = await createScraperLog(logEntry);
+  console.log(`[SCRAPER] Created log entry: ${logId}`);
+
+  try {
+    // Get enabled companies from scraper_companies table
+    const scraperCompanies = await getScraperCompanies();
+    console.log(`[SCRAPER] Found ${scraperCompanies.length} enabled companies`);
+
+    // If no scraper_companies exist yet, fall back to legacy companies table
+    const companies = scraperCompanies.length > 0
+      ? scraperCompanies
+      : await getCompanies();
+
+    console.log(`Found ${companies.length} companies`);
+
+    // Get current job count
+    const { count: beforeCount } = await supabase
+      .from('jobs')
+      .select('*', { count: 'exact', head: true });
+
+    // Track stats
+    let totalJobsFound = 0;
+    let totalJobsAdded = 0;
+    let totalJobsSkipped = 0;
+    let companiesProcessed = 0;
+    const errors: { company: string; error: string }[] = [];
+
+    // Process each company
+    for (const company of companies) {
+      try {
+        // For scraperCompanies format
+        const companyName = company.name;
+        const careersUrl = (company as ScraperCompany).careers_url || (company as any).careers_url;
+
+        if (!careersUrl) {
+          console.log(`[SCRAPER] Skipping ${companyName} - no careers URL`);
+          continue;
+        }
+
+        // Scrape jobs (currently returns empty, to be implemented)
+        const jobs = await scrapeCompanyJobs(companyName, careersUrl);
+        totalJobsFound += jobs.length;
+
+        // Insert jobs
+        if (jobs.length > 0) {
+          const result = await insertJobs(jobs);
+          totalJobsAdded += result.added;
+          totalJobsSkipped += result.skipped;
+        }
+
+        // Update company stats if using scraper_companies
+        if ((company as ScraperCompany).id && scraperCompanies.length > 0) {
+          await updateCompanyStats((company as ScraperCompany).id, jobs.length);
+        }
+
+        companiesProcessed++;
+      } catch (error: any) {
+        console.error(`[SCRAPER] Error processing ${company.name}:`, error);
+        errors.push({ company: company.name, error: error.message || 'Unknown error' });
+      }
+    }
+
+    // Get new job count
+    const { count: afterCount } = await supabase
+      .from('jobs')
+      .select('*', { count: 'exact', head: true });
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`Scraper completed in ${duration}s`);
+
+    // Update log entry
+    if (logId) {
+      await updateScraperLog(logId, {
+        completed_at: new Date().toISOString(),
+        status: 'completed',
+        companies_processed: companiesProcessed,
+        jobs_found: totalJobsFound,
+        jobs_added: totalJobsAdded,
+        jobs_skipped: totalJobsSkipped,
+        errors,
+      });
+    }
+
+    return {
+      success: true,
+      jobsScraped: totalJobsFound,
+      newJobs: (afterCount || 0) - (beforeCount || 0),
+      companiesUpdated: companiesProcessed,
+      totalJobs: afterCount || 0,
+      jobsAdded: totalJobsAdded,
+      jobsSkipped: totalJobsSkipped,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  } catch (error: any) {
+    console.error('[SCRAPER] Fatal error:', error);
+
+    // Update log entry with failure
+    if (logId) {
+      await updateScraperLog(logId, {
+        completed_at: new Date().toISOString(),
+        status: 'failed',
+        errors: [{ company: 'System', error: error.message || 'Unknown error' }],
+      });
+    }
+
+    throw error;
+  }
 }
