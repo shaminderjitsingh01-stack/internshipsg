@@ -93,19 +93,19 @@ export default function AdminScraperPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col">
+      <div className="min-h-screen bg-[var(--background)] flex flex-col">
         <Header />
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="w-full max-w-md">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <h1 className="text-2xl font-bold text-white">Admin Access</h1>
-                <p className="text-zinc-400 mt-2">Enter password to continue</p>
+                <h1 className="text-2xl font-bold text-[var(--foreground)]">Admin Access</h1>
+                <p className="text-[var(--muted)] mt-2">Enter password to continue</p>
               </div>
 
               <form onSubmit={handleLogin} className="space-y-4">
@@ -135,7 +135,7 @@ export default function AdminScraperPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       <main className="flex-1 pt-24 pb-16 px-4">
@@ -143,12 +143,12 @@ export default function AdminScraperPage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-white">Scraper Admin</h1>
-              <p className="text-zinc-400 mt-1">Manage job scraping operations</p>
+              <h1 className="text-3xl font-bold text-[var(--foreground)]">Scraper Admin</h1>
+              <p className="text-[var(--muted)] mt-1">Manage job scraping operations</p>
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+              className="px-4 py-2 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
             >
               Logout
             </button>
@@ -156,7 +156,7 @@ export default function AdminScraperPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center">
                   <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,13 +164,13 @@ export default function AdminScraperPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-white">{stats?.jobs ?? '-'}</p>
-                  <p className="text-zinc-400">Total Jobs</p>
+                  <p className="text-3xl font-bold text-[var(--foreground)]">{stats?.jobs ?? '-'}</p>
+                  <p className="text-[var(--muted)]">Total Jobs</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-pink-600/20 flex items-center justify-center">
                   <svg className="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,16 +178,16 @@ export default function AdminScraperPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-white">{stats?.companies ?? '-'}</p>
-                  <p className="text-zinc-400">Companies</p>
+                  <p className="text-3xl font-bold text-[var(--foreground)]">{stats?.companies ?? '-'}</p>
+                  <p className="text-[var(--muted)]">Companies</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Scraper Control */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 mb-8">
-            <h2 className="text-xl font-bold text-white mb-6">Run Scraper</h2>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8 mb-8">
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-6">Run Scraper</h2>
 
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               <button
@@ -195,7 +195,7 @@ export default function AdminScraperPage() {
                 disabled={isRunning}
                 className={`px-8 py-4 font-semibold rounded-xl transition-all flex items-center gap-3 ${
                   isRunning
-                    ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                    ? 'bg-zinc-700 text-[var(--muted)] cursor-not-allowed'
                     : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90'
                 }`}
               >
@@ -217,7 +217,7 @@ export default function AdminScraperPage() {
                 )}
               </button>
 
-              <p className="text-zinc-500 text-sm">
+              <p className="text-[var(--muted)] text-sm">
                 Scrapes job listings from company career pages and updates the database.
                 <br />
                 Auto-runs daily at 6:00 AM SGT via Vercel Cron.
@@ -252,26 +252,26 @@ export default function AdminScraperPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {result.jobsScraped !== undefined && (
                     <div className="bg-zinc-800/50 rounded-lg p-3">
-                      <p className="text-2xl font-bold text-white">{result.jobsScraped}</p>
-                      <p className="text-xs text-zinc-400">Jobs Scraped</p>
+                      <p className="text-2xl font-bold text-[var(--foreground)]">{result.jobsScraped}</p>
+                      <p className="text-xs text-[var(--muted)]">Jobs Scraped</p>
                     </div>
                   )}
                   {result.newJobs !== undefined && (
                     <div className="bg-zinc-800/50 rounded-lg p-3">
                       <p className="text-2xl font-bold text-emerald-400">{result.newJobs}</p>
-                      <p className="text-xs text-zinc-400">New Jobs</p>
+                      <p className="text-xs text-[var(--muted)]">New Jobs</p>
                     </div>
                   )}
                   {result.companiesUpdated !== undefined && (
                     <div className="bg-zinc-800/50 rounded-lg p-3">
-                      <p className="text-2xl font-bold text-white">{result.companiesUpdated}</p>
-                      <p className="text-xs text-zinc-400">Companies</p>
+                      <p className="text-2xl font-bold text-[var(--foreground)]">{result.companiesUpdated}</p>
+                      <p className="text-xs text-[var(--muted)]">Companies</p>
                     </div>
                   )}
                 </div>
 
                 {result.message && (
-                  <p className="mt-4 text-zinc-400 text-sm">{result.message}</p>
+                  <p className="mt-4 text-[var(--muted)] text-sm">{result.message}</p>
                 )}
               </div>
             )}
@@ -279,8 +279,8 @@ export default function AdminScraperPage() {
 
           {/* Info Card */}
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Scraper Info</h3>
-            <ul className="space-y-3 text-zinc-400 text-sm">
+            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">Scraper Info</h3>
+            <ul className="space-y-3 text-[var(--muted)] text-sm">
               <li className="flex items-start gap-3">
                 <span className="text-purple-400 mt-0.5">*</span>
                 <span>The scraper fetches internship listings from major Singapore companies</span>

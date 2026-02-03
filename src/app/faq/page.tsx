@@ -126,17 +126,17 @@ function FAQAccordion({ section }: { section: FAQSection }) {
 
   return (
     <section className="mb-8">
-      <h2 className="text-2xl font-semibold text-white mb-4">{section.title}</h2>
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+      <h2 className="text-2xl font-semibold text-[var(--foreground)] mb-4">{section.title}</h2>
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden">
         {section.items.map((item, index) => (
-          <div key={index} className={index !== 0 ? 'border-t border-zinc-800' : ''}>
+          <div key={index} className={index !== 0 ? 'border-t border-[var(--border)]' : ''}>
             <button
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"
             >
-              <span className="text-white font-medium pr-4">{item.question}</span>
+              <span className="text-[var(--foreground)] font-medium pr-4">{item.question}</span>
               <svg
-                className={`w-5 h-5 text-zinc-400 flex-shrink-0 transition-transform ${
+                className={`w-5 h-5 text-[var(--muted)] flex-shrink-0 transition-transform ${
                   openIndex === index ? 'rotate-180' : ''
                 }`}
                 fill="none"
@@ -148,7 +148,7 @@ function FAQAccordion({ section }: { section: FAQSection }) {
             </button>
             {openIndex === index && (
               <div className="px-6 pb-4">
-                <p className="text-zinc-300">{item.answer}</p>
+                <p className="text-[var(--foreground)]">{item.answer}</p>
               </div>
             )}
           </div>
@@ -160,25 +160,25 @@ function FAQAccordion({ section }: { section: FAQSection }) {
 
 export default function FAQPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       <main className="flex-1 pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-white mb-4">Frequently Asked Questions</h1>
-          <p className="text-zinc-400 text-lg mb-8">
+          <h1 className="text-4xl font-bold text-[var(--foreground)] mb-4">Frequently Asked Questions</h1>
+          <p className="text-[var(--muted)] text-lg mb-8">
             Find answers to common questions about using internship.sg
           </p>
 
-          <div className="prose prose-invert prose-zinc max-w-none">
+          <div className="prose prose-zinc max-w-none">
             {faqData.map((section, index) => (
               <FAQAccordion key={index} section={section} />
             ))}
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-white mb-4">Still have questions?</h2>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                <p className="text-zinc-300 mb-4">
+              <h2 className="text-2xl font-semibold text-[var(--foreground)] mb-4">Still have questions?</h2>
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
+                <p className="text-[var(--foreground)] mb-4">
                   Cannot find what you are looking for? Our support team is here to help.
                 </p>
                 <div className="flex flex-wrap gap-4">
@@ -190,7 +190,7 @@ export default function FAQPage() {
                   </a>
                   <a
                     href="mailto:support@internship.sg"
-                    className="inline-flex items-center px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors"
+                    className="inline-flex items-center px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-[var(--foreground)] rounded-lg transition-colors"
                   >
                     Email Support
                   </a>

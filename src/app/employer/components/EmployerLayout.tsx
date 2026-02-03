@@ -25,7 +25,7 @@ export default function EmployerLayout({ children, title, subtitle }: EmployerLa
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#dc2626] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -34,7 +34,7 @@ export default function EmployerLayout({ children, title, subtitle }: EmployerLa
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       <div className="flex-1 flex pt-16">
@@ -44,8 +44,8 @@ export default function EmployerLayout({ children, title, subtitle }: EmployerLa
           <div className="max-w-5xl mx-auto">
             {/* Page Header */}
             <div className="mb-8">
-              <h1 className="text-2xl lg:text-3xl font-bold text-white">{title}</h1>
-              {subtitle && <p className="text-zinc-400 mt-1">{subtitle}</p>}
+              <h1 className="text-2xl lg:text-3xl font-bold text-[var(--foreground)]">{title}</h1>
+              {subtitle && <p className="text-[var(--muted)] mt-1">{subtitle}</p>}
             </div>
 
             {/* Mobile Navigation */}

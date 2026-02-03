@@ -106,27 +106,27 @@ export default function EmployerPricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       <main className="flex-1 pt-24 pb-16">
         {/* Hero Section */}
         <section className="max-w-6xl mx-auto px-4 text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-[var(--foreground)] mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-[var(--muted)] max-w-2xl mx-auto mb-8">
             Choose the plan that fits your hiring needs. Start free and scale as you grow.
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-4 bg-zinc-900 border border-zinc-800 rounded-xl p-2">
+          <div className="inline-flex items-center gap-4 bg-[var(--card)] border border-[var(--border)] rounded-xl p-2">
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 billingCycle === 'monthly'
                   ? 'bg-[#dc2626] text-white'
-                  : 'text-zinc-400 hover:text-white'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
               }`}
             >
               Monthly
@@ -136,7 +136,7 @@ export default function EmployerPricingPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 billingCycle === 'annual'
                   ? 'bg-[#dc2626] text-white'
-                  : 'text-zinc-400 hover:text-white'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
               }`}
             >
               Annual
@@ -168,9 +168,9 @@ export default function EmployerPricingPage() {
                 )}
 
                 <div className="text-center mb-6">
-                  <h3 className="text-xl font-bold text-white mb-2">{tier.name}</h3>
+                  <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">{tier.name}</h3>
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold text-white">
+                    <span className="text-4xl font-bold text-[var(--foreground)]">
                       {tier.price === 'Custom'
                         ? tier.price
                         : billingCycle === 'annual' && tier.price !== '$0'
@@ -179,10 +179,10 @@ export default function EmployerPricingPage() {
                       }
                     </span>
                     {tier.period && (
-                      <span className="text-zinc-400">{tier.period}</span>
+                      <span className="text-[var(--muted)]">{tier.period}</span>
                     )}
                   </div>
-                  <p className="text-zinc-400 text-sm mt-3">{tier.description}</p>
+                  <p className="text-[var(--muted)] text-sm mt-3">{tier.description}</p>
                 </div>
 
                 <ul className="space-y-3 mb-8">
@@ -201,7 +201,7 @@ export default function EmployerPricingPage() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span className="text-zinc-300 text-sm">{feature}</span>
+                      <span className="text-[var(--foreground)] text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -223,14 +223,14 @@ export default function EmployerPricingPage() {
 
         {/* Features Comparison */}
         <section className="max-w-6xl mx-auto px-4 mb-20">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">
+          <h2 className="text-2xl font-bold text-[var(--foreground)] text-center mb-8">
             Compare All Features
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <table className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden">
               <thead>
                 <tr className="border-b border-zinc-800">
-                  <th className="text-left p-4 text-zinc-400 font-medium">Feature</th>
+                  <th className="text-left p-4 text-[var(--muted)] font-medium">Feature</th>
                   <th className="p-4 text-center text-white font-semibold">Free</th>
                   <th className="p-4 text-center text-white font-semibold bg-zinc-800/50">Pro</th>
                   <th className="p-4 text-center text-white font-semibold">Enterprise</th>
@@ -250,9 +250,9 @@ export default function EmployerPricingPage() {
                   { feature: 'Dedicated support', free: '-', pro: '-', enterprise: 'Yes' },
                 ].map((row, index) => (
                   <tr key={row.feature} className={index !== 0 ? 'border-t border-zinc-800' : ''}>
-                    <td className="p-4 text-zinc-300">{row.feature}</td>
+                    <td className="p-4 text-[var(--foreground)]">{row.feature}</td>
                     <td className="p-4 text-center text-zinc-400">{row.free}</td>
-                    <td className="p-4 text-center text-zinc-300 bg-zinc-800/50">{row.pro}</td>
+                    <td className="p-4 text-center text-[var(--foreground)] bg-zinc-800/50">{row.pro}</td>
                     <td className="p-4 text-center text-zinc-400">{row.enterprise}</td>
                   </tr>
                 ))}
@@ -263,20 +263,20 @@ export default function EmployerPricingPage() {
 
         {/* FAQ Section */}
         <section className="max-w-3xl mx-auto px-4 mb-20">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">
+          <h2 className="text-2xl font-bold text-[var(--foreground)] text-center mb-8">
             Frequently Asked Questions
           </h2>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden"
+                className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
                   className="w-full flex items-center justify-between p-4 text-left"
                 >
-                  <span className="text-white font-medium">{faq.question}</span>
+                  <span className="text-[var(--foreground)] font-medium">{faq.question}</span>
                   <svg
                     className={`w-5 h-5 text-zinc-400 transition-transform ${
                       openFaq === index ? 'rotate-180' : ''
@@ -295,7 +295,7 @@ export default function EmployerPricingPage() {
                 </button>
                 {openFaq === index && (
                   <div className="px-4 pb-4">
-                    <p className="text-zinc-400">{faq.answer}</p>
+                    <p className="text-[var(--muted)]">{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -305,11 +305,11 @@ export default function EmployerPricingPage() {
 
         {/* CTA Section */}
         <section className="max-w-4xl mx-auto px-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 md:p-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8 md:p-12 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] mb-4">
               Ready to Find Your Next Intern?
             </h2>
-            <p className="text-zinc-400 mb-8 max-w-xl mx-auto">
+            <p className="text-[var(--muted)] mb-8 max-w-xl mx-auto">
               Join hundreds of companies in Singapore already using internship.sg to connect with top student talent.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -18,7 +18,7 @@ export default async function CompanyPage({
   const jobs = await getJobsByCompanyId(company.id);
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       {/* Hero Section with Gradient Background */}
@@ -97,14 +97,14 @@ export default async function CompanyPage({
           {company.size && (
             <div className="group relative">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl opacity-0 group-hover:opacity-50 blur transition-all duration-500" />
-              <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center hover:border-zinc-700 transition-colors">
+              <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center hover:border-zinc-700 transition-colors">
                 <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-center">
                   <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <p className="text-2xl font-bold text-white mb-1">{company.size}</p>
-                <p className="text-sm text-zinc-500">Employees</p>
+                <p className="text-2xl font-bold text-[var(--foreground)] mb-1">{company.size}</p>
+                <p className="text-sm text-[var(--muted)]">Employees</p>
               </div>
             </div>
           )}
@@ -113,14 +113,14 @@ export default async function CompanyPage({
           {company.industry && (
             <div className="group relative">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-orange-600 rounded-xl opacity-0 group-hover:opacity-50 blur transition-all duration-500" />
-              <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center hover:border-zinc-700 transition-colors">
+              <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center hover:border-zinc-700 transition-colors">
                 <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-gradient-to-br from-pink-600/20 to-orange-600/20 flex items-center justify-center">
                   <svg className="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <p className="text-2xl font-bold text-white mb-1">{company.industry}</p>
-                <p className="text-sm text-zinc-500">Industry</p>
+                <p className="text-2xl font-bold text-[var(--foreground)] mb-1">{company.industry}</p>
+                <p className="text-sm text-[var(--muted)]">Industry</p>
               </div>
             </div>
           )}
@@ -129,15 +129,15 @@ export default async function CompanyPage({
           {company.location && (
             <div className="group relative">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-600 to-purple-600 rounded-xl opacity-0 group-hover:opacity-50 blur transition-all duration-500" />
-              <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center hover:border-zinc-700 transition-colors">
+              <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center hover:border-zinc-700 transition-colors">
                 <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-gradient-to-br from-orange-600/20 to-purple-600/20 flex items-center justify-center">
                   <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <p className="text-2xl font-bold text-white mb-1">{company.location}</p>
-                <p className="text-sm text-zinc-500">Location</p>
+                <p className="text-2xl font-bold text-[var(--foreground)] mb-1">{company.location}</p>
+                <p className="text-sm text-[var(--muted)]">Location</p>
               </div>
             </div>
           )}
@@ -148,7 +148,7 @@ export default async function CompanyPage({
         {/* About Section - Glassmorphism Card */}
         {company.description && (
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -159,7 +159,7 @@ export default async function CompanyPage({
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 rounded-2xl opacity-20 group-hover:opacity-30 blur transition-all duration-500" />
               <div className="relative bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8">
-                <p className="text-zinc-300 leading-relaxed text-lg whitespace-pre-wrap">
+                <p className="text-[var(--foreground)] leading-relaxed text-lg whitespace-pre-wrap">
                   {company.description}
                 </p>
               </div>
@@ -169,7 +169,7 @@ export default async function CompanyPage({
 
         {/* Open Positions */}
         <section>
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-3">
             <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-600 to-orange-600 flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -184,13 +184,13 @@ export default async function CompanyPage({
           {jobs.length === 0 ? (
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-10 blur" />
-              <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center">
+              <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-2xl p-12 text-center">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-center">
                   <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <p className="text-zinc-400 text-lg">No open positions at the moment.</p>
+                <p className="text-[var(--muted)] text-lg">No open positions at the moment.</p>
                 <p className="text-zinc-600 text-sm mt-2">Check back later for new opportunities!</p>
               </div>
             </div>
@@ -204,11 +204,11 @@ export default async function CompanyPage({
                   {/* Hover gradient border effect */}
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 rounded-xl opacity-0 group-hover:opacity-100 blur transition-all duration-500" />
 
-                  <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-transparent transition-all duration-300">
+                  <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 hover:border-transparent transition-all duration-300">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <Link href={`/jobs/${job.slug}`}>
-                          <h3 className="text-xl font-bold text-white mb-3 hover:text-transparent hover:bg-gradient-to-r hover:from-purple-400 hover:via-pink-400 hover:to-orange-400 hover:bg-clip-text transition-all duration-300">
+                          <h3 className="text-xl font-bold text-[var(--foreground)] mb-3 hover:text-transparent hover:bg-gradient-to-r hover:from-purple-400 hover:via-pink-400 hover:to-orange-400 hover:bg-clip-text transition-all duration-300">
                             {job.title}
                           </h3>
                         </Link>

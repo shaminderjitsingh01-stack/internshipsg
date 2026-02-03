@@ -135,7 +135,7 @@ export default function EmployerSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-16">
@@ -147,15 +147,15 @@ export default function EmployerSignupPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-white">Register Your Company</h1>
-            <p className="text-zinc-400 mt-2">Post internships and find top talent</p>
+            <h1 className="text-3xl font-bold text-[var(--foreground)]">Register Your Company</h1>
+            <p className="text-[var(--muted)] mt-2">Post internships and find top talent</p>
           </div>
 
           {/* Signup Form */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                   Company Name *
                 </label>
                 <input
@@ -170,7 +170,7 @@ export default function EmployerSignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                   Company Email *
                 </label>
                 <input
@@ -186,7 +186,7 @@ export default function EmployerSignupPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                     Password *
                   </label>
                   <input
@@ -200,7 +200,7 @@ export default function EmployerSignupPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                     Confirm Password *
                   </label>
                   <input
@@ -216,7 +216,7 @@ export default function EmployerSignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                   Industry *
                 </label>
                 <select
@@ -235,7 +235,7 @@ export default function EmployerSignupPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                     Company Size *
                   </label>
                   <select
@@ -252,7 +252,7 @@ export default function EmployerSignupPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                     Website
                   </label>
                   <input
@@ -299,7 +299,7 @@ export default function EmployerSignupPage() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-zinc-400">
+              <p className="text-[var(--muted)]">
                 Already have an account?{' '}
                 <Link href="/employer/login" className="text-[#dc2626] hover:text-red-400">
                   Sign in
@@ -308,7 +308,7 @@ export default function EmployerSignupPage() {
             </div>
 
             <div className="mt-4 text-center">
-              <Link href="/employer/pricing" className="text-zinc-500 hover:text-zinc-300 text-sm">
+              <Link href="/employer/pricing" className="text-[var(--muted)] hover:text-[var(--foreground)] text-sm">
                 View pricing plans
               </Link>
             </div>
@@ -316,7 +316,7 @@ export default function EmployerSignupPage() {
 
           {/* Back to main site */}
           <div className="mt-6 text-center">
-            <Link href="/" className="text-zinc-500 hover:text-zinc-300 text-sm">
+            <Link href="/" className="text-[var(--muted)] hover:text-[var(--foreground)] text-sm">
               Back to internship.sg
             </Link>
           </div>

@@ -79,27 +79,27 @@ export default function ClaimCompanyPage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       <main className="flex-1 pt-24 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Claim Your Company</h1>
-            <p className="text-zinc-400">
+            <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">Claim Your Company</h1>
+            <p className="text-[var(--muted)]">
               Search for your company and claim ownership to manage job postings
             </p>
           </div>
 
           {/* Email Info */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-8">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,8 +107,8 @@ export default function ClaimCompanyPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-white font-medium">Verification Required</p>
-                <p className="text-zinc-400 text-sm mt-1">
+                <p className="text-[var(--foreground)] font-medium">Verification Required</p>
+                <p className="text-[var(--muted)] text-sm mt-1">
                   To claim a company, your email domain ({user.email?.split('@')[1]}) must match the company's domain.
                   Our team will verify your claim within 24-48 hours.
                 </p>
@@ -117,8 +117,8 @@ export default function ClaimCompanyPage() {
           </div>
 
           {/* Search */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-8">
-            <h2 className="text-lg font-semibold text-white mb-4">Search for your company</h2>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8">
+            <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Search for your company</h2>
 
             <div className="flex gap-3">
               <input
@@ -132,7 +132,7 @@ export default function ClaimCompanyPage() {
               <button
                 onClick={searchCompanies}
                 disabled={searching}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-[var(--foreground)] font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
               >
                 {searching ? 'Searching...' : 'Search'}
               </button>
@@ -159,7 +159,7 @@ export default function ClaimCompanyPage() {
                             </svg>
                           )}
                         </p>
-                        <p className="text-sm text-zinc-400">{company.industry || 'Industry not specified'}</p>
+                        <p className="text-sm text-[var(--muted)]">{company.industry || 'Industry not specified'}</p>
                       </div>
                     </div>
                     <button
@@ -176,7 +176,7 @@ export default function ClaimCompanyPage() {
 
             {search && companies.length === 0 && !searching && (
               <div className="mt-6 text-center py-8">
-                <p className="text-zinc-400 mb-4">No companies found matching "{search}"</p>
+                <p className="text-[var(--muted)] mb-4">No companies found matching "{search}"</p>
                 <Link
                   href="/employer/signup"
                   className="text-purple-400 hover:text-purple-300"
@@ -202,7 +202,7 @@ export default function ClaimCompanyPage() {
 
           {/* Alternative Option */}
           <div className="text-center">
-            <p className="text-zinc-500 mb-2">Can't find your company?</p>
+            <p className="text-[var(--muted)] mb-2">Can't find your company?</p>
             <Link
               href="/employer/signup"
               className="text-purple-400 hover:text-purple-300"

@@ -89,7 +89,7 @@ export default async function JobDetailPage({
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       <main className="flex-1 pt-24 pb-16">

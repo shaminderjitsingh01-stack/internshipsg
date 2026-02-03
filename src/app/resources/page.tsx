@@ -119,12 +119,12 @@ export default function ResourcesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       {/* Hero Section */}
       <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-zinc-950 to-pink-900/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-[var(--background)] to-pink-900/20" />
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
@@ -144,7 +144,7 @@ export default function ResourcesPage() {
                 Career Resources
               </span>
             </h1>
-            <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-xl text-[var(--muted)] max-w-2xl mx-auto">
               Everything you need to land your dream internship. Free guides, tips, and tools.
             </p>
           </motion.div>
@@ -169,13 +169,13 @@ export default function ResourcesPage() {
                   {resourceCategories[0].icon}
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">{resourceCategories[0].title}</h3>
-              <p className="text-zinc-400 mb-6">{resourceCategories[0].description}</p>
+              <h3 className="text-2xl font-bold text-[var(--foreground)] mb-2">{resourceCategories[0].title}</h3>
+              <p className="text-[var(--muted)] mb-6">{resourceCategories[0].description}</p>
               <div className="space-y-4">
                 {resourceCategories[0].tips?.map((tip, i) => (
                   <div key={i} className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                    <h4 className="font-semibold text-white mb-1">{tip.title}</h4>
-                    <p className="text-sm text-zinc-400">{tip.text}</p>
+                    <h4 className="font-semibold text-[var(--foreground)] mb-1">{tip.title}</h4>
+                    <p className="text-sm text-[var(--muted)]">{tip.text}</p>
                   </div>
                 ))}
               </div>
@@ -195,13 +195,13 @@ export default function ResourcesPage() {
                   {resourceCategories[1].icon}
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">{resourceCategories[1].title}</h3>
-              <p className="text-zinc-400 mb-6">{resourceCategories[1].description}</p>
+              <h3 className="text-2xl font-bold text-[var(--foreground)] mb-2">{resourceCategories[1].title}</h3>
+              <p className="text-[var(--muted)] mb-6">{resourceCategories[1].description}</p>
               <div className="space-y-4">
                 {resourceCategories[1].tips?.map((tip, i) => (
                   <div key={i} className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                    <h4 className="font-semibold text-white mb-1">{tip.title}</h4>
-                    <p className="text-sm text-zinc-400">{tip.text}</p>
+                    <h4 className="font-semibold text-[var(--foreground)] mb-1">{tip.title}</h4>
+                    <p className="text-sm text-[var(--muted)]">{tip.text}</p>
                   </div>
                 ))}
               </div>
@@ -223,7 +223,7 @@ export default function ResourcesPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">{resourceCategories[2].title}</h3>
+                  <h3 className="text-2xl font-bold text-[var(--foreground)] mb-2">{resourceCategories[2].title}</h3>
                   <p className="text-zinc-400">{resourceCategories[2].description}</p>
                 </div>
               </div>
@@ -235,7 +235,7 @@ export default function ResourcesPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-zinc-500 mt-4">* Based on reported salaries from interns in Singapore (2024-2025)</p>
+              <p className="text-xs text-[var(--muted)] mt-4">* Based on reported salaries from interns in Singapore (2024-2025)</p>
             </motion.div>
 
             {/* Industry Guides - Wide Card */}
@@ -254,15 +254,15 @@ export default function ResourcesPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">{resourceCategories[3].title}</h3>
+                  <h3 className="text-2xl font-bold text-[var(--foreground)] mb-2">{resourceCategories[3].title}</h3>
                   <p className="text-zinc-400">{resourceCategories[3].description}</p>
                 </div>
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {resourceCategories[3].industries?.map((industry, i) => (
                   <div key={i} className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-purple-500/30 transition-colors">
-                    <h4 className="font-semibold text-white mb-2">{industry.name}</h4>
-                    <p className="text-xs text-zinc-500">{industry.companies}</p>
+                    <h4 className="font-semibold text-[var(--foreground)] mb-2">{industry.name}</h4>
+                    <p className="text-xs text-[var(--muted)]">{industry.companies}</p>
                   </div>
                 ))}
               </div>
@@ -283,7 +283,7 @@ export default function ResourcesPage() {
             <span className="text-sm font-medium text-purple-400 tracking-wider uppercase mb-4 block">
               Learn More
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">External Resources</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-[var(--foreground)]">External Resources</h2>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -308,8 +308,8 @@ export default function ResourcesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-purple-400 transition-colors">{resource.title}</h3>
-                <p className="text-sm text-zinc-400">{resource.description}</p>
+                <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2 group-hover:text-purple-400 transition-colors">{resource.title}</h3>
+                <p className="text-sm text-[var(--muted)]">{resource.description}</p>
               </motion.a>
             ))}
           </div>
@@ -318,7 +318,7 @@ export default function ResourcesPage() {
 
       {/* CTA Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-zinc-950 to-pink-900/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-[var(--background)] to-pink-900/30" />
         <div className="absolute inset-0">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-3xl" />
         </div>
@@ -330,10 +330,10 @@ export default function ResourcesPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-[var(--foreground)] mb-6">
               Ready to Start Your Journey?
             </h2>
-            <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
+            <p className="text-xl text-[var(--muted)] mb-10 max-w-2xl mx-auto">
               Apply what you have learned and find your dream internship today.
             </p>
             <Link

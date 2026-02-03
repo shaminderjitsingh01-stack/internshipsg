@@ -59,7 +59,7 @@ export default function EmployerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-16">
@@ -71,15 +71,15 @@ export default function EmployerLoginPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-white">Employer Login</h1>
-            <p className="text-zinc-400 mt-2">Access your company dashboard</p>
+            <h1 className="text-3xl font-bold text-[var(--foreground)]">Employer Login</h1>
+            <p className="text-[var(--muted)] mt-2">Access your company dashboard</p>
           </div>
 
           {/* Login Form */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                   Company Email
                 </label>
                 <input
@@ -93,7 +93,7 @@ export default function EmployerLoginPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-[var(--muted)] mb-2">
                   Password
                 </label>
                 <input
@@ -109,7 +109,7 @@ export default function EmployerLoginPage() {
               <div className="flex items-center justify-between">
                 <label className="flex items-center">
                   <input type="checkbox" className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-[#dc2626] focus:ring-[#dc2626]" />
-                  <span className="ml-2 text-sm text-zinc-400">Remember me</span>
+                  <span className="ml-2 text-sm text-[var(--muted)]">Remember me</span>
                 </label>
                 <Link href="/forgot-password" className="text-sm text-[#dc2626] hover:text-red-400">
                   Forgot password?
@@ -142,7 +142,7 @@ export default function EmployerLoginPage() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-zinc-400">
+              <p className="text-[var(--muted)]">
                 Don't have an account?{' '}
                 <Link href="/employer/signup" className="text-[#dc2626] hover:text-red-400">
                   Register your company
@@ -151,7 +151,7 @@ export default function EmployerLoginPage() {
             </div>
 
             <div className="mt-4 text-center">
-              <Link href="/employer/pricing" className="text-zinc-500 hover:text-zinc-300 text-sm">
+              <Link href="/employer/pricing" className="text-[var(--muted)] hover:text-[var(--foreground)] text-sm">
                 View pricing plans
               </Link>
             </div>
@@ -159,7 +159,7 @@ export default function EmployerLoginPage() {
 
           {/* Back to main site */}
           <div className="mt-6 text-center">
-            <Link href="/" className="text-zinc-500 hover:text-zinc-300 text-sm">
+            <Link href="/" className="text-[var(--muted)] hover:text-[var(--foreground)] text-sm">
               Back to internship.sg
             </Link>
           </div>

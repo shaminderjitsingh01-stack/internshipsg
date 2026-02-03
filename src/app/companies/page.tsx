@@ -69,7 +69,7 @@ export default function CompaniesPage() {
   const visibleCompanies = companies.slice(0, visibleCount);
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
 
       {/* Hero Section */}
@@ -84,7 +84,7 @@ export default function CompaniesPage() {
               Top Companies Hiring
             </span>
           </h1>
-          <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
+          <p className="text-xl text-[var(--muted)] mb-10 max-w-2xl mx-auto">
             {companies.length.toLocaleString()} {companies.length === 1 ? 'company' : 'companies'} offering internship opportunities in Singapore
           </p>
 
@@ -95,7 +95,7 @@ export default function CompaniesPage() {
               <div className="relative flex flex-col sm:flex-row gap-3 p-2 bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl">
                 <div className="flex-1 relative">
                   <svg
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--muted)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -161,7 +161,7 @@ export default function CompaniesPage() {
       {/* Companies Grid */}
       <main className="max-w-6xl mx-auto px-4 py-12 flex-1">
         {search && (
-          <p className="text-zinc-400 mb-8 text-center">
+          <p className="text-[var(--muted)] mb-8 text-center">
             Showing results for <span className="text-white font-medium">&quot;{search}&quot;</span>
           </p>
         )}
@@ -173,8 +173,8 @@ export default function CompaniesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">No companies found</h2>
-            <p className="text-zinc-500 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-3">No companies found</h2>
+            <p className="text-[var(--muted)] max-w-md mx-auto">
               {search
                 ? `No results for "${search}". Try a different search term.`
                 : 'No companies available at the moment. Check back soon!'}
@@ -192,17 +192,17 @@ export default function CompaniesPage() {
                   {/* Hover gradient border effect */}
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-all duration-500" />
 
-                  <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-transparent transition-all duration-500 group-hover:-translate-y-1 h-full">
+                  <div className="relative bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 hover:border-transparent transition-all duration-500 group-hover:-translate-y-1 h-full">
                     <div className="flex flex-col h-full">
                       {/* Company Logo/Initial */}
                       <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center mb-4 shadow-lg shadow-purple-500/20">
-                        <span className="text-2xl font-bold text-white">
+                        <span className="text-2xl font-bold text-[var(--foreground)]">
                           {company.name?.charAt(0) || '?'}
                         </span>
                       </div>
 
                       {/* Company Name */}
-                      <h2 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-orange-400 group-hover:bg-clip-text transition-all duration-300">
+                      <h2 className="text-xl font-bold text-[var(--foreground)] mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-orange-400 group-hover:bg-clip-text transition-all duration-300">
                         {company.name}
                       </h2>
 
