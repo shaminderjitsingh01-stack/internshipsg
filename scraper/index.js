@@ -42,6 +42,33 @@ function log(msg) {
 }
 
 // ============================================================================
+// URL Resolution - Follow redirects to get direct company URL
+// ============================================================================
+async function resolveUrl(url) {
+  if (!url) return url;
+  try {
+    const response = await fetch(url, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(5000),
+    });
+    return response.url || url;
+  } catch (err) {
+    // If HEAD fails, try GET
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        signal: AbortSignal.timeout(5000),
+      });
+      return response.url || url;
+    } catch {
+      return url; // Return original if all fails
+    }
+  }
+}
+
+// ============================================================================
 // PDPA Compliance
 // ============================================================================
 const PERSONAL_DATA_PATTERNS = [
@@ -310,10 +337,16 @@ async function main() {
     log(`\n📊 Total unique internships: ${uniqueJobs.length}`);
 
     // Save jobs
+    log(`\n🔗 Resolving URLs and saving jobs...`);
     for (const job of uniqueJobs) {
       const companyId = await getOrCreateCompany(job.company);
+
+      // Resolve tracking URL to get direct company URL
+      const directUrl = await resolveUrl(job.application_url);
+
       const result = await saveJob({
         ...job,
+        application_url: directUrl,
         company_id: companyId,
       });
 
