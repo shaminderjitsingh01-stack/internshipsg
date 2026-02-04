@@ -100,11 +100,8 @@ async function saveJob(job) {
   const exists = await jobExists(job.title, job.company_id);
   if (exists) return { added: false, skipped: true };
 
-  const slug = job.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 80) + '-' + Math.random().toString(36).slice(2, 8);
-
   const { error } = await supabase.from('jobs').insert({
     title: stripPersonalData(job.title),
-    slug,
     company_id: job.company_id,
     description: stripPersonalData(job.description || ''),
     location: job.location || 'Singapore',
