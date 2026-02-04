@@ -1,6 +1,6 @@
 /**
  * Job Scraper for internship.sg
- * Uses Adzuna + Jooble APIs for reliable job data
+ * Uses RemoteOK + Remotive APIs for reliable job data with DIRECT company URLs
  *
  * PDPA COMPLIANCE: Personal data is stripped before storage
  */
@@ -18,11 +18,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim();
 const SUPABASE_SERVICE_KEY = (process.env.SUPABASE_SERVICE_KEY || '').trim();
 
-// API Keys - set these in GitHub Secrets
-const ADZUNA_APP_ID = (process.env.ADZUNA_APP_ID || '').trim();
-const ADZUNA_APP_KEY = (process.env.ADZUNA_APP_KEY || '').trim();
-const JOOBLE_API_KEY = (process.env.JOOBLE_API_KEY || '').trim();
-
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY');
   process.exit(1);
@@ -39,89 +34,6 @@ function log(msg) {
   const line = `[${new Date().toISOString()}] ${msg}`;
   console.log(line);
   fs.appendFileSync(logFile, line + '\n');
-}
-
-// ============================================================================
-// URL Resolution - Scrape intermediate pages to get direct company URL
-// ============================================================================
-async function resolveUrl(url) {
-  if (!url) return url;
-
-  try {
-    // First, follow redirects to get the intermediate page
-    const response = await fetch(url, {
-      method: 'GET',
-      redirect: 'follow',
-      signal: AbortSignal.timeout(10000),
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    });
-
-    const finalUrl = response.url;
-    const html = await response.text();
-
-    // Check if we landed on Adzuna details page
-    if (finalUrl.includes('adzuna.sg') || finalUrl.includes('adzuna.com')) {
-      // Look for the apply button URL in Adzuna page
-      // Pattern: data-href="..." or href="..." with apply/redirect
-      const patterns = [
-        /data-href="([^"]+)"/g,
-        /href="(https?:\/\/[^"]*(?:apply|career|job|redirect)[^"]*)"/gi,
-        /"apply_url"\s*:\s*"([^"]+)"/g,
-        /window\.location\.href\s*=\s*['"]([^'"]+)['"]/g,
-      ];
-
-      for (const pattern of patterns) {
-        const matches = [...html.matchAll(pattern)];
-        for (const match of matches) {
-          const extractedUrl = match[1];
-          // Skip if it's still an Adzuna URL
-          if (extractedUrl && !extractedUrl.includes('adzuna')) {
-            return extractedUrl;
-          }
-        }
-      }
-    }
-
-    // Check if we landed on Jooble page
-    if (finalUrl.includes('jooble.org')) {
-      // Look for the actual job URL in Jooble page
-      const patterns = [
-        /href="(https?:\/\/(?!.*jooble)[^"]+)"/gi,
-        /"link"\s*:\s*"([^"]+)"/g,
-        /data-url="([^"]+)"/g,
-      ];
-
-      for (const pattern of patterns) {
-        const matches = [...html.matchAll(pattern)];
-        for (const match of matches) {
-          const extractedUrl = match[1];
-          // Skip if it's still a Jooble URL or common non-job URLs
-          if (extractedUrl &&
-              !extractedUrl.includes('jooble') &&
-              !extractedUrl.includes('google') &&
-              !extractedUrl.includes('facebook') &&
-              !extractedUrl.includes('twitter') &&
-              (extractedUrl.includes('career') ||
-               extractedUrl.includes('job') ||
-               extractedUrl.includes('apply') ||
-               extractedUrl.includes('workday') ||
-               extractedUrl.includes('greenhouse') ||
-               extractedUrl.includes('lever.co') ||
-               extractedUrl.includes('smartrecruiters'))) {
-            return extractedUrl;
-          }
-        }
-      }
-    }
-
-    // Return the final URL after redirects if no better URL found
-    return finalUrl;
-  } catch (err) {
-    log(`URL resolution failed for ${url}: ${err.message}`);
-    return url; // Return original if all fails
-  }
 }
 
 // ============================================================================
@@ -160,7 +72,7 @@ async function getOrCreateCompany(name, website) {
 
   const { data, error } = await supabase
     .from('companies')
-    .insert({ name, slug, website, location: 'Singapore' })
+    .insert({ name, slug, website, location: 'Remote / Singapore' })
     .select('id')
     .single();
 
@@ -187,7 +99,7 @@ async function saveJob(job) {
     title: stripPersonalData(job.title),
     company_id: job.company_id,
     description: stripPersonalData(job.description || ''),
-    location: job.location || 'Singapore',
+    location: job.location || 'Remote',
     salary_min: job.salary_min,
     salary_max: job.salary_max,
     application_url: job.application_url,
@@ -212,145 +124,136 @@ async function updateScraperLog(id, updates) {
 }
 
 // ============================================================================
-// Adzuna API
+// RemoteOK API - Free, direct company URLs
 // ============================================================================
-async function fetchAdzunaJobs() {
-  if (!ADZUNA_APP_ID || !ADZUNA_APP_KEY) {
-    log('⚠️ Adzuna API keys not configured - skipping');
-    return [];
-  }
+async function fetchRemoteOKJobs() {
+  log('📡 Fetching from RemoteOK API...');
 
-  log('📡 Fetching from Adzuna API...');
-
-  const keywords = ['intern', 'internship', 'trainee', 'graduate'];
   const jobs = [];
 
-  for (const keyword of keywords) {
-    for (let page = 1; page <= 3; page++) {
-      try {
-        const url = `https://api.adzuna.com/v1/api/jobs/sg/search/${page}?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=${encodeURIComponent(keyword)}`;
+  try {
+    const response = await fetch('https://remoteok.com/api', {
+      headers: {
+        'User-Agent': 'InternshipSG/1.0 (job aggregator)',
+      },
+    });
 
-        const response = await fetch(url);
-        if (!response.ok) {
-          log(`Adzuna API error: ${response.status}`);
-          continue;
-        }
-
-        const data = await response.json();
-        const results = data.results || [];
-
-        log(`  Adzuna "${keyword}" page ${page}: ${results.length} results`);
-
-        for (const job of results) {
-          const title = job.title?.toLowerCase() || '';
-          if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate')) {
-            continue;
-          }
-
-          jobs.push({
-            title: job.title,
-            company: job.company?.display_name,
-            description: job.description,
-            location: job.location?.display_name || 'Singapore',
-            salary_min: job.salary_min ? Math.round(job.salary_min / 12) : null,
-            salary_max: job.salary_max ? Math.round(job.salary_max / 12) : null,
-            application_url: job.redirect_url,
-            source: 'adzuna',
-          });
-        }
-
-        await new Promise(r => setTimeout(r, 500));
-      } catch (err) {
-        log(`Adzuna error: ${err.message}`);
-      }
+    if (!response.ok) {
+      log(`RemoteOK API error: ${response.status}`);
+      return [];
     }
+
+    const data = await response.json();
+    // First item is metadata, skip it
+    const results = Array.isArray(data) ? data.slice(1) : [];
+
+    log(`  RemoteOK: ${results.length} total jobs`);
+
+    for (const job of results) {
+      const title = (job.position || '').toLowerCase();
+      const tags = (job.tags || []).map(t => t.toLowerCase()).join(' ');
+
+      // Filter for internships
+      if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate') && !title.includes('junior') && !tags.includes('intern')) {
+        continue;
+      }
+
+      // Parse salary
+      let salaryMin = null;
+      let salaryMax = null;
+      if (job.salary_min) salaryMin = parseInt(job.salary_min) / 12; // Convert annual to monthly
+      if (job.salary_max) salaryMax = parseInt(job.salary_max) / 12;
+
+      jobs.push({
+        title: job.position,
+        company: job.company,
+        company_logo: job.company_logo,
+        description: job.description,
+        location: job.location || 'Remote',
+        salary_min: salaryMin ? Math.round(salaryMin) : null,
+        salary_max: salaryMax ? Math.round(salaryMax) : null,
+        application_url: job.url, // Direct company URL!
+        source: 'remoteok',
+      });
+    }
+
+    log(`✅ RemoteOK: Found ${jobs.length} internships/junior roles`);
+  } catch (err) {
+    log(`RemoteOK error: ${err.message}`);
   }
 
-  log(`✅ Adzuna: Found ${jobs.length} internships`);
   return jobs;
 }
 
 // ============================================================================
-// Jooble API
+// Remotive API - Free, direct company URLs
 // ============================================================================
-async function fetchJoobleJobs() {
-  if (!JOOBLE_API_KEY) {
-    log('⚠️ Jooble API key not configured - skipping');
-    return [];
-  }
+async function fetchRemotiveJobs() {
+  log('📡 Fetching from Remotive API...');
 
-  log('📡 Fetching from Jooble API...');
-
-  const keywords = ['internship', 'intern', 'trainee'];
   const jobs = [];
+  const categories = ['software-dev', 'marketing', 'design', 'customer-support', 'sales', 'product', 'data', 'finance'];
 
-  for (const keyword of keywords) {
-    for (let page = 1; page <= 3; page++) {
-      try {
-        const url = `https://jooble.org/api/${JOOBLE_API_KEY}`;
+  for (const category of categories) {
+    try {
+      const response = await fetch(`https://remotive.com/api/remote-jobs?category=${category}&limit=100`);
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            keywords: keyword,
-            location: 'Singapore',
-            page: page,
-          }),
-        });
+      if (!response.ok) {
+        log(`Remotive API error for ${category}: ${response.status}`);
+        continue;
+      }
 
-        if (!response.ok) {
-          log(`Jooble API error: ${response.status}`);
+      const data = await response.json();
+      const results = data.jobs || [];
+
+      log(`  Remotive "${category}": ${results.length} jobs`);
+
+      for (const job of results) {
+        const title = (job.title || '').toLowerCase();
+        const jobType = (job.job_type || '').toLowerCase();
+
+        // Filter for internships or junior roles
+        if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate') && !title.includes('junior') && !title.includes('entry') && jobType !== 'internship') {
           continue;
         }
 
-        const data = await response.json();
-        const results = data.jobs || [];
-
-        log(`  Jooble "${keyword}" page ${page}: ${results.length} results`);
-
-        for (const job of results) {
-          const title = job.title?.toLowerCase() || '';
-          if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate')) {
-            continue;
-          }
-
-          // Parse salary if available
-          let salaryMin = null;
-          let salaryMax = null;
-          if (job.salary) {
-            const numbers = job.salary.match(/\d[\d,]*/g);
-            if (numbers) {
-              const parsed = numbers.map(n => parseInt(n.replace(/,/g, ''), 10));
-              if (parsed.length >= 2) {
-                salaryMin = Math.min(...parsed);
-                salaryMax = Math.max(...parsed);
-              } else if (parsed.length === 1) {
-                salaryMin = parsed[0];
-              }
+        // Parse salary from description if available
+        let salaryMin = null;
+        let salaryMax = null;
+        if (job.salary) {
+          const numbers = job.salary.match(/\d[\d,]*/g);
+          if (numbers) {
+            const parsed = numbers.map(n => parseInt(n.replace(/,/g, ''), 10));
+            if (parsed.length >= 2) {
+              salaryMin = Math.min(...parsed);
+              salaryMax = Math.max(...parsed);
+            } else if (parsed.length === 1) {
+              salaryMin = parsed[0];
             }
           }
-
-          jobs.push({
-            title: job.title,
-            company: job.company,
-            description: job.snippet,
-            location: job.location || 'Singapore',
-            salary_min: salaryMin,
-            salary_max: salaryMax,
-            application_url: job.link,
-            source: 'jooble',
-          });
         }
 
-        await new Promise(r => setTimeout(r, 500));
-      } catch (err) {
-        log(`Jooble error: ${err.message}`);
+        jobs.push({
+          title: job.title,
+          company: job.company_name,
+          company_logo: job.company_logo,
+          description: job.description,
+          location: job.candidate_required_location || 'Remote',
+          salary_min: salaryMin,
+          salary_max: salaryMax,
+          application_url: job.url, // Direct company URL!
+          source: 'remotive',
+        });
       }
+
+      // Rate limit: max 4 requests per day recommended, but we'll be gentle
+      await new Promise(r => setTimeout(r, 1000));
+    } catch (err) {
+      log(`Remotive error for ${category}: ${err.message}`);
     }
   }
 
-  log(`✅ Jooble: Found ${jobs.length} internships`);
+  log(`✅ Remotive: Found ${jobs.length} internships/junior roles`);
   return jobs;
 }
 
@@ -360,6 +263,7 @@ async function fetchJoobleJobs() {
 async function main() {
   log('========================================');
   log('🚀 Starting internship.sg job scraper');
+  log('📡 Using: RemoteOK + Remotive (FREE, Direct URLs)');
   log('========================================');
 
   const logId = await createScraperLog({
@@ -376,11 +280,11 @@ async function main() {
 
   try {
     // Fetch from both APIs
-    const adzunaJobs = await fetchAdzunaJobs();
-    const joobleJobs = await fetchJoobleJobs();
+    const remoteOKJobs = await fetchRemoteOKJobs();
+    const remotiveJobs = await fetchRemotiveJobs();
 
-    // Combine and dedupe by title
-    const allJobs = [...adzunaJobs, ...joobleJobs];
+    // Combine and dedupe by title + company
+    const allJobs = [...remoteOKJobs, ...remotiveJobs];
     const seen = new Set();
     const uniqueJobs = allJobs.filter(job => {
       const key = `${job.title}-${job.company}`.toLowerCase();
@@ -390,19 +294,13 @@ async function main() {
     });
 
     stats.found = uniqueJobs.length;
-    log(`\n📊 Total unique internships: ${uniqueJobs.length}`);
+    log(`\n📊 Total unique internships/junior roles: ${uniqueJobs.length}`);
 
     // Save jobs
-    log(`\n🔗 Resolving URLs and saving jobs...`);
     for (const job of uniqueJobs) {
-      const companyId = await getOrCreateCompany(job.company);
-
-      // Resolve tracking URL to get direct company URL
-      const directUrl = await resolveUrl(job.application_url);
-
+      const companyId = await getOrCreateCompany(job.company, job.company_logo);
       const result = await saveJob({
         ...job,
-        application_url: directUrl,
         company_id: companyId,
       });
 
