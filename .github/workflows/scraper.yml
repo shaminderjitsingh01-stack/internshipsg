@@ -28,9 +28,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
-          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
-          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: node index.js
 
       - name: Upload logs

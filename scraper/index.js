@@ -1,6 +1,6 @@
 /**
  * Job Scraper for internship.sg
- * Uses RemoteOK + Remotive APIs for reliable job data with DIRECT company URLs
+ * Uses Fantastic.jobs Active Jobs DB API - DIRECT company URLs!
  *
  * PDPA COMPLIANCE: Personal data is stripped before storage
  */
@@ -17,6 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ============================================================================
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim();
 const SUPABASE_SERVICE_KEY = (process.env.SUPABASE_SERVICE_KEY || '').trim();
+const RAPIDAPI_KEY = (process.env.RAPIDAPI_KEY || '').trim();
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY');
@@ -57,7 +58,7 @@ function stripPersonalData(text) {
 // ============================================================================
 // Database Operations
 // ============================================================================
-async function getOrCreateCompany(name, website) {
+async function getOrCreateCompany(name, logoUrl, website) {
   if (!name) return null;
 
   const { data: existing } = await supabase
@@ -72,7 +73,13 @@ async function getOrCreateCompany(name, website) {
 
   const { data, error } = await supabase
     .from('companies')
-    .insert({ name, slug, website, location: 'Remote / Singapore' })
+    .insert({
+      name,
+      slug,
+      logo_url: logoUrl,
+      website: website,
+      location: 'Various'
+    })
     .select('id')
     .single();
 
@@ -124,137 +131,99 @@ async function updateScraperLog(id, updates) {
 }
 
 // ============================================================================
-// RemoteOK API - Free, direct company URLs
+// Fantastic.jobs Active Jobs DB API - DIRECT COMPANY URLs!
 // ============================================================================
-async function fetchRemoteOKJobs() {
-  log('📡 Fetching from RemoteOK API...');
-
-  const jobs = [];
-
-  try {
-    const response = await fetch('https://remoteok.com/api', {
-      headers: {
-        'User-Agent': 'InternshipSG/1.0 (job aggregator)',
-      },
-    });
-
-    if (!response.ok) {
-      log(`RemoteOK API error: ${response.status}`);
-      return [];
-    }
-
-    const data = await response.json();
-    // First item is metadata, skip it
-    const results = Array.isArray(data) ? data.slice(1) : [];
-
-    log(`  RemoteOK: ${results.length} total jobs`);
-
-    for (const job of results) {
-      const title = (job.position || '').toLowerCase();
-      const tags = (job.tags || []).map(t => t.toLowerCase()).join(' ');
-
-      // Filter for internships
-      if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate') && !title.includes('junior') && !tags.includes('intern')) {
-        continue;
-      }
-
-      // Parse salary
-      let salaryMin = null;
-      let salaryMax = null;
-      if (job.salary_min) salaryMin = parseInt(job.salary_min) / 12; // Convert annual to monthly
-      if (job.salary_max) salaryMax = parseInt(job.salary_max) / 12;
-
-      jobs.push({
-        title: job.position,
-        company: job.company,
-        company_logo: job.company_logo,
-        description: job.description,
-        location: job.location || 'Remote',
-        salary_min: salaryMin ? Math.round(salaryMin) : null,
-        salary_max: salaryMax ? Math.round(salaryMax) : null,
-        application_url: job.url, // Direct company URL!
-        source: 'remoteok',
-      });
-    }
-
-    log(`✅ RemoteOK: Found ${jobs.length} internships/junior roles`);
-  } catch (err) {
-    log(`RemoteOK error: ${err.message}`);
+async function fetchFantasticJobs() {
+  if (!RAPIDAPI_KEY) {
+    log('⚠️ RAPIDAPI_KEY not configured - skipping Fantastic.jobs');
+    return [];
   }
 
-  return jobs;
-}
-
-// ============================================================================
-// Remotive API - Free, direct company URLs
-// ============================================================================
-async function fetchRemotiveJobs() {
-  log('📡 Fetching from Remotive API...');
+  log('📡 Fetching from Fantastic.jobs Active Jobs DB API...');
+  log('   (Direct company URLs - no tracking!)');
 
   const jobs = [];
-  const categories = ['software-dev', 'marketing', 'design', 'customer-support', 'sales', 'product', 'data', 'finance'];
+  const keywords = ['intern', 'trainee', 'graduate', 'entry level'];
 
-  for (const category of categories) {
+  for (const keyword of keywords) {
     try {
-      const response = await fetch(`https://remotive.com/api/remote-jobs?category=${category}&limit=100`);
+      const url = `https://active-jobs-db.p.rapidapi.com/active-ats-24h?limit=100&title_filter=${encodeURIComponent(keyword)}`;
+
+      const response = await fetch(url, {
+        headers: {
+          'x-rapidapi-host': 'active-jobs-db.p.rapidapi.com',
+          'x-rapidapi-key': RAPIDAPI_KEY,
+        },
+      });
 
       if (!response.ok) {
-        log(`Remotive API error for ${category}: ${response.status}`);
+        const errorText = await response.text();
+        log(`Fantastic.jobs API error for "${keyword}": ${response.status} - ${errorText}`);
         continue;
       }
 
-      const data = await response.json();
-      const results = data.jobs || [];
+      const results = await response.json();
 
-      log(`  Remotive "${category}": ${results.length} jobs`);
+      if (!Array.isArray(results)) {
+        log(`Fantastic.jobs returned non-array for "${keyword}"`);
+        continue;
+      }
+
+      log(`  "${keyword}": ${results.length} jobs found`);
 
       for (const job of results) {
-        const title = (job.title || '').toLowerCase();
-        const jobType = (job.job_type || '').toLowerCase();
+        // Filter for Singapore jobs only
+        const countries = job.countries_derived || [];
+        const locations = job.locations_derived || [];
+        const isSingapore = countries.some(c => c.toLowerCase().includes('singapore')) ||
+                           locations.some(l => l.toLowerCase().includes('singapore'));
 
-        // Filter for internships or junior roles
-        if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate') && !title.includes('junior') && !title.includes('entry') && jobType !== 'internship') {
-          continue;
-        }
+        if (!isSingapore) continue;
 
-        // Parse salary from description if available
+        // Parse salary
         let salaryMin = null;
         let salaryMax = null;
-        if (job.salary) {
-          const numbers = job.salary.match(/\d[\d,]*/g);
-          if (numbers) {
-            const parsed = numbers.map(n => parseInt(n.replace(/,/g, ''), 10));
-            if (parsed.length >= 2) {
-              salaryMin = Math.min(...parsed);
-              salaryMax = Math.max(...parsed);
-            } else if (parsed.length === 1) {
-              salaryMin = parsed[0];
-            }
-          }
+        if (job.salary_raw?.value) {
+          const val = job.salary_raw.value;
+          if (val.minValue) salaryMin = val.unitText === 'YEAR' ? Math.round(val.minValue / 12) : val.minValue;
+          if (val.maxValue) salaryMax = val.unitText === 'YEAR' ? Math.round(val.maxValue / 12) : val.maxValue;
         }
+
+        // Get location
+        const location = job.locations_derived?.[0] || 'Singapore';
 
         jobs.push({
           title: job.title,
-          company: job.company_name,
-          company_logo: job.company_logo,
-          description: job.description,
-          location: job.candidate_required_location || 'Remote',
+          company: job.organization,
+          company_logo: job.organization_logo,
+          company_website: job.organization_url || job.domain_derived,
+          description: '', // API doesn't include full description in this endpoint
+          location: location,
           salary_min: salaryMin,
           salary_max: salaryMax,
-          application_url: job.url, // Direct company URL!
-          source: 'remotive',
+          application_url: job.url, // DIRECT company URL!
+          source: 'fantastic_jobs',
         });
       }
 
-      // Rate limit: max 4 requests per day recommended, but we'll be gentle
-      await new Promise(r => setTimeout(r, 1000));
+      // Rate limit
+      await new Promise(r => setTimeout(r, 500));
     } catch (err) {
-      log(`Remotive error for ${category}: ${err.message}`);
+      log(`Fantastic.jobs error for "${keyword}": ${err.message}`);
     }
   }
 
-  log(`✅ Remotive: Found ${jobs.length} internships/junior roles`);
-  return jobs;
+  // Dedupe by title + company
+  const seen = new Set();
+  const uniqueJobs = jobs.filter(job => {
+    const key = `${job.title}-${job.company}`.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  log(`✅ Fantastic.jobs: Found ${uniqueJobs.length} unique internships`);
+  return uniqueJobs;
 }
 
 // ============================================================================
@@ -263,7 +232,8 @@ async function fetchRemotiveJobs() {
 async function main() {
   log('========================================');
   log('🚀 Starting internship.sg job scraper');
-  log('📡 Using: RemoteOK + Remotive (FREE, Direct URLs)');
+  log('📡 Using: Fantastic.jobs Active Jobs DB');
+  log('✅ DIRECT company URLs - no tracking!');
   log('========================================');
 
   const logId = await createScraperLog({
@@ -279,26 +249,23 @@ async function main() {
   const stats = { found: 0, added: 0, skipped: 0, errors: [] };
 
   try {
-    // Fetch from both APIs
-    const remoteOKJobs = await fetchRemoteOKJobs();
-    const remotiveJobs = await fetchRemotiveJobs();
+    // Fetch jobs
+    const jobs = await fetchFantasticJobs();
 
-    // Combine and dedupe by title + company
-    const allJobs = [...remoteOKJobs, ...remotiveJobs];
-    const seen = new Set();
-    const uniqueJobs = allJobs.filter(job => {
-      const key = `${job.title}-${job.company}`.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    stats.found = uniqueJobs.length;
-    log(`\n📊 Total unique internships/junior roles: ${uniqueJobs.length}`);
+    stats.found = jobs.length;
+    log(`\n📊 Total internships found: ${jobs.length}`);
 
     // Save jobs
-    for (const job of uniqueJobs) {
-      const companyId = await getOrCreateCompany(job.company, job.company_logo);
+    const companiesSeen = new Set();
+    for (const job of jobs) {
+      const companyId = await getOrCreateCompany(
+        job.company,
+        job.company_logo,
+        job.company_website
+      );
+
+      if (job.company) companiesSeen.add(job.company);
+
       const result = await saveJob({
         ...job,
         company_id: companyId,
@@ -317,6 +284,7 @@ async function main() {
       await updateScraperLog(logId, {
         completed_at: new Date().toISOString(),
         status: 'completed',
+        companies_processed: companiesSeen.size,
         jobs_found: stats.found,
         jobs_added: stats.added,
         jobs_skipped: stats.skipped,
