@@ -447,9 +447,9 @@ export default function AdminScraperPage() {
                     )}
                   </button>
                   <p className="text-[var(--muted)] text-sm">
-                    Scrapes job listings from enabled company career pages and updates the database.
+                    Fetches internship listings from Adzuna &amp; Jooble APIs and updates the database.
                     <br />
-                    Auto-runs daily at 6:00 AM SGT via Vercel Cron.
+                    Auto-runs daily at 6:00 AM SGT via GitHub Actions.
                   </p>
                 </div>
 
@@ -503,19 +503,19 @@ export default function AdminScraperPage() {
                 <ul className="space-y-3 text-[var(--muted)] text-sm">
                   <li className="flex items-start gap-3">
                     <span className="text-purple-400 mt-0.5">*</span>
-                    <span>The scraper fetches internship listings from major Singapore companies</span>
+                    <span>Uses <strong>Adzuna API</strong> and <strong>Jooble API</strong> to fetch Singapore internship listings</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-purple-400 mt-0.5">*</span>
-                    <span>Duplicate jobs are automatically detected and skipped</span>
+                    <span>Duplicate jobs are automatically detected and skipped (by title + company)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-purple-400 mt-0.5">*</span>
-                    <span>Jobs older than 90 days are automatically marked inactive</span>
+                    <span>Personal data (emails, phone numbers) is automatically stripped for PDPA compliance</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-purple-400 mt-0.5">*</span>
-                    <span>Vercel Cron runs this automatically every day at 6:00 AM SGT</span>
+                    <span>GitHub Actions runs this automatically every day at 6:00 AM SGT</span>
                   </li>
                 </ul>
               </div>

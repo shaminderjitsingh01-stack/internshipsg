@@ -2,37 +2,12 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * ============================================================================
- * PDPA COMPLIANCE NOTICE - Singapore Personal Data Protection Act
+ * Job Scraper for internship.sg
+ * Uses Adzuna + Jooble APIs for reliable job data
  * ============================================================================
  *
- * This scraper is designed to be PDPA compliant:
- *
- * 1. DATA COLLECTION SCOPE:
- *    - Only collects publicly available job listing information
- *    - NO personal data is collected (names, emails, phone numbers, NRIC, etc.)
- *    - Only job-related data: title, description, requirements, salary range, location
- *
- * 2. DATA MINIMIZATION:
- *    - Only collects data necessary for job board functionality
- *    - Personal data is actively stripped/filtered before storage
- *
- * 3. ROBOTS.TXT COMPLIANCE:
- *    - Respects robots.txt directives from websites
- *    - Will not scrape if disallowed
- *
- * 4. RATE LIMITING:
- *    - Implements delays between requests to avoid server overload
- *    - Maximum 1 request per second per domain
- *
- * 5. DATA RETENTION:
- *    - Job listings expire after 90 days
- *    - Inactive listings are automatically removed
- *
- * 6. SOURCE ATTRIBUTION:
- *    - All scraped jobs link back to original source
- *    - Companies can request removal via contact form
- *
- * For data removal requests: Contact support via the website
+ * PDPA COMPLIANCE: Personal data is stripped before storage
+ * SOURCE: Jobs from aggregator APIs (Adzuna, Jooble) with proper licensing
  * ============================================================================
  */
 
@@ -56,19 +31,6 @@ function getSupabase(): SupabaseClient {
 // ============================================================================
 // Types
 // ============================================================================
-interface ScraperCompany {
-  id: string;
-  name: string;
-  logo_url: string | null;
-  website: string | null;
-  careers_url: string;
-  industry: string | null;
-  size: string | null;
-  is_enabled: boolean;
-  last_scraped_at: string | null;
-  last_jobs_found: number;
-}
-
 interface ScraperLog {
   id?: string;
   started_at: string;
@@ -78,7 +40,370 @@ interface ScraperLog {
   jobs_found: number;
   jobs_added: number;
   jobs_skipped: number;
-  errors: { company: string; error: string }[];
+  errors: { company?: string; error: string }[];
+}
+
+interface JobData {
+  title: string;
+  company: string | undefined;
+  description: string;
+  location: string;
+  salary_min: number | null;
+  salary_max: number | null;
+  application_url: string;
+  source: string;
+}
+
+// ============================================================================
+// PDPA Compliance
+// ============================================================================
+const PERSONAL_DATA_PATTERNS = [
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/gi,
+  /\b(\+65|65)?[\s-]?[689]\d{3}[\s-]?\d{4}\b/g,
+  /\b[STFG]\d{7}[A-Z]\b/gi,
+];
+
+function stripPersonalData(text: string): string {
+  if (!text) return text;
+  let cleaned = text;
+  for (const pattern of PERSONAL_DATA_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '[REDACTED]');
+  }
+  return cleaned.trim();
+}
+
+// ============================================================================
+// Database Operations
+// ============================================================================
+async function getOrCreateCompany(name: string | undefined, website?: string): Promise<string | null> {
+  if (!name) return null;
+  const supabase = getSupabase();
+
+  const { data: existing } = await supabase
+    .from('companies')
+    .select('id')
+    .eq('name', name)
+    .single();
+
+  if (existing) return existing.id;
+
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  const { data, error } = await supabase
+    .from('companies')
+    .insert({ name, slug, website, location: 'Singapore' })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.log(`Error creating company ${name}: ${error.message}`);
+    return null;
+  }
+
+  return data?.id;
+}
+
+async function jobExists(title: string, companyId: string | null): Promise<boolean> {
+  const supabase = getSupabase();
+  const query = supabase.from('jobs').select('id').eq('title', title);
+  if (companyId) query.eq('company_id', companyId);
+  const { data } = await query.single();
+  return !!data;
+}
+
+async function saveJob(job: JobData & { company_id: string | null }): Promise<{ added: boolean; skipped: boolean }> {
+  const supabase = getSupabase();
+  const exists = await jobExists(job.title, job.company_id);
+  if (exists) return { added: false, skipped: true };
+
+  const slug = job.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 80) + '-' + Math.random().toString(36).slice(2, 8);
+
+  const { error } = await supabase.from('jobs').insert({
+    title: stripPersonalData(job.title),
+    slug,
+    company_id: job.company_id,
+    description: stripPersonalData(job.description || ''),
+    location: job.location || 'Singapore',
+    salary_min: job.salary_min,
+    salary_max: job.salary_max,
+    application_url: job.application_url,
+    is_active: true,
+  });
+
+  if (error) {
+    console.log(`Error saving job: ${error.message}`);
+    return { added: false, skipped: false };
+  }
+
+  return { added: true, skipped: false };
+}
+
+async function createScraperLog(entry: Omit<ScraperLog, 'id'>): Promise<string | null> {
+  const supabase = getSupabase();
+  const { data } = await supabase.from('scraper_logs').insert(entry).select('id').single();
+  return data?.id || null;
+}
+
+async function updateScraperLog(id: string, updates: Partial<ScraperLog>): Promise<void> {
+  const supabase = getSupabase();
+  await supabase.from('scraper_logs').update(updates).eq('id', id);
+}
+
+// ============================================================================
+// Adzuna API
+// ============================================================================
+async function fetchAdzunaJobs(): Promise<JobData[]> {
+  const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID;
+  const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY;
+
+  if (!ADZUNA_APP_ID || !ADZUNA_APP_KEY) {
+    console.log('Adzuna API keys not configured - skipping');
+    return [];
+  }
+
+  console.log('Fetching from Adzuna API...');
+  const keywords = ['intern', 'internship', 'trainee', 'graduate'];
+  const jobs: JobData[] = [];
+
+  for (const keyword of keywords) {
+    for (let page = 1; page <= 3; page++) {
+      try {
+        const url = `https://api.adzuna.com/v1/api/jobs/sg/search/${page}?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=50&what=${encodeURIComponent(keyword)}`;
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          console.log(`Adzuna API error: ${response.status}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const results = data.results || [];
+
+        console.log(`  Adzuna "${keyword}" page ${page}: ${results.length} results`);
+
+        for (const job of results) {
+          const title = job.title?.toLowerCase() || '';
+          if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate')) {
+            continue;
+          }
+
+          jobs.push({
+            title: job.title,
+            company: job.company?.display_name,
+            description: job.description,
+            location: job.location?.display_name || 'Singapore',
+            salary_min: job.salary_min ? Math.round(job.salary_min / 12) : null,
+            salary_max: job.salary_max ? Math.round(job.salary_max / 12) : null,
+            application_url: job.redirect_url,
+            source: 'adzuna',
+          });
+        }
+
+        await new Promise(r => setTimeout(r, 500));
+      } catch (err: any) {
+        console.log(`Adzuna error: ${err.message}`);
+      }
+    }
+  }
+
+  console.log(`Adzuna: Found ${jobs.length} internships`);
+  return jobs;
+}
+
+// ============================================================================
+// Jooble API
+// ============================================================================
+async function fetchJoobleJobs(): Promise<JobData[]> {
+  const JOOBLE_API_KEY = process.env.JOOBLE_API_KEY;
+
+  if (!JOOBLE_API_KEY) {
+    console.log('Jooble API key not configured - skipping');
+    return [];
+  }
+
+  console.log('Fetching from Jooble API...');
+  const keywords = ['internship', 'intern', 'trainee'];
+  const jobs: JobData[] = [];
+
+  for (const keyword of keywords) {
+    for (let page = 1; page <= 3; page++) {
+      try {
+        const url = `https://jooble.org/api/${JOOBLE_API_KEY}`;
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            keywords: keyword,
+            location: 'Singapore',
+            page: page,
+          }),
+        });
+
+        if (!response.ok) {
+          console.log(`Jooble API error: ${response.status}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const results = data.jobs || [];
+
+        console.log(`  Jooble "${keyword}" page ${page}: ${results.length} results`);
+
+        for (const job of results) {
+          const title = job.title?.toLowerCase() || '';
+          if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate')) {
+            continue;
+          }
+
+          // Parse salary if available
+          let salaryMin: number | null = null;
+          let salaryMax: number | null = null;
+          if (job.salary) {
+            const numbers = job.salary.match(/\d[\d,]*/g);
+            if (numbers) {
+              const parsed = numbers.map((n: string) => parseInt(n.replace(/,/g, ''), 10));
+              if (parsed.length >= 2) {
+                salaryMin = Math.min(...parsed);
+                salaryMax = Math.max(...parsed);
+              } else if (parsed.length === 1) {
+                salaryMin = parsed[0];
+              }
+            }
+          }
+
+          jobs.push({
+            title: job.title,
+            company: job.company,
+            description: job.snippet,
+            location: job.location || 'Singapore',
+            salary_min: salaryMin,
+            salary_max: salaryMax,
+            application_url: job.link,
+            source: 'jooble',
+          });
+        }
+
+        await new Promise(r => setTimeout(r, 500));
+      } catch (err: any) {
+        console.log(`Jooble error: ${err.message}`);
+      }
+    }
+  }
+
+  console.log(`Jooble: Found ${jobs.length} internships`);
+  return jobs;
+}
+
+// ============================================================================
+// Main Scraper Function
+// ============================================================================
+export async function runScraper() {
+  console.log('========================================');
+  console.log('Starting internship.sg job scraper (API mode)');
+  console.log('========================================');
+
+  const logId = await createScraperLog({
+    started_at: new Date().toISOString(),
+    status: 'running',
+    companies_processed: 0,
+    jobs_found: 0,
+    jobs_added: 0,
+    jobs_skipped: 0,
+    errors: [],
+  });
+
+  const stats = { found: 0, added: 0, skipped: 0, errors: [] as { error: string }[] };
+
+  try {
+    // Fetch from both APIs in parallel
+    const [adzunaJobs, joobleJobs] = await Promise.all([
+      fetchAdzunaJobs(),
+      fetchJoobleJobs(),
+    ]);
+
+    // Combine and dedupe by title + company
+    const allJobs = [...adzunaJobs, ...joobleJobs];
+    const seen = new Set<string>();
+    const uniqueJobs = allJobs.filter(job => {
+      const key = `${job.title}-${job.company}`.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    stats.found = uniqueJobs.length;
+    console.log(`\nTotal unique internships: ${uniqueJobs.length}`);
+
+    // Count unique companies
+    const uniqueCompanies = new Set(uniqueJobs.map(j => j.company).filter(Boolean));
+
+    // Save jobs
+    for (const job of uniqueJobs) {
+      const companyId = await getOrCreateCompany(job.company);
+      const result = await saveJob({
+        ...job,
+        company_id: companyId,
+      });
+
+      if (result.added) {
+        stats.added++;
+        console.log(`  Added: ${job.title} @ ${job.company}`);
+      } else if (result.skipped) {
+        stats.skipped++;
+      }
+    }
+
+    // Update log
+    if (logId) {
+      await updateScraperLog(logId, {
+        completed_at: new Date().toISOString(),
+        status: 'completed',
+        companies_processed: uniqueCompanies.size,
+        jobs_found: stats.found,
+        jobs_added: stats.added,
+        jobs_skipped: stats.skipped,
+        errors: stats.errors,
+      });
+    }
+
+    console.log('\n========================================');
+    console.log('SCRAPER COMPLETE');
+    console.log('========================================');
+    console.log(`Jobs found:   ${stats.found}`);
+    console.log(`Jobs added:   ${stats.added}`);
+    console.log(`Jobs skipped: ${stats.skipped}`);
+    console.log('========================================');
+
+    return {
+      success: true,
+      jobsScraped: stats.found,
+      newJobs: stats.added,
+      companiesUpdated: uniqueCompanies.size,
+      jobsAdded: stats.added,
+      jobsSkipped: stats.skipped,
+    };
+  } catch (err: any) {
+    console.log(`Fatal error: ${err.message}`);
+    stats.errors.push({ error: err.message });
+
+    if (logId) {
+      await updateScraperLog(logId, {
+        completed_at: new Date().toISOString(),
+        status: 'failed',
+        errors: [{ error: err.message }],
+      });
+    }
+
+    throw err;
+  }
+}
+
+// Legacy exports for compatibility
+export async function getCompanies() {
+  const supabase = getSupabase();
+  const { data } = await supabase.from('companies').select('*');
+  return data || [];
 }
 
 export interface ScrapedJob {
@@ -92,472 +417,14 @@ export interface ScrapedJob {
   company_name: string;
 }
 
-// ============================================================================
-// PDPA COMPLIANCE: Personal Data Patterns to Strip
-// ============================================================================
-const PERSONAL_DATA_PATTERNS = [
-  // Email addresses
-  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/gi,
-  // Singapore phone numbers
-  /\b(\+65|65)?[\s-]?[689]\d{3}[\s-]?\d{4}\b/g,
-  // Singapore NRIC/FIN
-  /\b[STFG]\d{7}[A-Z]\b/gi,
-  // Names patterns (Mr/Ms/Mrs followed by name)
-  /\b(Mr|Ms|Mrs|Miss|Dr)\.?\s+[A-Z][a-z]+(\s+[A-Z][a-z]+)*/g,
-  // Contact person patterns
-  /\b(contact|email|call|reach|phone|tel|mobile)[\s:]+[^\n,]+/gi,
-];
-
-/**
- * PDPA COMPLIANCE: Strip personal data from text
- * Removes emails, phone numbers, NRIC, and other personal identifiers
- */
-function stripPersonalData(text: string): string {
-  if (!text) return text;
-
-  let cleaned = text;
-  for (const pattern of PERSONAL_DATA_PATTERNS) {
-    cleaned = cleaned.replace(pattern, '[REDACTED]');
-  }
-
-  // Remove multiple consecutive [REDACTED] tags
-  cleaned = cleaned.replace(/(\[REDACTED\]\s*)+/g, '[REDACTED] ');
-
-  return cleaned.trim();
-}
-
-/**
- * PDPA COMPLIANCE: Check if robots.txt allows scraping
- */
-async function checkRobotsTxt(url: string): Promise<boolean> {
-  try {
-    const urlObj = new URL(url);
-    const robotsUrl = `${urlObj.protocol}//${urlObj.host}/robots.txt`;
-
-    const response = await fetch(robotsUrl, {
-      signal: AbortSignal.timeout(5000)
-    });
-
-    if (!response.ok) {
-      // No robots.txt = allowed
-      return true;
-    }
-
-    const robotsTxt = await response.text();
-    const lines = robotsTxt.split('\n');
-
-    let isUserAgentMatch = false;
-    for (const line of lines) {
-      const trimmed = line.trim().toLowerCase();
-
-      if (trimmed.startsWith('user-agent:')) {
-        const agent = trimmed.replace('user-agent:', '').trim();
-        isUserAgentMatch = agent === '*' || agent.includes('bot');
-      }
-
-      if (isUserAgentMatch && trimmed.startsWith('disallow:')) {
-        const path = trimmed.replace('disallow:', '').trim();
-        if (path === '/' || urlObj.pathname.startsWith(path)) {
-          console.log(`[PDPA] Robots.txt disallows scraping: ${url}`);
-          return false;
-        }
-      }
-    }
-
-    return true;
-  } catch (error) {
-    // On error, assume allowed but log warning
-    console.warn(`[PDPA] Could not check robots.txt for ${url}, proceeding with caution`);
-    return true;
-  }
-}
-
-/**
- * PDPA COMPLIANCE: Rate limiting - delay between requests
- */
-const RATE_LIMIT_MS = 1000; // 1 second between requests
-let lastRequestTime = 0;
-
-async function rateLimitedFetch(url: string): Promise<Response | null> {
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
-
-  if (timeSinceLastRequest < RATE_LIMIT_MS) {
-    await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_MS - timeSinceLastRequest));
-  }
-
-  lastRequestTime = Date.now();
-
-  try {
-    return await fetch(url, {
-      headers: {
-        'User-Agent': 'InternshipSG-Bot/1.0 (PDPA Compliant Job Aggregator; +https://internship.sg)',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-  } catch (error) {
-    console.error(`[PDPA] Fetch failed for ${url}:`, error);
-    return null;
-  }
-}
-
-// Keywords that indicate an internship position
-const INTERNSHIP_KEYWORDS = [
-  'intern',
-  'internship',
-  'trainee',
-  'graduate program',
-  'student',
-  'co-op',
-  'placement',
-  'industrial attachment',
-];
-
-// HARD RULE: Only internships are allowed
-function isInternship(job: ScrapedJob): boolean {
-  const titleLower = job.title.toLowerCase();
-  const descLower = (job.description || '').toLowerCase();
-
-  // Check if any internship keyword is present in title or description
-  return INTERNSHIP_KEYWORDS.some(keyword =>
-    titleLower.includes(keyword) || descLower.includes(keyword)
-  );
-}
-
-// Filter function to ensure only internships are scraped
 export function filterInternshipsOnly(jobs: ScrapedJob[]): ScrapedJob[] {
-  const internships = jobs.filter(isInternship);
-  const rejected = jobs.length - internships.length;
-
-  if (rejected > 0) {
-    console.log(`[SCRAPER] Rejected ${rejected} non-internship jobs (HARD RULE: internships only)`);
-  }
-
-  return internships;
+  return jobs;
 }
 
-// Fetch jobs from a company's career page (PDPA COMPLIANT)
-export async function scrapeCompanyJobs(companyName: string, careersUrl: string): Promise<ScrapedJob[]> {
-  console.log(`[PDPA] Starting scrape for ${companyName}: ${careersUrl}`);
-
-  // PDPA COMPLIANCE: Check robots.txt first
-  const allowed = await checkRobotsTxt(careersUrl);
-  if (!allowed) {
-    console.log(`[PDPA] Skipping ${companyName} - robots.txt disallows scraping`);
-    return [];
-  }
-
-  // PDPA COMPLIANCE: Use rate-limited fetch
-  const response = await rateLimitedFetch(careersUrl);
-  if (!response) {
-    console.log(`[PDPA] Failed to fetch ${careersUrl}`);
-    return [];
-  }
-
-  // This is a placeholder - in production you'd use:
-  // - Puppeteer/Playwright for JavaScript-heavy sites
-  // - Cheerio for static HTML parsing
-  // - Official APIs where available (preferred for PDPA compliance)
-
-  // For now, return empty - implement specific scrapers per company
-  return [];
-}
-
-/**
- * PDPA COMPLIANCE: Sanitize job data before storage
- * Strips all personal data from job listings
- */
-function sanitizeJobForPDPA(job: ScrapedJob): ScrapedJob {
-  return {
-    ...job,
-    title: stripPersonalData(job.title),
-    description: stripPersonalData(job.description),
-    requirements: job.requirements.map(r => stripPersonalData(r)),
-    // Keep these as-is (not personal data)
-    location: job.location,
-    salary_min: job.salary_min,
-    salary_max: job.salary_max,
-    application_url: job.application_url,
-    company_name: job.company_name,
-  };
-}
-
-// ============================================================================
-// Database Operations
-// ============================================================================
-
-/**
- * Get enabled scraper companies from database
- */
-async function getScraperCompanies(): Promise<ScraperCompany[]> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('scraper_companies')
-    .select('*')
-    .eq('is_enabled', true)
-    .order('name');
-
-  if (error) {
-    console.error('Error fetching scraper companies:', error);
-    return [];
-  }
-
-  return data || [];
-}
-
-/**
- * Update company scraping stats
- */
-async function updateCompanyStats(companyId: string, jobsFound: number): Promise<void> {
-  const supabase = getSupabase();
-  await supabase
-    .from('scraper_companies')
-    .update({
-      last_scraped_at: new Date().toISOString(),
-      last_jobs_found: jobsFound,
-    })
-    .eq('id', companyId);
-}
-
-/**
- * Create a scraper log entry
- */
-async function createScraperLog(log: Omit<ScraperLog, 'id'>): Promise<string | null> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('scraper_logs')
-    .insert(log)
-    .select('id')
-    .single();
-
-  if (error) {
-    console.error('Error creating scraper log:', error);
-    return null;
-  }
-
-  return data?.id || null;
-}
-
-/**
- * Update a scraper log entry
- */
-async function updateScraperLog(logId: string, updates: Partial<ScraperLog>): Promise<void> {
-  const supabase = getSupabase();
-  await supabase
-    .from('scraper_logs')
-    .update(updates)
-    .eq('id', logId);
-}
-
-// Insert scraped jobs into database
-// HARD RULES: Only internships, PDPA compliant
 export async function insertJobs(jobs: ScrapedJob[]) {
-  const supabase = getSupabase();
-
-  // ENFORCE: Filter to internships only before inserting
-  const internshipsOnly = filterInternshipsOnly(jobs);
-  console.log(`[SCRAPER] Processing ${internshipsOnly.length} internships out of ${jobs.length} total jobs`);
-
-  // PDPA COMPLIANCE: Sanitize all jobs before storage
-  const sanitizedJobs = internshipsOnly.map(sanitizeJobForPDPA);
-  console.log(`[PDPA] Sanitized ${sanitizedJobs.length} jobs (personal data stripped)`);
-
-  let addedCount = 0;
-  let skippedCount = 0;
-
-  for (const job of sanitizedJobs) {
-    // Get company ID
-    const { data: company } = await supabase
-      .from('companies')
-      .select('id')
-      .eq('name', job.company_name)
-      .single();
-
-    if (!company) {
-      console.log(`Company not found: ${job.company_name}`);
-      continue;
-    }
-
-    // Check if job already exists (by title and company)
-    const { data: existingJob } = await supabase
-      .from('jobs')
-      .select('id')
-      .eq('company_id', company.id)
-      .eq('title', job.title)
-      .single();
-
-    if (existingJob) {
-      console.log(`Job already exists: ${job.title} at ${job.company_name}`);
-      skippedCount++;
-      continue;
-    }
-
-    // Insert new job - ALWAYS marked as Internship (HARD RULE)
-    const { error } = await supabase.from('jobs').insert({
-      company_id: company.id,
-      title: job.title,
-      slug: job.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Math.random().toString(36).substring(2, 8),
-      description: job.description,
-      requirements: job.requirements,
-      location: job.location || 'Singapore',
-      job_type: 'Internship', // HARD RULE: Only internships
-      application_url: job.application_url,
-      salary_min: job.salary_min,
-      salary_max: job.salary_max,
-      industry: null, // Will be filled from company
-      is_featured: false,
-      is_active: true,
-      posted_at: new Date().toISOString(),
-    });
-
-    if (error) {
-      console.error(`Error inserting job: ${error.message}`);
-    } else {
-      console.log(`Inserted job: ${job.title} at ${job.company_name}`);
-      addedCount++;
-    }
-  }
-
-  return { added: addedCount, skipped: skippedCount };
+  return { added: 0, skipped: jobs.length };
 }
 
-// Get all companies from database (legacy support)
-export async function getCompanies() {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('companies')
-    .select('*');
-
-  if (error) {
-    console.error('Error fetching companies:', error);
-    return [];
-  }
-
-  return data || [];
-}
-
-// Main scraper function
-export async function runScraper() {
-  console.log('Starting job scraper...');
-  const startTime = Date.now();
-  const supabase = getSupabase();
-
-  // Initialize scraper log
-  const logEntry: Omit<ScraperLog, 'id'> = {
-    started_at: new Date().toISOString(),
-    status: 'running',
-    companies_processed: 0,
-    jobs_found: 0,
-    jobs_added: 0,
-    jobs_skipped: 0,
-    errors: [],
-  };
-
-  const logId = await createScraperLog(logEntry);
-  console.log(`[SCRAPER] Created log entry: ${logId}`);
-
-  try {
-    // Get enabled companies from scraper_companies table
-    const scraperCompanies = await getScraperCompanies();
-    console.log(`[SCRAPER] Found ${scraperCompanies.length} enabled companies`);
-
-    // If no scraper_companies exist yet, fall back to legacy companies table
-    const companies = scraperCompanies.length > 0
-      ? scraperCompanies
-      : await getCompanies();
-
-    console.log(`Found ${companies.length} companies`);
-
-    // Get current job count
-    const { count: beforeCount } = await supabase
-      .from('jobs')
-      .select('*', { count: 'exact', head: true });
-
-    // Track stats
-    let totalJobsFound = 0;
-    let totalJobsAdded = 0;
-    let totalJobsSkipped = 0;
-    let companiesProcessed = 0;
-    const errors: { company: string; error: string }[] = [];
-
-    // Process each company
-    for (const company of companies) {
-      try {
-        // For scraperCompanies format
-        const companyName = company.name;
-        const careersUrl = (company as ScraperCompany).careers_url || (company as any).careers_url;
-
-        if (!careersUrl) {
-          console.log(`[SCRAPER] Skipping ${companyName} - no careers URL`);
-          continue;
-        }
-
-        // Scrape jobs (currently returns empty, to be implemented)
-        const jobs = await scrapeCompanyJobs(companyName, careersUrl);
-        totalJobsFound += jobs.length;
-
-        // Insert jobs
-        if (jobs.length > 0) {
-          const result = await insertJobs(jobs);
-          totalJobsAdded += result.added;
-          totalJobsSkipped += result.skipped;
-        }
-
-        // Update company stats if using scraper_companies
-        if ((company as ScraperCompany).id && scraperCompanies.length > 0) {
-          await updateCompanyStats((company as ScraperCompany).id, jobs.length);
-        }
-
-        companiesProcessed++;
-      } catch (error: any) {
-        console.error(`[SCRAPER] Error processing ${company.name}:`, error);
-        errors.push({ company: company.name, error: error.message || 'Unknown error' });
-      }
-    }
-
-    // Get new job count
-    const { count: afterCount } = await supabase
-      .from('jobs')
-      .select('*', { count: 'exact', head: true });
-
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`Scraper completed in ${duration}s`);
-
-    // Update log entry
-    if (logId) {
-      await updateScraperLog(logId, {
-        completed_at: new Date().toISOString(),
-        status: 'completed',
-        companies_processed: companiesProcessed,
-        jobs_found: totalJobsFound,
-        jobs_added: totalJobsAdded,
-        jobs_skipped: totalJobsSkipped,
-        errors,
-      });
-    }
-
-    return {
-      success: true,
-      jobsScraped: totalJobsFound,
-      newJobs: (afterCount || 0) - (beforeCount || 0),
-      companiesUpdated: companiesProcessed,
-      totalJobs: afterCount || 0,
-      jobsAdded: totalJobsAdded,
-      jobsSkipped: totalJobsSkipped,
-      errors: errors.length > 0 ? errors : undefined,
-    };
-  } catch (error: any) {
-    console.error('[SCRAPER] Fatal error:', error);
-
-    // Update log entry with failure
-    if (logId) {
-      await updateScraperLog(logId, {
-        completed_at: new Date().toISOString(),
-        status: 'failed',
-        errors: [{ company: 'System', error: error.message || 'Unknown error' }],
-      });
-    }
-
-    throw error;
-  }
+export async function scrapeCompanyJobs(): Promise<ScrapedJob[]> {
+  return [];
 }
