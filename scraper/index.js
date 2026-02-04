@@ -1,6 +1,6 @@
 /**
  * Job Scraper for internship.sg
- * Uses Adzuna API for reliable job data
+ * Uses Adzuna + Jooble APIs for reliable job data
  *
  * PDPA COMPLIANCE: Personal data is stripped before storage
  */
@@ -17,8 +17,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ============================================================================
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || 'dc4c2ae3';
-const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || '1c57965a0d94dc68d06b9ce6de58da42';
+
+// API Keys - set these in GitHub Secrets
+const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID;
+const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY;
+const JOOBLE_API_KEY = process.env.JOOBLE_API_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY');
@@ -71,7 +74,6 @@ async function getOrCreateCompany(name, website) {
   if (existing) return existing.id;
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const logoUrl = `https://img.logo.dev/${slug}.com?token=pk_X-1ZO13GSgeOoUrIuJ6GMQ&size=200`;
 
   const { data, error } = await supabase
     .from('companies')
@@ -134,7 +136,12 @@ async function updateScraperLog(id, updates) {
 // Adzuna API
 // ============================================================================
 async function fetchAdzunaJobs() {
-  log('Fetching from Adzuna API...');
+  if (!ADZUNA_APP_ID || !ADZUNA_APP_KEY) {
+    log('⚠️ Adzuna API keys not configured - skipping');
+    return [];
+  }
+
+  log('📡 Fetching from Adzuna API...');
 
   const keywords = ['intern', 'internship', 'trainee', 'graduate'];
   const jobs = [];
@@ -153,7 +160,7 @@ async function fetchAdzunaJobs() {
         const data = await response.json();
         const results = data.results || [];
 
-        log(`Adzuna "${keyword}" page ${page}: ${results.length} jobs`);
+        log(`  Adzuna "${keyword}" page ${page}: ${results.length} results`);
 
         for (const job of results) {
           const title = job.title?.toLowerCase() || '';
@@ -169,6 +176,7 @@ async function fetchAdzunaJobs() {
             salary_min: job.salary_min ? Math.round(job.salary_min / 12) : null,
             salary_max: job.salary_max ? Math.round(job.salary_max / 12) : null,
             application_url: job.redirect_url,
+            source: 'adzuna',
           });
         }
 
@@ -179,6 +187,91 @@ async function fetchAdzunaJobs() {
     }
   }
 
+  log(`✅ Adzuna: Found ${jobs.length} internships`);
+  return jobs;
+}
+
+// ============================================================================
+// Jooble API
+// ============================================================================
+async function fetchJoobleJobs() {
+  if (!JOOBLE_API_KEY) {
+    log('⚠️ Jooble API key not configured - skipping');
+    return [];
+  }
+
+  log('📡 Fetching from Jooble API...');
+
+  const keywords = ['internship', 'intern', 'trainee'];
+  const jobs = [];
+
+  for (const keyword of keywords) {
+    for (let page = 1; page <= 3; page++) {
+      try {
+        const url = `https://jooble.org/api/${JOOBLE_API_KEY}`;
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            keywords: keyword,
+            location: 'Singapore',
+            page: page,
+          }),
+        });
+
+        if (!response.ok) {
+          log(`Jooble API error: ${response.status}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const results = data.jobs || [];
+
+        log(`  Jooble "${keyword}" page ${page}: ${results.length} results`);
+
+        for (const job of results) {
+          const title = job.title?.toLowerCase() || '';
+          if (!title.includes('intern') && !title.includes('trainee') && !title.includes('graduate')) {
+            continue;
+          }
+
+          // Parse salary if available
+          let salaryMin = null;
+          let salaryMax = null;
+          if (job.salary) {
+            const numbers = job.salary.match(/\d[\d,]*/g);
+            if (numbers) {
+              const parsed = numbers.map(n => parseInt(n.replace(/,/g, ''), 10));
+              if (parsed.length >= 2) {
+                salaryMin = Math.min(...parsed);
+                salaryMax = Math.max(...parsed);
+              } else if (parsed.length === 1) {
+                salaryMin = parsed[0];
+              }
+            }
+          }
+
+          jobs.push({
+            title: job.title,
+            company: job.company,
+            description: job.snippet,
+            location: job.location || 'Singapore',
+            salary_min: salaryMin,
+            salary_max: salaryMax,
+            application_url: job.link,
+            source: 'jooble',
+          });
+        }
+
+        await new Promise(r => setTimeout(r, 500));
+      } catch (err) {
+        log(`Jooble error: ${err.message}`);
+      }
+    }
+  }
+
+  log(`✅ Jooble: Found ${jobs.length} internships`);
   return jobs;
 }
 
@@ -187,7 +280,7 @@ async function fetchAdzunaJobs() {
 // ============================================================================
 async function main() {
   log('========================================');
-  log('Starting internship.sg job scraper');
+  log('🚀 Starting internship.sg job scraper');
   log('========================================');
 
   const logId = await createScraperLog({
@@ -203,13 +296,25 @@ async function main() {
   const stats = { found: 0, added: 0, skipped: 0, errors: [] };
 
   try {
-    // Fetch from Adzuna
-    const jobs = await fetchAdzunaJobs();
-    stats.found = jobs.length;
-    log(`Total internships found: ${jobs.length}`);
+    // Fetch from both APIs
+    const adzunaJobs = await fetchAdzunaJobs();
+    const joobleJobs = await fetchJoobleJobs();
+
+    // Combine and dedupe by title
+    const allJobs = [...adzunaJobs, ...joobleJobs];
+    const seen = new Set();
+    const uniqueJobs = allJobs.filter(job => {
+      const key = `${job.title}-${job.company}`.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    stats.found = uniqueJobs.length;
+    log(`\n📊 Total unique internships: ${uniqueJobs.length}`);
 
     // Save jobs
-    for (const job of jobs) {
+    for (const job of uniqueJobs) {
       const companyId = await getOrCreateCompany(job.company);
       const result = await saveJob({
         ...job,
@@ -218,7 +323,7 @@ async function main() {
 
       if (result.added) {
         stats.added++;
-        log(`Added: ${job.title} @ ${job.company}`);
+        log(`  ✅ Added: ${job.title} @ ${job.company}`);
       } else if (result.skipped) {
         stats.skipped++;
       }
@@ -237,7 +342,7 @@ async function main() {
     }
 
   } catch (err) {
-    log(`Fatal error: ${err.message}`);
+    log(`❌ Fatal error: ${err.message}`);
     stats.errors.push(err.message);
 
     if (logId) {
@@ -249,9 +354,11 @@ async function main() {
     }
   }
 
+  log('\n========================================');
+  log('📊 SCRAPER COMPLETE');
   log('========================================');
-  log(`Jobs found: ${stats.found}`);
-  log(`Jobs added: ${stats.added}`);
+  log(`Jobs found:   ${stats.found}`);
+  log(`Jobs added:   ${stats.added}`);
   log(`Jobs skipped: ${stats.skipped}`);
   log('========================================');
 
