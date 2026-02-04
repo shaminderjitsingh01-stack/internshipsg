@@ -42,29 +42,85 @@ function log(msg) {
 }
 
 // ============================================================================
-// URL Resolution - Follow redirects to get direct company URL
+// URL Resolution - Scrape intermediate pages to get direct company URL
 // ============================================================================
 async function resolveUrl(url) {
   if (!url) return url;
+
   try {
+    // First, follow redirects to get the intermediate page
     const response = await fetch(url, {
-      method: 'HEAD',
+      method: 'GET',
       redirect: 'follow',
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
     });
-    return response.url || url;
-  } catch (err) {
-    // If HEAD fails, try GET
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        redirect: 'follow',
-        signal: AbortSignal.timeout(5000),
-      });
-      return response.url || url;
-    } catch {
-      return url; // Return original if all fails
+
+    const finalUrl = response.url;
+    const html = await response.text();
+
+    // Check if we landed on Adzuna details page
+    if (finalUrl.includes('adzuna.sg') || finalUrl.includes('adzuna.com')) {
+      // Look for the apply button URL in Adzuna page
+      // Pattern: data-href="..." or href="..." with apply/redirect
+      const patterns = [
+        /data-href="([^"]+)"/g,
+        /href="(https?:\/\/[^"]*(?:apply|career|job|redirect)[^"]*)"/gi,
+        /"apply_url"\s*:\s*"([^"]+)"/g,
+        /window\.location\.href\s*=\s*['"]([^'"]+)['"]/g,
+      ];
+
+      for (const pattern of patterns) {
+        const matches = [...html.matchAll(pattern)];
+        for (const match of matches) {
+          const extractedUrl = match[1];
+          // Skip if it's still an Adzuna URL
+          if (extractedUrl && !extractedUrl.includes('adzuna')) {
+            return extractedUrl;
+          }
+        }
+      }
     }
+
+    // Check if we landed on Jooble page
+    if (finalUrl.includes('jooble.org')) {
+      // Look for the actual job URL in Jooble page
+      const patterns = [
+        /href="(https?:\/\/(?!.*jooble)[^"]+)"/gi,
+        /"link"\s*:\s*"([^"]+)"/g,
+        /data-url="([^"]+)"/g,
+      ];
+
+      for (const pattern of patterns) {
+        const matches = [...html.matchAll(pattern)];
+        for (const match of matches) {
+          const extractedUrl = match[1];
+          // Skip if it's still a Jooble URL or common non-job URLs
+          if (extractedUrl &&
+              !extractedUrl.includes('jooble') &&
+              !extractedUrl.includes('google') &&
+              !extractedUrl.includes('facebook') &&
+              !extractedUrl.includes('twitter') &&
+              (extractedUrl.includes('career') ||
+               extractedUrl.includes('job') ||
+               extractedUrl.includes('apply') ||
+               extractedUrl.includes('workday') ||
+               extractedUrl.includes('greenhouse') ||
+               extractedUrl.includes('lever.co') ||
+               extractedUrl.includes('smartrecruiters'))) {
+            return extractedUrl;
+          }
+        }
+      }
+    }
+
+    // Return the final URL after redirects if no better URL found
+    return finalUrl;
+  } catch (err) {
+    log(`URL resolution failed for ${url}: ${err.message}`);
+    return url; // Return original if all fails
   }
 }
 
