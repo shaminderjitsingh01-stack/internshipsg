@@ -67,33 +67,38 @@ const KNOWN_DOMAINS: Record<string, string> = {
   'razer': 'razer.com',
 };
 
-// Get logo URL - use logo_url if available, otherwise try Clearbit
+// Logo.dev API token for high-quality logos
+const LOGO_DEV_TOKEN = 'pk_X-1ZO13GSgeOoUrIuJ6GMQ';
+
+// Get logo URL - use logo_url if available, otherwise try logo.dev
 function getLogoUrl(company?: Company): string | null {
   if (!company) return null;
 
-  // 1. Use logo_url if available
-  if (company.logo_url) return company.logo_url;
+  // 1. Use logo_url if available and it's already a logo.dev URL
+  if (company.logo_url && company.logo_url.includes('logo.dev')) {
+    return company.logo_url;
+  }
 
-  // 2. Try website field
+  // 2. Try website field with logo.dev
   if (company.website) {
     try {
       const domain = new URL(company.website.startsWith('http') ? company.website : `https://${company.website}`).hostname.replace('www.', '');
-      return `https://logo.clearbit.com/${domain}`;
+      return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=200`;
     } catch {
       // Continue to fallbacks
     }
   }
 
-  // 3. Try known domain mappings
+  // 3. Try known domain mappings with logo.dev
   const nameLower = company.name.toLowerCase().trim();
   if (KNOWN_DOMAINS[nameLower]) {
-    return `https://logo.clearbit.com/${KNOWN_DOMAINS[nameLower]}`;
+    return `https://img.logo.dev/${KNOWN_DOMAINS[nameLower]}?token=${LOGO_DEV_TOKEN}&size=200`;
   }
 
   // 4. Try partial matches in known domains
   for (const [key, domain] of Object.entries(KNOWN_DOMAINS)) {
     if (nameLower.includes(key) || key.includes(nameLower)) {
-      return `https://logo.clearbit.com/${domain}`;
+      return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=200`;
     }
   }
 
@@ -104,7 +109,7 @@ function getLogoUrl(company?: Company): string | null {
     .trim();
 
   if (guessedDomain.length >= 2) {
-    return `https://logo.clearbit.com/${guessedDomain}.com`;
+    return `https://img.logo.dev/${guessedDomain}.com?token=${LOGO_DEV_TOKEN}&size=200`;
   }
 
   return null;

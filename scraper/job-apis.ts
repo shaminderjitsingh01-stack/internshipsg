@@ -2,17 +2,62 @@
  * Job API Integration for internship.sg
  * Fetches internship listings from Adzuna and Jooble APIs
  *
+ * PDPA COMPLIANCE: This module adheres to Singapore's Personal Data Protection Act
+ * - Personal data (emails, phones, NRIC) is stripped before storage
+ * - Only publicly available job listing data is collected
+ * - Rate limiting respects API providers
+ * - Source attribution maintained for all jobs
+ *
  * Usage:
  *   npx ts-node scraper/job-apis.ts              # Full sync
  *   npx ts-node scraper/job-apis.ts --test       # Test mode (1 page)
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import * as dotenv from 'dotenv';
+
+// ES Module compatibility
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables
 dotenv.config({ path: join(__dirname, '..', '.env.local') });
+
+// ============================================================================
+// PDPA COMPLIANCE: Personal Data Patterns to Strip
+// ============================================================================
+const PERSONAL_DATA_PATTERNS = [
+  // Email addresses
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/gi,
+  // Singapore phone numbers
+  /\b(\+65|65)?[\s-]?[689]\d{3}[\s-]?\d{4}\b/g,
+  // Singapore NRIC/FIN
+  /\b[STFG]\d{7}[A-Z]\b/gi,
+  // Names patterns (Mr/Ms/Mrs followed by name)
+  /\b(Mr|Ms|Mrs|Miss|Dr)\.?\s+[A-Z][a-z]+(\s+[A-Z][a-z]+)*/g,
+  // Contact person patterns
+  /\b(contact|email|call|reach|phone|tel|mobile)[\s:]+[^\n,]+/gi,
+];
+
+/**
+ * PDPA COMPLIANCE: Strip personal data from text
+ * Removes emails, phone numbers, NRIC, and other personal identifiers
+ */
+function stripPersonalData(text: string): string {
+  if (!text) return text;
+
+  let cleaned = text;
+  for (const pattern of PERSONAL_DATA_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '[REDACTED]');
+  }
+
+  // Remove multiple consecutive [REDACTED] tags
+  cleaned = cleaned.replace(/(\[REDACTED\]\s*)+/g, '[REDACTED] ');
+
+  return cleaned.trim();
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -35,6 +80,7 @@ const stats = {
   joobleJobs: 0,
   jobsAdded: 0,
   jobsSkipped: 0,
+  pdpaSanitized: 0,
   errors: [] as string[],
 };
 
@@ -115,6 +161,7 @@ async function jobExists(title: string, companyId: string | null): Promise<boole
 
 /**
  * Save job to database
+ * PDPA COMPLIANCE: All text fields are sanitized before storage
  */
 async function saveJob(job: {
   title: string;
@@ -133,14 +180,19 @@ async function saveJob(job: {
     return false;
   }
 
-  const slug = generateSlug(job.title);
+  // PDPA COMPLIANCE: Sanitize all text fields before storage
+  const sanitizedTitle = stripPersonalData(job.title);
+  const sanitizedDescription = stripPersonalData(job.description || 'See job posting for full details.');
+  const sanitizedLocation = stripPersonalData(job.location || 'Singapore');
+
+  const slug = generateSlug(sanitizedTitle);
 
   const { error } = await supabase.from('jobs').insert({
-    title: job.title,
+    title: sanitizedTitle,
     slug,
     company_id: job.company_id,
-    description: job.description || 'See job posting for full details.',
-    location: job.location || 'Singapore',
+    description: sanitizedDescription,
+    location: sanitizedLocation,
     job_type: 'internship',
     work_arrangement: 'onsite',
     salary_min: job.salary_min || null,
@@ -158,7 +210,7 @@ async function saveJob(job: {
   }
 
   stats.jobsAdded++;
-  console.log(`  ✅ Added: ${job.title}`);
+  console.log(`  ✅ Added: ${sanitizedTitle} [PDPA Sanitized]`);
   return true;
 }
 
@@ -331,8 +383,13 @@ async function main() {
   const testMode = process.argv.includes('--test');
   const pages = testMode ? 1 : 5;
 
-  console.log('🚀 Job API Integration');
-  console.log('======================\n');
+  console.log('🚀 Job API Integration - internship.sg');
+  console.log('======================================\n');
+  console.log('🔒 PDPA COMPLIANCE ENABLED:');
+  console.log('   ✓ Personal data (emails, phones, NRIC) stripped');
+  console.log('   ✓ Only public job listing data collected');
+  console.log('   ✓ Rate limiting (1s delay between requests)');
+  console.log('   ✓ Source attribution maintained\n');
   console.log(`🔧 Mode: ${testMode ? 'TEST (1 page)' : 'FULL (5 pages)'}`);
 
   // Fetch from both APIs
@@ -347,6 +404,7 @@ async function main() {
   console.log(`📥 Jooble jobs found: ${stats.joobleJobs}`);
   console.log(`💾 Jobs added: ${stats.jobsAdded}`);
   console.log(`⏭️  Jobs skipped (duplicates): ${stats.jobsSkipped}`);
+  console.log(`🔒 PDPA sanitized: ${stats.jobsAdded} jobs`);
 
   if (stats.errors.length > 0) {
     console.log(`\n⚠️  Errors (${stats.errors.length}):`);

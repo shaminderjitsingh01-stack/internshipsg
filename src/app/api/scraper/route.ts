@@ -36,10 +36,38 @@ export async function POST(request: Request) {
   }
 }
 
-// GET endpoint to check scraper status
-export async function GET() {
+// GET endpoint - Vercel Cron uses GET requests
+export async function GET(request: Request) {
+  // Check if this is a Vercel Cron request
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  const isVercelCron = request.headers.get('x-vercel-cron') === '1';
+
+  // Allow Vercel Cron requests or valid bearer token
+  const isValidBearer = cronSecret && authHeader === `Bearer ${cronSecret}`;
+
+  if (isVercelCron || isValidBearer || !cronSecret) {
+    try {
+      const { runScraper } = await import('@/lib/scraper');
+      const result = await runScraper();
+
+      return NextResponse.json({
+        ...result,
+        success: true,
+        message: 'Scraper completed via cron',
+      });
+    } catch (error: any) {
+      console.error('Scraper cron error:', error);
+      return NextResponse.json(
+        { error: error.message || 'Scraper failed' },
+        { status: 500 }
+      );
+    }
+  }
+
+  // Regular GET request - just return status
   return NextResponse.json({
     status: 'ready',
-    message: 'Scraper API is ready. Send POST request to run.',
+    message: 'Scraper API is ready. Cron runs daily at 6:00 AM SGT.',
   });
 }

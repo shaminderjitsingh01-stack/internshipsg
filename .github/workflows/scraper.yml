@@ -1,0 +1,48 @@
+name: Job Scraper
+
+on:
+  # Run daily at 6 AM SGT (10 PM UTC previous day)
+  schedule:
+    - cron: '0 22 * * *'
+
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: scraper/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./scraper
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./scraper
+        run: npx playwright install chromium --with-deps
+
+      - name: Run scraper
+        working-directory: ./scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: npm run scrape
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper-logs
+          path: scraper/logs/
+          retention-days: 7

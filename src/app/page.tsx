@@ -297,9 +297,9 @@ export default function Home() {
             </div>
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-[#dc2626]">
-                #1
+                23+
               </div>
-              <div className="text-sm text-[var(--muted)]">in Singapore</div>
+              <div className="text-sm text-[var(--muted)]">Industries</div>
             </div>
           </motion.div>
         </div>

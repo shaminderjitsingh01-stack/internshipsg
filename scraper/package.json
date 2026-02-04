@@ -1,0 +1,19 @@
+{
+  "name": "internshipsg-scraper",
+  "version": "1.0.0",
+  "description": "Job scraper for internship.sg using Playwright",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "scrape": "node index.js",
+    "scrape:test": "node index.js --test",
+    "scrape:company": "node index.js --company"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "playwright": "^1.41.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

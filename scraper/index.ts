@@ -1,6 +1,13 @@
 /**
  * Internship Scraper for internship.sg
- * Scrapes job listings from company career pages
+ * Scrapes job listings directly from company career pages
+ *
+ * PDPA COMPLIANCE (Singapore Personal Data Protection Act):
+ * - Only collects publicly available job listing data
+ * - Personal data (emails, phones, NRIC) is stripped before storage
+ * - Respects robots.txt directives
+ * - Rate limiting (3s between requests)
+ * - Source attribution maintained
  *
  * Usage:
  *   npx ts-node scraper/index.ts          # Full scrape
@@ -11,8 +18,13 @@ import puppeteer, { Browser, Page } from 'puppeteer';
 import * as cheerio from 'cheerio';
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import * as dotenv from 'dotenv';
+
+// ES Module compatibility
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables
 dotenv.config({ path: join(__dirname, '..', '.env.local') });
@@ -26,6 +38,60 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// ============================================================================
+// PDPA COMPLIANCE: Personal Data Patterns to Strip
+// ============================================================================
+const PERSONAL_DATA_PATTERNS = [
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/gi, // Email
+  /\b(\+65|65)?[\s-]?[689]\d{3}[\s-]?\d{4}\b/g, // SG phone
+  /\b[STFG]\d{7}[A-Z]\b/gi, // NRIC/FIN
+  /\b(Mr|Ms|Mrs|Miss|Dr)\.?\s+[A-Z][a-z]+(\s+[A-Z][a-z]+)*/g, // Names
+  /\b(contact|email|call|reach|phone|tel|mobile)[\s:]+[^\n,]+/gi, // Contact patterns
+];
+
+function stripPersonalData(text: string): string {
+  if (!text) return text;
+  let cleaned = text;
+  for (const pattern of PERSONAL_DATA_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '[REDACTED]');
+  }
+  return cleaned.replace(/(\[REDACTED\]\s*)+/g, '[REDACTED] ').trim();
+}
+
+/**
+ * PDPA COMPLIANCE: Check robots.txt before scraping
+ */
+async function checkRobotsTxt(url: string): Promise<boolean> {
+  try {
+    const urlObj = new URL(url);
+    const robotsUrl = `${urlObj.protocol}//${urlObj.host}/robots.txt`;
+    const response = await fetch(robotsUrl, { signal: AbortSignal.timeout(5000) });
+
+    if (!response.ok) return true; // No robots.txt = allowed
+
+    const robotsTxt = await response.text();
+    const lines = robotsTxt.split('\n');
+
+    let isUserAgentMatch = false;
+    for (const line of lines) {
+      const trimmed = line.trim().toLowerCase();
+      if (trimmed.startsWith('user-agent:')) {
+        const agent = trimmed.replace('user-agent:', '').trim();
+        isUserAgentMatch = agent === '*' || agent.includes('bot');
+      }
+      if (isUserAgentMatch && trimmed.startsWith('disallow:')) {
+        const path = trimmed.replace('disallow:', '').trim();
+        if (path === '/' || urlObj.pathname.startsWith(path)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  } catch {
+    return true; // On error, proceed with caution
+  }
+}
 
 // Load companies
 interface CompanyConfig {
@@ -111,6 +177,7 @@ async function jobExists(companyId: string, title: string): Promise<boolean> {
 
 /**
  * Save job to database
+ * PDPA COMPLIANCE: All text fields are sanitized before storage
  */
 async function saveJob(companyId: string, job: {
   title: string;
@@ -129,6 +196,11 @@ async function saveJob(companyId: string, job: {
     return false;
   }
 
+  // PDPA COMPLIANCE: Sanitize all text fields
+  const sanitizedTitle = stripPersonalData(job.title);
+  const sanitizedDescription = stripPersonalData(job.description || 'See job posting for full details.');
+  const sanitizedLocation = stripPersonalData(job.location || 'Singapore');
+
   // Validate URL - use careers page as fallback if URL is invalid
   let applicationUrl = job.url;
   try {
@@ -141,9 +213,9 @@ async function saveJob(companyId: string, job: {
     .from('jobs')
     .insert({
       company_id: companyId,
-      title: job.title,
-      description: job.description || 'See job posting for full details.',
-      location: job.location || 'Singapore',
+      title: sanitizedTitle,
+      description: sanitizedDescription,
+      location: sanitizedLocation,
       job_type: 'internship',
       work_arrangement: job.work_arrangement || 'onsite',
       salary_min: job.salary_min || null,
@@ -162,7 +234,7 @@ async function saveJob(companyId: string, job: {
   }
 
   stats.jobsAdded++;
-  console.log(`  ✅ Added: ${job.title}`);
+  console.log(`  ✅ Added: ${sanitizedTitle} [PDPA Sanitized]`);
   return true;
 }
 
@@ -322,15 +394,24 @@ async function scrapeJobs(page: Page, company: CompanyConfig): Promise<ScrapedJo
 
 /**
  * Scrape a single company
+ * PDPA COMPLIANCE: Checks robots.txt before scraping
  */
 async function scrapeCompany(browser: Browser, company: CompanyConfig) {
   console.log(`\n📍 ${company.name}`);
   console.log(`   ${company.careers_url}`);
 
+  // PDPA COMPLIANCE: Check robots.txt first
+  const allowed = await checkRobotsTxt(company.careers_url);
+  if (!allowed) {
+    console.log(`   ⚠️  Skipped: robots.txt disallows scraping`);
+    stats.errors.push({ company: company.name, error: 'robots.txt disallows scraping' });
+    return;
+  }
+
   const page = await browser.newPage();
 
   await page.setUserAgent(
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+    'InternshipSG-Bot/1.0 (PDPA Compliant Job Aggregator; +https://internship.sg)'
   );
 
   try {
@@ -364,10 +445,15 @@ async function main() {
   const testMode = process.argv.includes('--test');
   const toScrape = testMode ? companies.slice(0, 3) : companies;
 
-  console.log('🚀 Internship.sg Scraper');
-  console.log('========================\n');
+  console.log('🚀 Internship.sg Company Scraper');
+  console.log('=================================\n');
+  console.log('🔒 PDPA COMPLIANCE ENABLED:');
+  console.log('   ✓ robots.txt checked before scraping');
+  console.log('   ✓ Personal data (emails, phones, NRIC) stripped');
+  console.log('   ✓ Rate limiting (3s between companies)');
+  console.log('   ✓ Direct company sources only (no job boards)\n');
   console.log(`📋 Companies: ${toScrape.length}`);
-  console.log(`🔧 Mode: ${testMode ? 'TEST' : 'FULL'}\n`);
+  console.log(`🔧 Mode: ${testMode ? 'TEST (3 companies)' : 'FULL'}\n`);
 
   const browser = await puppeteer.launch({
     headless: true,
