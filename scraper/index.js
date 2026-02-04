@@ -15,13 +15,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ============================================================================
 // Configuration
 // ============================================================================
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim();
+const SUPABASE_SERVICE_KEY = (process.env.SUPABASE_SERVICE_KEY || '').trim();
 
 // API Keys - set these in GitHub Secrets
-const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID;
-const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY;
-const JOOBLE_API_KEY = process.env.JOOBLE_API_KEY;
+const ADZUNA_APP_ID = (process.env.ADZUNA_APP_ID || '').trim();
+const ADZUNA_APP_KEY = (process.env.ADZUNA_APP_KEY || '').trim();
+const JOOBLE_API_KEY = (process.env.JOOBLE_API_KEY || '').trim();
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY');
