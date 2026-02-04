@@ -112,7 +112,6 @@ async function saveJob(job) {
     salary_max: job.salary_max,
     application_url: job.application_url,
     is_active: true,
-    posted_at: new Date().toISOString(),
   });
 
   if (error) {
